@@ -7,11 +7,13 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +23,10 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'image_path',
+        'otp_code',
+        'otp_expires_at',
         'password',
     ];
 
@@ -32,6 +38,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'otp_code',
     ];
 
     /**
@@ -44,6 +51,32 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'otp_expires_at' => 'datetime',
         ];
+    }
+
+    public function playerProfile()
+    {
+        return $this->hasOne(PlayerProfile::class);
+    }
+
+    public function coachProfile()
+    {
+        return $this->hasOne(CoachProfile::class);
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function staffProfile()
+    {
+        return $this->hasOne(StaffProfile::class);
     }
 }
