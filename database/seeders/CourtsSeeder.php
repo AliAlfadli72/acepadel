@@ -10,8 +10,11 @@ class CourtsSeeder extends Seeder
     public function run(): void
     {
         // Clear existing courts first
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+    
         DB::table('courts')->truncate();
-
+    
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         $courts = [
             [
                 'name'        => 'ملعب الماس',
@@ -75,6 +78,6 @@ class CourtsSeeder extends Seeder
             ],
         ];
 
-        DB::table('courts')->insert($courts);
+    DB::table('courts')->insert($courts);
     }
 }
