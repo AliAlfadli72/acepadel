@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageUploadService;
 
 class StaffController extends Controller
 {
@@ -96,7 +97,7 @@ class StaffController extends Controller
             'email'          => 'nullable|required_without:phone|string|email|max:255|unique:users,email,'.$user->id,
             'phone'          => 'nullable|required_without:email|string|max:255|unique:users,phone,'.$user->id,
             'password'       => ['nullable', Rules\Password::defaults()],
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
             'role'           => 'required|in:Receptionist,Staff',
             'position'       => 'nullable|string|max:255',
             'shift_name'     => 'nullable|string|max:255',
@@ -123,10 +124,12 @@ class StaffController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($user->image_path) {
-                Storage::disk('public')->delete($user->image_path);
-            }
-            $data['image_path'] = $request->file('image')->store('profiles', 'public');
+
+            $data['image_path'] = ImageUploadService::upload(
+                $request->file('image'),
+                'profiles',
+                $user->image_path
+            );
         }
 
         $user->update($data);

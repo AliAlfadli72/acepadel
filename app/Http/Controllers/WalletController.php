@@ -94,7 +94,7 @@ class WalletController extends Controller
         ]);
 
         try {
-            $this->walletService->deduct(
+            $this->walletService->manualAdjustment(
                 $wallet,
                 (float) $request->amount,
                 $request->description,
@@ -102,8 +102,12 @@ class WalletController extends Controller
             );
 
             return redirect()->back()->with('success', 'تم خصم الرصيد بنجاح.');
+
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+
+            return redirect()->back()->withErrors([
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

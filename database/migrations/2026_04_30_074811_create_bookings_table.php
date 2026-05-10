@@ -19,6 +19,11 @@ return new class extends Migration
             $table->dateTime('end_time');
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled', 'completed'])->default('pending');
             $table->decimal('total_price', 10, 2);
+            $table->string('payment_status')->default('unpaid');
+            $table->string('payment_method')
+                    ->nullable();
+            $table->decimal('paid_amount', 10, 2)
+                ->default(0);
             $table->timestamps();
         });
     }

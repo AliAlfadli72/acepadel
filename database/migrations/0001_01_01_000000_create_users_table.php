@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamp('otp_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
+            $table->string('image_path')->nullable()->after('phone');
             $table->rememberToken();
             $table->timestamps();
         });

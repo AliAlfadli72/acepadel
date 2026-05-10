@@ -16,9 +16,14 @@ import {
 
 export default function Dashboard({ stats = {} }) {
     const { auth } = usePage().props;
-    const isAdmin =
-        auth.user?.roles?.includes("Admin") ||
-        auth.user?.roles?.includes("Receptionist");
+    const roles = auth.user?.roles || [];
+
+    const isAdmin = roles.includes("Admin");
+    const isManager = roles.includes("Manager");
+    const isReceptionist = roles.includes("Receptionist");
+
+    const canViewFinance = isAdmin;
+    const canViewAdminStats = isAdmin || isManager;
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -122,7 +127,7 @@ export default function Dashboard({ stats = {} }) {
                             <div className="absolute -bottom-10 -left-10 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
                                 <Icon
                                     icon={
-                                        isAdmin
+                                        canViewFinance
                                             ? "mdi:cash-multiple"
                                             : "mdi:wallet"
                                     }
@@ -135,7 +140,7 @@ export default function Dashboard({ stats = {} }) {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="text-gray-400 font-medium mb-2 text-lg">
-                                            {isAdmin
+                                            {canViewFinance
                                                 ? "أرباح اليوم"
                                                 : "الرصيد الحالي"}
                                         </p>
@@ -144,7 +149,7 @@ export default function Dashboard({ stats = {} }) {
                                                 dir="ltr"
                                                 className="font-sans"
                                             >
-                                                {isAdmin
+                                                {canViewFinance
                                                     ? (
                                                           stats
                                                               .revenue_data?.[6]
@@ -164,14 +169,14 @@ export default function Dashboard({ stats = {} }) {
                                 <div className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 w-fit px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
                                     <Icon
                                         icon={
-                                            isAdmin
+                                            canViewFinance
                                                 ? "mdi:trending-up"
                                                 : "mdi:shield-check"
                                         }
                                         className="text-[#cbfb45] w-5 h-5"
                                     />
                                     <span className="font-medium">
-                                        {isAdmin
+                                        {canViewFinance
                                             ? "أداء ممتاز واستمرارية في النمو"
                                             : "الرصيد آمن ومتاح للاستخدام"}
                                     </span>
@@ -318,7 +323,7 @@ export default function Dashboard({ stats = {} }) {
                                 </div>
                                 <div className="mt-auto">
                                     <button className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-lg">
-                                        إدارة الفعاليات
+                                     الفعاليات
                                         <Icon
                                             icon="mdi:arrow-left"
                                             className="w-4 h-4"
@@ -433,7 +438,7 @@ export default function Dashboard({ stats = {} }) {
                                         icon="mdi:chart-areaspline"
                                         className="w-6 h-6 text-[#cbfb45]"
                                     />
-                                    {isAdmin
+                                    {canViewFinance
                                         ? "إيرادات آخر 7 أيام"
                                         : "معدل حجوزاتك (آخر 7 أيام)"}
                                 </h4>
@@ -441,7 +446,7 @@ export default function Dashboard({ stats = {} }) {
 
                             <div className="h-72 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    {isAdmin ? (
+                                    {canViewFinance ? (
                                         <AreaChart
                                             data={stats.revenue_data}
                                             margin={{
@@ -690,7 +695,7 @@ export default function Dashboard({ stats = {} }) {
                             <div className="mt-6 pt-4 border-t border-gray-100">
                                 <a
                                     href={route(
-                                        isAdmin
+                                        canViewFinance
                                             ? "admin.bookings"
                                             : "booking.index",
                                     )}

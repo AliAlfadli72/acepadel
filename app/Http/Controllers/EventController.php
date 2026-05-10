@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
-
+use App\Services\WalletService;
 class EventController extends Controller
 {
+    protected WalletService $walletService;
+
+    public function __construct(WalletService $walletService)
+    {
+        $this->walletService = $walletService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -48,47 +54,154 @@ class EventController extends Controller
             'is_registered' => $is_registered
         ]);
     }
-
     public function register(Request $request, Event $event)
-    {
-        if (!auth()->check()) {
-            return back()->with('error', 'يجب تسجيل الدخول للتسجيل في الفعالية.');
-        }
+{
+    if (!auth()->check()) {
 
-        // Check if already registered
-        $existingRegistration = \App\Models\EventRegistration::where('event_id', $event->id)
-            ->where('user_id', auth()->id())
-            ->first();
-
-        if ($existingRegistration) {
-            return back()->with('error', 'أنت مسجل بالفعل في هذه الفعالية.');
-        }
-
-        \App\Models\EventRegistration::create([
-            'event_id' => $event->id,
-            'user_id' => auth()->id(),
-            'status' => 'pending'
-        ]);
-
-        return back()->with('success', 'تم تسجيل طلبك بنجاح. سنقوم بمراجعته قريباً.');
+        return back()->with(
+            'error',
+            'يجب تسجيل الدخول للتسجيل في الفعالية.'
+        );
     }
 
-    public function cancelRegistration(Request $request, Event $event)
-    {
-        if (!auth()->check()) {
-            return back()->with('error', 'يجب تسجيل الدخول لإلغاء التسجيل.');
-        }
+    $user = auth()->user();
 
-        $registration = \App\Models\EventRegistration::where('event_id', $event->id)
-            ->where('user_id', auth()->id())
-            ->first();
+    /*
+    |--------------------------------------------------------------------------
+    | Already Registered
+    |--------------------------------------------------------------------------
+    */
 
-        if (!$registration) {
-            return back()->with('error', 'لم يتم العثور على تسجيل لهذه الفعالية.');
-        }
+    $existingRegistration = \App\Models\EventRegistration::where(
+            'event_id',
+            $event->id
+        )
+        ->where('user_id', $user->id)
+        ->first();
 
-        $registration->delete();
+    if ($existingRegistration) {
 
-        return back()->with('success', 'تم إلغاء التسجيل بنجاح.');
+        return back()->with(
+            'error',
+            'أنت مسجل بالفعل في هذه الفعالية.'
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Max Participants Check
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $event->max_participants > 0 &&
+        $event->registrations()
+            ->where('status', 'approved')
+            ->count() >= $event->max_participants
+    ) {
+
+        return back()->with(
+            'error',
+            'تم اكتمال عدد المشاركين في هذه الفعالية.'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Pending Registration ONLY
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    | No payment here.
+    | Payment happens ONLY after admin approval.
+    |
+    */
+
+    \App\Models\EventRegistration::create([
+
+        'event_id' => $event->id,
+
+        'user_id' => $user->id,
+
+        'status' => 'pending',
+    ]);
+
+    return back()->with(
+        'success',
+        'تم إرسال طلب التسجيل بنجاح وبانتظار موافقة الإدارة.'
+    );
+}
+public function cancelRegistration(Request $request, Event $event)
+{
+    if (!auth()->check()) {
+
+        return back()->with(
+            'error',
+            'يجب تسجيل الدخول لإلغاء التسجيل.'
+        );
+    }
+
+    $user = auth()->user();
+
+    $registration = \App\Models\EventRegistration::where(
+            'event_id',
+            $event->id
+        )
+        ->where('user_id', $user->id)
+        ->first();
+
+    if (!$registration) {
+
+        return back()->with(
+            'error',
+            'لم يتم العثور على تسجيل لهذه الفعالية.'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Refund ONLY if already approved
+    |--------------------------------------------------------------------------
+    |
+    | Because payment is taken only after admin approval.
+    |
+    */
+
+    if (
+        $registration->status === 'approved' &&
+        $event->fee > 0
+    ) {
+
+        $wallet = $user->wallet;
+
+        if ($wallet) {
+
+            $this->walletService->deposit(
+                $wallet,
+                $event->fee,
+                "استرجاع رسوم فعالية #{$event->id}",
+                auth()->id(),
+                $event
+            );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Delete Registration
+    |--------------------------------------------------------------------------
+    */
+
+    $registration->delete();
+
+    return back()->with(
+        'success',
+        'تم إلغاء التسجيل بنجاح.'
+    );
+}
+
+
+
+
+
 }

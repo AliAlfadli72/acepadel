@@ -7,6 +7,7 @@ use App\Models\Court;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageUploadService;
 
 class CourtController extends Controller
 {
@@ -48,7 +49,7 @@ class CourtController extends Controller
             'price'       => 'required|integer|min:0',
             'description' => 'nullable|string',
             'is_active'   => 'boolean',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:10240'
         ], [
             'name.required'   => 'اسم الملعب مطلوب.',
             'name.max'        => 'اسم الملعب يجب ألا يتجاوز 255 حرفاً.',
@@ -63,8 +64,11 @@ class CourtController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('courts', 'public');
-            $validated['image_path'] = $path;
+
+            $validated['image_path'] = ImageUploadService::upload(
+                $request->file('image'),
+                'courts'
+            );
         }
 
         Court::create($validated);
@@ -80,7 +84,7 @@ class CourtController extends Controller
             'price'       => 'required|integer|min:0',
             'description' => 'nullable|string',
             'is_active'   => 'boolean',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:10240'
         ], [
             'name.required'   => 'اسم الملعب مطلوب.',
             'name.max'        => 'اسم الملعب يجب ألا يتجاوز 255 حرفاً.',
@@ -98,8 +102,11 @@ class CourtController extends Controller
             if ($court->image_path) {
                 Storage::disk('public')->delete($court->image_path);
             }
-            $path = $request->file('image')->store('courts', 'public');
-            $validated['image_path'] = $path;
+            $validated['image_path'] = ImageUploadService::upload(
+                $request->file('image'),
+                'courts',
+                $court->image_path
+            );
         }
 
         $court->update($validated);
@@ -109,11 +116,60 @@ class CourtController extends Controller
 
     public function destroy(Court $court)
     {
-        if ($court->image_path) {
-            Storage::disk('public')->delete($court->image_path);
-        }
-        $court->delete();
+        try {
 
-        return redirect()->back()->with('success', 'تم حذف الملعب بنجاح.');
+            /*
+            |--------------------------------------------------------------------------
+            | Check Future Bookings
+            |--------------------------------------------------------------------------
+            */
+
+            $hasFutureBookings = $court->bookings()
+                ->where('start_time', '>', now())
+                ->whereIn('status', [
+                    'pending',
+                    'approved'
+                ])
+                ->exists();
+
+            if ($hasFutureBookings) {
+
+                return redirect()->back()->withErrors([
+                    'error' => 'لا يمكن حذف الملعب لوجود حجوزات مستقبلية.'
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete Court Image
+            |--------------------------------------------------------------------------
+            */
+
+            if ($court->image_path) {
+
+                Storage::disk('public')->delete(
+                    $court->image_path
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete Court
+            |--------------------------------------------------------------------------
+            */
+
+            $court->delete();
+
+            return redirect()->back()->with(
+                'success',
+                'تم حذف الملعب بنجاح.'
+            );
+
+        } catch (\Exception $e) {
+
+            return redirect()->back()->withErrors([
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

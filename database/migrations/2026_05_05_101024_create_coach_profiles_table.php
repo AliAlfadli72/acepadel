@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('specialty')->nullable();
             $table->decimal('hourly_rate', 10, 2)->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
