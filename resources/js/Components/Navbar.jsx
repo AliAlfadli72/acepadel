@@ -22,6 +22,7 @@ export default function Navbar({ lang, setLang }) {
     { path: "/services",label: { ar: "الخدمات",   en: "Services"} },
     { path: "/book-court", label: { ar: "الحجز",     en: "Booking" } },
     { path: "/events",  label: { ar: "الفعاليات", en: "Events"  } },
+      {path: "/players", label: { ar: "اللاعبين",  en: "Players" } },
     { path: "/about",   label: { ar: "من نحن",   en: "About Us"  } },
     { path: "/contact", label: { ar: "تواصل",    en: "Contact" } },
   ];

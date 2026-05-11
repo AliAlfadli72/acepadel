@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminFinanceController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Foundation\Application;
@@ -31,6 +32,9 @@ Route::get('/book-court', [BookingController::class, 'guestBooking'])->name('boo
 Route::post('/book-court', [BookingController::class, 'store'])->name('booking.guest.store');
 Route::get('/api/courts/{court}/availability', [BookingController::class, 'getAvailability'])->name('api.courts.availability');
 Route::get('/api/courts/{court}/available-coaches', [BookingController::class, 'getAvailableCoaches'])->name('api.courts.coaches');
+
+Route::get('/players', [PlayerController::class, 'index'])
+    ->name('players.index');
 
 Route::get('/contact', function () {
     return Inertia::render('Contact');
