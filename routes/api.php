@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User Profile (Fresh data from server)
     Route::get('/profile', [AuthController::class, 'profile']);
+    Route::post('/profile/update', [AuthController::class, 'updateProfile']);
 });
 
 // هذا الرابط (API) سيزود تطبيق الموبايل بمعلومات الأكاديمية

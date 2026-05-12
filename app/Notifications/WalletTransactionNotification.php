@@ -14,11 +14,11 @@ class WalletTransactionNotification extends Notification
     protected float $amount;
     protected float $newBalance;
 
-    public function __construct(string $action, float $amount, float $newBalance)
+    public function __construct(\App\Models\Transaction $transaction)
     {
-        $this->action = $action;
-        $this->amount = $amount;
-        $this->newBalance = $newBalance;
+        $this->action = $transaction->type === 'credit' ? 'add' : 'deduct';
+        $this->amount = (float) $transaction->amount;
+        $this->newBalance = (float) $transaction->balance_after;
     }
 
     public function via($notifiable)

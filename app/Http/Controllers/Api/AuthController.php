@@ -176,4 +176,33 @@ class AuthController extends Controller
             'data'   => $this->buildUserData($request->user()),
         ]);
     }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            $request->validate([
+                'name'  => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+            ]);
+
+            $user->name = $request->name;
+            $user->phone = $request->phone;
+            $user->save();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم تحديث الملف الشخصي بنجاح',
+                'data'    => $this->buildUserData($user),
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'بيانات التحقق غير صالحة.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
+    }
 }
