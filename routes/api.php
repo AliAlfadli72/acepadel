@@ -21,6 +21,14 @@ Route::post('/login', [AuthController::class, 'login']);
 // Protected API Routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Bookings API
+    Route::get('/user-bookings', [BookingController::class, 'userBookings']);
+    Route::post('/bookings', [BookingController::class, 'store']);
+    
+    // Wallet API
+    Route::get('/wallet', [WalletController::class, 'show']);
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
 });
 
 // هذا الرابط (API) سيزود تطبيق الموبايل بمعلومات الأكاديمية
@@ -38,14 +46,6 @@ Route::get('/academy-info', function () {
 // Courts API
 Route::get('/courts', [CourtController::class, 'index']);
 Route::get('/courts/{id}/availability', [CourtController::class, 'availability']);
-
-// Bookings API (Public for now, uses user_id parameter)
-Route::get('/user-bookings', [BookingController::class, 'userBookings']);
-Route::post('/bookings', [BookingController::class, 'store']);
-
-// Wallet API (Public for now, uses user_id parameter)
-Route::get('/wallet', [WalletController::class, 'show']);
-Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
 
 // Leaderboard API
 Route::get('/leaderboard', [LeaderboardController::class, 'index']);

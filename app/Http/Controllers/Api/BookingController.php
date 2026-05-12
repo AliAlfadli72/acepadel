@@ -11,14 +11,7 @@ class BookingController extends Controller
 {
     public function userBookings(Request $request)
     {
-        $userId = $request->input('user_id');
-        
-        if (!$userId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'user_id is required in query parameters or body'
-            ], 400);
-        }
+        $userId = $request->user()->id;
 
         $bookings = Booking::with(['court'])->where('user_id', $userId)->orderBy('start_time', 'desc')->get();
 
@@ -31,21 +24,16 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
             'court_id' => 'required|exists:courts,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
         ]);
 
-        // Check for availability logic
+        // Check for availability logic (Overlap check: existing_start < new_end AND existing_end > new_start)
         $conflict = Booking::where('court_id', $validated['court_id'])
             ->where(function ($query) use ($validated) {
-                $query->whereBetween('start_time', [$validated['start_time'], $validated['end_time']])
-                      ->orWhereBetween('end_time', [$validated['start_time'], $validated['end_time']])
-                      ->orWhere(function ($q) use ($validated) {
-                          $q->where('start_time', '<=', $validated['start_time'])
-                            ->where('end_time', '>=', $validated['end_time']);
-                      });
+                $query->where('start_time', '<', $validated['end_time'])
+                      ->where('end_time', '>', $validated['start_time']);
             })
             ->whereIn('status', ['approved', 'pending'])
             ->exists();
@@ -62,7 +50,7 @@ class BookingController extends Controller
         $totalPrice = $court->price * $hours;
 
         $booking = Booking::create([
-            'user_id' => $validated['user_id'],
+            'user_id' => $request->user()->id,
             'court_id' => $validated['court_id'],
             'start_time' => $validated['start_time'],
             'end_time' => $validated['end_time'],

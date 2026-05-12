@@ -11,14 +11,7 @@ class WalletController extends Controller
 {
     public function show(Request $request)
     {
-        $userId = $request->input('user_id');
-
-        if (!$userId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'user_id is required'
-            ], 400);
-        }
+        $userId = $request->user()->id;
 
         $wallet = Wallet::where('user_id', $userId)->first();
 
@@ -39,14 +32,7 @@ class WalletController extends Controller
 
     public function transactions(Request $request)
     {
-        $userId = $request->input('user_id');
-
-        if (!$userId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'user_id is required'
-            ], 400);
-        }
+        $userId = $request->user()->id;
 
         $wallet = Wallet::where('user_id', $userId)->first();
 
