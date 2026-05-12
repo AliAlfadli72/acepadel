@@ -58,7 +58,11 @@ class EventController extends Controller
             );
         }
 
-        \App\Models\Event::create($validated);
+        $event = \App\Models\Event::create($validated);
+
+        // Notify all users about the new event
+        $users = \App\Models\User::all();
+        \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\NewEventNotification($event));
 
         return back()->with('success', 'تم إنشاء الفعالية بنجاح.');
     }
@@ -269,6 +273,10 @@ class EventController extends Controller
         $registration->update([
             'status' => $request->status
         ]);
+        
+        if ($registration->user) {
+            $registration->user->notify(new \App\Notifications\EventRegistrationNotification($registration->event));
+        }
 
         $message =
             $request->status === 'approved'

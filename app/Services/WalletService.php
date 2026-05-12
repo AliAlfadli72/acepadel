@@ -44,7 +44,7 @@ class WalletService
 
             $wallet->refresh();
 
-            return $wallet->transactions()->create([
+            $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
 
                 'type' => 'credit',
@@ -62,6 +62,12 @@ class WalletService
 
                 'created_by' => $createdBy,
             ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
         });
     }
 
@@ -102,7 +108,7 @@ class WalletService
 
             $wallet->refresh();
 
-            return $wallet->transactions()->create([
+            $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
 
                 'type' => 'debit',
@@ -120,6 +126,12 @@ class WalletService
 
                 'created_by' => $createdBy,
             ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
         });
     }
 
@@ -156,7 +168,7 @@ class WalletService
 
         $wallet->refresh();
 
-        return $wallet->transactions()->create([
+        $transaction = $wallet->transactions()->create([
             'amount' => $amount,
 
             'type' => 'debit',
@@ -172,6 +184,12 @@ class WalletService
 
             'created_by' => $createdBy,
         ]);
+
+        if ($wallet->user) {
+            $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+        }
+
+        return $transaction;
     });
 }
 
@@ -201,7 +219,7 @@ class WalletService
 
             $wallet->refresh();
 
-            return $wallet->transactions()->create([
+            $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
 
                 'type' => 'credit',
@@ -220,6 +238,12 @@ class WalletService
 
                 'created_by' => $createdBy,
             ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
         });
     }
 public function eventPayment(
@@ -255,7 +279,7 @@ public function eventPayment(
 
         $wallet->refresh();
 
-        return $wallet->transactions()->create([
+        $transaction = $wallet->transactions()->create([
 
             'amount' => $amount,
 
@@ -277,6 +301,12 @@ public function eventPayment(
 
             'created_by' => $createdBy,
         ]);
+
+        if ($wallet->user) {
+            $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+        }
+
+        return $transaction;
     });
 }
 }

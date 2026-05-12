@@ -289,12 +289,9 @@ class AdminBookingController extends Controller
         
         event(new \App\Events\BookingStatusUpdated($booking->id, 'approved'));
         
-        $pushService->sendToUser(
-            $booking->user,
-            'تأكيد الحجز',
-            'تم قبول حجزك للملعب بنجاح.',
-            ['booking_id' => $booking->id, 'status' => 'approved']
-        );
+        if ($booking->user) {
+            $booking->user->notify(new \App\Notifications\BookingConfirmedNotification($booking));
+        }
 
         return redirect()->back()->with('success', 'تم تأكيد الحجز بنجاح.');
     }
@@ -305,12 +302,9 @@ class AdminBookingController extends Controller
         
         event(new \App\Events\BookingStatusUpdated($booking->id, 'cancelled'));
         
-        $pushService->sendToUser(
-            $booking->user,
-            'إلغاء الحجز',
-            'نأسف، تم إلغاء حجزك.',
-            ['booking_id' => $booking->id, 'status' => 'cancelled']
-        );
+        if ($booking->user) {
+            $booking->user->notify(new \App\Notifications\BookingCancelledNotification($booking));
+        }
 
         return redirect()->back()->with('success', 'تم إلغاء الحجز.');
     }
@@ -446,18 +440,19 @@ class AdminBookingController extends Controller
         
         event(new \App\Events\BookingStatusUpdated($booking->id, $request->status));
         
-        $message = '';
-        if ($request->status == 'approved') $message = 'تم قبول حجزك للملعب بنجاح.';
-        elseif ($request->status == 'rejected' || $request->status == 'cancelled') $message = 'نأسف، تم إلغاء حجزك.';
-        elseif ($request->status == 'completed') $message = 'تم إكمال حجزك بنجاح.';
-
-        if ($message && $booking->user) {
-            $pushService->sendToUser(
-                $booking->user,
-                'تحديث حالة الحجز',
-                $message,
-                ['booking_id' => $booking->id, 'status' => $request->status]
-            );
+        if ($booking->user) {
+            if ($request->status === 'approved') {
+                $booking->user->notify(new \App\Notifications\BookingConfirmedNotification($booking));
+            } elseif ($request->status === 'cancelled' || $request->status === 'rejected') {
+                $booking->user->notify(new \App\Notifications\BookingCancelledNotification($booking));
+            } elseif ($request->status === 'completed') {
+                $pushService->sendToUser(
+                    $booking->user,
+                    'تحديث حالة الحجز',
+                    'تم إكمال حجزك بنجاح.',
+                    ['booking_id' => $booking->id, 'status' => $request->status]
+                );
+            }
         }
 
         return back()->with('success', 'تم تحديث حالة الحجز بنجاح');

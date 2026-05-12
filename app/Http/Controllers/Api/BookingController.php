@@ -59,6 +59,8 @@ class BookingController extends Controller
         ]);
 
         event(new \App\Events\BookingStatusUpdated($booking->id, 'created'));
+        
+        $request->user()->notify(new \App\Notifications\BookingConfirmedNotification($booking));
 
         return response()->json([
             'status' => 'success',

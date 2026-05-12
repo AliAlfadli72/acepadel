@@ -120,7 +120,7 @@ class EventController extends Controller
                 $wallet->balance -= $event->fee;
                 $wallet->save();
 
-                Transaction::create([
+                $transaction = Transaction::create([
                     'wallet_id'      => $wallet->id,
                     'amount'         => $event->fee,
                     'type'           => 'debit', // نوع مدعوم في النظام
@@ -132,6 +132,8 @@ class EventController extends Controller
                     'description'    => 'تسجيل في فعالية: ' . $event->title,
                     'created_by'     => $user->id,
                 ]);
+
+                $user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
             }
 
             // إنشاء التسجيل
@@ -143,6 +145,8 @@ class EventController extends Controller
             ]);
 
             DB::commit();
+
+            $user->notify(new \App\Notifications\EventRegistrationNotification($event));
 
             return response()->json([
                 'status'  => 'success',
