@@ -2,6 +2,26 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CourtController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\LeaderboardController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EventController;
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+// Auth Routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+// Protected API Routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
 
 // هذا الرابط (API) سيزود تطبيق الموبايل بمعلومات الأكاديمية
 Route::get('/academy-info', function () {
@@ -15,8 +35,27 @@ Route::get('/academy-info', function () {
     ]);
 });
 
-use App\Models\Court; // تأكد من استدعاء الموديل الخاص بالملاعب
+// Courts API
+Route::get('/courts', [CourtController::class, 'index']);
+Route::get('/courts/{id}/availability', [CourtController::class, 'availability']);
 
-Route::get('/courts', function () {
-    return response()->json(Court::all()); 
-});
+// Bookings API (Public for now, uses user_id parameter)
+Route::get('/user-bookings', [BookingController::class, 'userBookings']);
+Route::post('/bookings', [BookingController::class, 'store']);
+
+// Wallet API (Public for now, uses user_id parameter)
+Route::get('/wallet', [WalletController::class, 'show']);
+Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+
+// Leaderboard API
+Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+
+// Events API
+Route::get('/events', [EventController::class, 'index']);
+
+// Notifications API
+Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+Route::post('/notifications/test', [\App\Http\Controllers\Api\NotificationController::class, 'test']);
