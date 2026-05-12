@@ -10,38 +10,96 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /**
+     * بناء بيانات المستخدم الكاملة مع الملف الشخصي والمحفظة
+     */
+    private function buildUserData(User $user): array
+    {
+        $user->load(['playerProfile', 'wallet']);
+
+        $profile = $user->playerProfile;
+        $wallet  = $user->wallet;
+
+        return [
+            'id'         => $user->id,
+            'name'       => $user->name,
+            'email'      => $user->email,
+            'phone'      => $user->phone,
+            'image_path' => $user->image_path,
+            'profile'    => $profile ? [
+                'rank_level'     => $profile->rank_level  ?? 'D',
+                'points'         => $profile->points       ?? 0,
+                'matches_played' => $profile->matches_played ?? 0,
+                'matches_won'    => $profile->matches_won  ?? 0,
+            ] : [
+                'rank_level'     => 'D',
+                'points'         => 0,
+                'matches_played' => 0,
+                'matches_won'    => 0,
+            ],
+            'wallet' => $wallet ? [
+                'balance' => $wallet->balance ?? 0,
+            ] : [
+                'balance' => 0,
+            ],
+        ];
+    }
+
     public function register(Request $request)
     {
         try {
             $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'phone' => 'required|string|max:20|unique:users',
+                'name'     => 'required|string|max:255',
+                'identifier' => 'required|string',
                 'password' => 'required|string|min:8|confirmed',
             ]);
 
+            $isEmail = filter_var($request->identifier, FILTER_VALIDATE_EMAIL);
+
+            if ($isEmail) {
+                $request->validate(['identifier' => 'unique:users,email']);
+                $email = $request->identifier;
+                $phone = 'DUMMY_' . time() . rand(100, 999);
+            } else {
+                $request->validate(['identifier' => 'unique:users,phone']);
+                $phone = $request->identifier;
+                $email = 'dummy_' . time() . rand(100, 999) . '@acepadel.local';
+            }
+
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
+                'name'     => $request->name,
+                'email'    => $email,
+                'phone'    => $phone,
                 'password' => Hash::make($request->password),
             ]);
+
+            // إنشاء ملف شخصي للاعب تلقائياً
+            $user->playerProfile()->create([
+                'rank_level'     => 'D',
+                'points'         => 0,
+                'matches_played' => 0,
+                'matches_won'    => 0,
+            ]);
+
+            // إنشاء محفظة فارغة تلقائياً
+            $user->wallet()->create(['balance' => 0]);
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
                 'status' => 'success',
-                'data' => [
+                'data'   => [
                     'access_token' => $token,
-                    'token_type' => 'Bearer',
-                    'user' => $user
-                ]
+                    'token_type'   => 'Bearer',
+                    'user'         => $this->buildUserData($user),
+                ],
             ], 201);
+
         } catch (ValidationException $e) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'بيانات التحقق غير صالحة.',
-                'errors' => $e->errors()
+                'errors'  => $e->errors(),
             ], 422);
         }
     }
@@ -50,40 +108,36 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
-                'identifier' => 'required|string', // Could be email or phone
-                'password' => 'required|string',
+                'identifier' => 'required|string',
+                'password'   => 'required|string',
             ]);
 
-            // Check if identifier is email or phone
             $loginType = filter_var($request->identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-
             $user = User::where($loginType, $request->identifier)->first();
 
-            if (! $user || ! Hash::check($request->password, $user->password)) {
+            if (!$user || !Hash::check($request->password, $user->password)) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'البيانات المدخلة غير صحيحة.'
+                    'status'  => 'error',
+                    'message' => 'البيانات المدخلة غير صحيحة.',
                 ], 401);
             }
-
-            // Revoke all existing tokens (Optional: If you want only one active device)
-            // $user->tokens()->delete();
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
                 'status' => 'success',
-                'data' => [
+                'data'   => [
                     'access_token' => $token,
-                    'token_type' => 'Bearer',
-                    'user' => $user
-                ]
+                    'token_type'   => 'Bearer',
+                    'user'         => $this->buildUserData($user),
+                ],
             ]);
+
         } catch (ValidationException $e) {
-             return response()->json([
-                'status' => 'error',
+            return response()->json([
+                'status'  => 'error',
                 'message' => 'بيانات التحقق غير صالحة.',
-                'errors' => $e->errors()
+                'errors'  => $e->errors(),
             ], 422);
         }
     }
@@ -94,9 +148,15 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => [
-                'message' => 'تم تسجيل الخروج بنجاح'
-            ]
+            'data'   => ['message' => 'تم تسجيل الخروج بنجاح'],
+        ]);
+    }
+
+    public function profile(Request $request)
+    {
+        return response()->json([
+            'status' => 'success',
+            'data'   => $this->buildUserData($request->user()),
         ]);
     }
 
@@ -104,7 +164,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'data' => clone $request->user()
+            'data'   => $this->buildUserData($request->user()),
         ]);
     }
 }
