@@ -47,8 +47,7 @@ class WalletService
             return $wallet->transactions()->create([
                 'amount' => $amount,
 
-                'type' => 'deposit',
-
+                'type' => 'credit',
                 'status' => 'completed',
 
                 'balance_before' => $before,
@@ -106,8 +105,7 @@ class WalletService
             return $wallet->transactions()->create([
                 'amount' => $amount,
 
-                'type' => 'booking_payment',
-
+                'type' => 'debit',
                 'status' => 'completed',
 
                 'balance_before' => $before,
@@ -161,7 +159,7 @@ class WalletService
         return $wallet->transactions()->create([
             'amount' => $amount,
 
-            'type' => 'manual_adjustment',
+            'type' => 'debit',
 
             'status' => 'completed',
 
@@ -206,7 +204,7 @@ class WalletService
             return $wallet->transactions()->create([
                 'amount' => $amount,
 
-                'type' => 'refund',
+                'type' => 'credit',
 
                 'status' => 'completed',
 
@@ -261,8 +259,8 @@ public function eventPayment(
 
             'amount' => $amount,
 
-            'type' => 'event_payment',
-
+            'type' => 'debit',
+            
             'status' => 'completed',
 
             'balance_before' => $before,
