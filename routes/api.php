@@ -63,5 +63,6 @@ Route::get('/events', [EventController::class, 'index']);
 Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
 Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
 Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
 Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
 Route::post('/notifications/test', [\App\Http\Controllers\Api\NotificationController::class, 'test']);

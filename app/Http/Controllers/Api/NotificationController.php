@@ -61,6 +61,21 @@ class NotificationController extends Controller
         return response()->json(['status' => 'success']);
     }
 
+    public function destroy(Request $request, $id)
+    {
+        $userId = $request->input('user_id');
+        if (!$userId) return response()->json(['status' => 'error', 'message' => 'user_id is required'], 400);
+
+        $user = User::findOrFail($userId);
+        $notification = $user->notifications()->where('id', $id)->first();
+        if ($notification) {
+            $notification->delete();
+            return response()->json(['status' => 'success', 'message' => 'Notification deleted successfully']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+    }
+
     // A test method to generate a dummy notification
     public function test(Request $request)
     {
