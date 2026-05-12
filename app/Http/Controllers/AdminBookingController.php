@@ -268,7 +268,7 @@ class AdminBookingController extends Controller
             return redirect()->back()->withErrors(['time' => 'يوجد حجز متعارض في هذا الوقت.']);
         }
 
-        Booking::create([
+        $booking = Booking::create([
             'user_id'     => $request->user_id,
             'court_id'    => $court->id,
             'coach_profile_id' => $request->coach_profile_id,
@@ -277,19 +277,41 @@ class AdminBookingController extends Controller
             'status'      => 'approved',
             'total_price' => $court->price * $request->duration,
         ]);
+        
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'created'));
 
         return redirect()->back()->with('success', 'تم إنشاء الحجز بنجاح.');
     }
 
-    public function approve(Booking $booking)
+    public function approve(Booking $booking, \App\Services\PushNotificationService $pushService)
     {
         $booking->update(['status' => 'approved']);
+        
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'approved'));
+        
+        $pushService->sendToUser(
+            $booking->user,
+            'تأكيد الحجز',
+            'تم قبول حجزك للملعب بنجاح.',
+            ['booking_id' => $booking->id, 'status' => 'approved']
+        );
+
         return redirect()->back()->with('success', 'تم تأكيد الحجز بنجاح.');
     }
 
-    public function reject(Booking $booking)
+    public function reject(Booking $booking, \App\Services\PushNotificationService $pushService)
     {
         $booking->update(['status' => 'cancelled']);
+        
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'cancelled'));
+        
+        $pushService->sendToUser(
+            $booking->user,
+            'إلغاء الحجز',
+            'نأسف، تم إلغاء حجزك.',
+            ['booking_id' => $booking->id, 'status' => 'cancelled']
+        );
+
         return redirect()->back()->with('success', 'تم إلغاء الحجز.');
     }
     public function complete(Booking $booking)
@@ -339,6 +361,10 @@ class AdminBookingController extends Controller
                 'status' => 'completed',
             ]);
 
+            if ($booking->user && $booking->user->playerProfile) {
+                $booking->user->playerProfile->increment('matches_played');
+            }
+
             return back()->with(
                 'success',
                 'تم إكمال الحجز بنجاح.'
@@ -382,6 +408,10 @@ class AdminBookingController extends Controller
             'paid_amount' => $booking->total_price,
         ]);
 
+        if ($booking->user && $booking->user->playerProfile) {
+            $booking->user->playerProfile->increment('matches_played');
+        }
+
         return back()->with(
             'success',
             'تم إكمال الحجز وخصم المبلغ من المحفظة.'
@@ -397,16 +427,38 @@ class AdminBookingController extends Controller
 
 
 
-    public function updateStatus(Request $request, Booking $booking)
+    public function updateStatus(Request $request, Booking $booking, \App\Services\PushNotificationService $pushService)
     {
         // dd('hello');
         $request->validate([
             'status' => 'required|in:pending,approved,rejected,cancelled,completed'
         ]);
 
+        if ($request->status === 'completed' && $booking->status !== 'completed') {
+            if ($booking->user && $booking->user->playerProfile) {
+                $booking->user->playerProfile->increment('matches_played');
+            }
+        }
+
         $booking->update([
             'status' => $request->status
         ]);
+        
+        event(new \App\Events\BookingStatusUpdated($booking->id, $request->status));
+        
+        $message = '';
+        if ($request->status == 'approved') $message = 'تم قبول حجزك للملعب بنجاح.';
+        elseif ($request->status == 'rejected' || $request->status == 'cancelled') $message = 'نأسف، تم إلغاء حجزك.';
+        elseif ($request->status == 'completed') $message = 'تم إكمال حجزك بنجاح.';
+
+        if ($message && $booking->user) {
+            $pushService->sendToUser(
+                $booking->user,
+                'تحديث حالة الحجز',
+                $message,
+                ['booking_id' => $booking->id, 'status' => $request->status]
+            );
+        }
 
         return back()->with('success', 'تم تحديث حالة الحجز بنجاح');
     }

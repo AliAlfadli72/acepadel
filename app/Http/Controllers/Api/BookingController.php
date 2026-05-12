@@ -58,6 +58,8 @@ class BookingController extends Controller
             'total_price' => $totalPrice,
         ]);
 
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'created'));
+
         return response()->json([
             'status' => 'success',
             'message' => 'تم إنشاء الحجز بنجاح.',

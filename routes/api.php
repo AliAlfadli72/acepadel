@@ -29,6 +29,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Wallet API
     Route::get('/wallet', [WalletController::class, 'show']);
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    
+    // Events API (Protected)
+    Route::post('/events/{id}/register', [EventController::class, 'register']);
+
+    // User Profile (Fresh data from server)
+    Route::get('/profile', [AuthController::class, 'profile']);
 });
 
 // هذا الرابط (API) سيزود تطبيق الموبايل بمعلومات الأكاديمية

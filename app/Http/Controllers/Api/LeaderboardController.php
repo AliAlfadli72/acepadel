@@ -9,10 +9,26 @@ class LeaderboardController extends Controller
 {
     public function index()
     {
-        $players = PlayerProfile::with('user:id,name,image_path')
+        $players = PlayerProfile::with(['user.eventRegistrations.event'])
             ->orderBy('points', 'desc')
             ->get()
             ->map(function ($profile, $index) {
+                
+                $events = [];
+                if ($profile->user && $profile->user->eventRegistrations) {
+                    foreach ($profile->user->eventRegistrations as $reg) {
+                        if ($reg->event) {
+                            $events[] = [
+                                'id' => $reg->event->id,
+                                'name' => $reg->event->name,
+                                'status' => $reg->status,
+                                'placement' => $reg->placement,
+                                'start_date' => $reg->event->start_date,
+                            ];
+                        }
+                    }
+                }
+
                 return [
                     'rank' => $index + 1,
                     'user_name' => $profile->user ? $profile->user->name : 'Unknown',
@@ -21,6 +37,7 @@ class LeaderboardController extends Controller
                     'points' => $profile->points,
                     'matches_won' => $profile->matches_won,
                     'matches_played' => $profile->matches_played,
+                    'events' => $events,
                 ];
             });
 

@@ -31,6 +31,20 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
         setCourtId(filters?.court_id || '');
     }, [filters]);
 
+    useEffect(() => {
+        if (window.Echo) {
+            window.Echo.channel('bookings')
+                .listen('BookingStatusUpdated', (e) => {
+                    console.log('Real-time booking update:', e);
+                    router.reload({ only: ['bookings', 'stats'] });
+                });
+
+            return () => {
+                window.Echo.leaveChannel('bookings');
+            };
+        }
+    }, []);
+
     // Send filters to server — pass ALL current values explicitly to avoid stale-closure bugs
     const go = (overrides = {}) => {
         const p = {
