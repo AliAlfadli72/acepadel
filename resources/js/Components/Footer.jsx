@@ -141,9 +141,17 @@ export default function Footer({ lang }) {
       {/* Bottom bar */}
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className={`text-white/30 text-[11px] font-mono uppercase tracking-widest ${isArabic ? "font-arabic" : ""}`}>
-            © 2026 ACE PADEL ACADEMY — ALL RIGHTS RESERVED
-          </p>
+          <div className="flex flex-col items-center md:items-start gap-1">
+            <p className={`text-white/30 text-[11px] font-mono uppercase tracking-widest ${isArabic ? "font-arabic" : ""}`}>
+              © 2026 ACE PADEL ACADEMY — ALL RIGHTS RESERVED
+            </p>
+            <p className={`text-white/30 text-[10px] tracking-widest ${isArabic ? "font-arabic" : ""}`}>
+              {isArabic ? "من تطوير " : "Developed by "}
+              <a href="https://nuwasoftware.com/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors font-bold text-white/50">
+                Nuwa Software
+              </a>
+            </p>
+          </div>
           <div className="flex gap-6">
             {[
               { ar: "الشروط", en: "Terms" },
