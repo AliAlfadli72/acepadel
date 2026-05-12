@@ -123,7 +123,7 @@ class EventController extends Controller
                 Transaction::create([
                     'wallet_id'      => $wallet->id,
                     'amount'         => $event->fee,
-                    'type'           => 'manual_deduction', // نوع مدعوم في النظام
+                    'type'           => 'debit', // نوع مدعوم في النظام
                     'status'         => 'completed',
                     'balance_before' => $balanceBefore,
                     'balance_after'  => $wallet->balance,

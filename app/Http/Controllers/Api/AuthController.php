@@ -71,6 +71,7 @@ class AuthController extends Controller
                 'email'    => $email,
                 'phone'    => $phone,
                 'password' => Hash::make($request->password),
+                'fcm_token'=> $request->fcm_token,
             ]);
 
             // إنشاء ملف شخصي للاعب تلقائياً
@@ -122,6 +123,11 @@ class AuthController extends Controller
                 ], 401);
             }
 
+            if ($request->filled('fcm_token')) {
+                $user->fcm_token = $request->fcm_token;
+                $user->save();
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -144,7 +150,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->fcm_token = null;
+        $user->save();
+        $user->currentAccessToken()->delete();
 
         return response()->json([
             'status' => 'success',
