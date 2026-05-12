@@ -80,6 +80,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(StaffProfile::class);
     }
+
+    public function eventRegistrations()
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
     protected static function booted(): void
     {
         static::created(function ($user) {

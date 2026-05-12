@@ -22,11 +22,14 @@ class WalletController extends Controller
             ], 404);
         }
 
+        $transactions = Transaction::where('wallet_id', $wallet->id)->orderBy('created_at', 'desc')->get();
+
         return response()->json([
             'status' => 'success',
             'data' => [
                 'balance' => $wallet->balance
-            ]
+            ],
+            'transactions' => $transactions
         ]);
     }
 

@@ -361,6 +361,10 @@ class AdminBookingController extends Controller
                 'status' => 'completed',
             ]);
 
+            if ($booking->user && $booking->user->playerProfile) {
+                $booking->user->playerProfile->increment('matches_played');
+            }
+
             return back()->with(
                 'success',
                 'تم إكمال الحجز بنجاح.'
@@ -404,6 +408,10 @@ class AdminBookingController extends Controller
             'paid_amount' => $booking->total_price,
         ]);
 
+        if ($booking->user && $booking->user->playerProfile) {
+            $booking->user->playerProfile->increment('matches_played');
+        }
+
         return back()->with(
             'success',
             'تم إكمال الحجز وخصم المبلغ من المحفظة.'
@@ -425,6 +433,12 @@ class AdminBookingController extends Controller
         $request->validate([
             'status' => 'required|in:pending,approved,rejected,cancelled,completed'
         ]);
+
+        if ($request->status === 'completed' && $booking->status !== 'completed') {
+            if ($booking->user && $booking->user->playerProfile) {
+                $booking->user->playerProfile->increment('matches_played');
+            }
+        }
 
         $booking->update([
             'status' => $request->status
