@@ -14,6 +14,7 @@ class Transaction extends Model
         // Financial
         'amount',
         'type',
+        'payment_method',
         'status',
 
         // Ledger tracking

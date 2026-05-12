@@ -58,12 +58,12 @@ const menuItems = [
         icon: 'mdi:cash-multiple',
         routeName: 'admin.finances.index',
     },
+    {
 
-    can('wallet.view') && {
         name: 'المحفظة',
         icon: 'mdi:wallet-outline',
         routeName: 'wallet.index',
-    },
+    }
 
 ].filter(Boolean);
 
