@@ -474,6 +474,8 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                     >
                                         <option value="Receptionist">مستقبل (Receptionist)</option>
                                         <option value="Staff">موظف (Staff)</option>
+                                        <option value="Manager">مدير (Manager)</option>
+                                        <option value="Coach">مدرب (Coach)</option>
                                     </select>
                                     {errors.role && <p className="text-red-500 text-xs">{errors.role}</p>}
                                 </div>
@@ -599,6 +601,8 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                             >
                                                 <option value="Receptionist">مستقبل (Receptionist)</option>
                                                 <option value="Staff">موظف (Staff)</option>
+                                                <option value="Manager">مدير (Manager)</option>
+                                                <option value="Coach">مدرب (Coach)</option>
                                             </select>
                                             {errors.role && <p className="text-red-500 text-xs">{errors.role}</p>}
                                         </div>
