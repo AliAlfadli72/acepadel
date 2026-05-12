@@ -23,7 +23,7 @@ class PlayerController extends Controller
         $search = $request->input('search');
         $rank   = $request->input('rank');
 
-        $players = User::role('Player')
+            $players = User::whereHas('playerProfile')
             ->when($search, fn($q) => $q->where(fn($q2) =>
                 $q2->where('name',  'like', "%{$search}%")
                    ->orWhere('phone', 'like', "%{$search}%")
@@ -35,7 +35,7 @@ class PlayerController extends Controller
             ->withQueryString();
 
         // quick stats
-        $allPlayers   = User::role('Player')->with('playerProfile')->get();
+      $allPlayers = User::whereHas('playerProfile')->with('playerProfile')->get();
         $rankCounts   = $allPlayers->groupBy(fn($u) => $u->playerProfile?->rank_level ?? 'غير محدد')->map->count();
 
         return Inertia::render('Admin/Players/Index', [
@@ -111,18 +111,16 @@ class PlayerController extends Controller
         // Assign 'Player' role
         $user->assignRole('Player');
 
-        // Create player profile
-        PlayerProfile::create([
-            'user_id' => $user->id,
+        // Update auto-created player profile
+        $user->playerProfile()->update([
             'rank_level' => $request->rank_level,
             'points' => $request->points,
             'matches_played' => $request->matches_played,
             'matches_won' => $request->matches_won,
         ]);
 
-        // Create wallet
-        Wallet::create([
-            'user_id' => $user->id,
+        // Update auto-created wallet
+        $user->wallet()->update([
             'balance' => $request->wallet_balance,
         ]);
 

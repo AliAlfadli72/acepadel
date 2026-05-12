@@ -296,7 +296,12 @@ class AdminBookingController extends Controller
 {
     try {
 
-        // Already completed
+        /*
+        |------------------------------------------------------------------
+        | Already completed
+        |------------------------------------------------------------------
+        */
+
         if ($booking->status === 'completed') {
 
             return back()->withErrors([
@@ -305,9 +310,9 @@ class AdminBookingController extends Controller
         }
 
         /*
-        |--------------------------------------------------------------------------
+        |------------------------------------------------------------------
         | Visitor Booking
-        |--------------------------------------------------------------------------
+        |------------------------------------------------------------------
         */
 
         if (!$booking->user_id) {
@@ -323,9 +328,27 @@ class AdminBookingController extends Controller
         }
 
         /*
-        |--------------------------------------------------------------------------
-        | Registered User Booking
-        |--------------------------------------------------------------------------
+        |------------------------------------------------------------------
+        | Already Paid
+        |------------------------------------------------------------------
+        */
+
+        if ($booking->payment_status === 'paid') {
+
+            $booking->update([
+                'status' => 'completed',
+            ]);
+
+            return back()->with(
+                'success',
+                'تم إكمال الحجز بنجاح.'
+            );
+        }
+
+        /*
+        |------------------------------------------------------------------
+        | Wallet Payment
+        |------------------------------------------------------------------
         */
 
         $wallet = $booking->user->wallet;
@@ -334,6 +357,13 @@ class AdminBookingController extends Controller
 
             return back()->withErrors([
                 'error' => 'اللاعب لا يملك محفظة.'
+            ]);
+        }
+
+        if ($wallet->balance < $booking->total_price) {
+
+            return back()->withErrors([
+                'error' => 'رصيد المحفظة غير كافٍ.'
             ]);
         }
 
@@ -449,11 +479,13 @@ class AdminBookingController extends Controller
 
             \App\Models\Transaction::create([
 
-                'wallet_id' => $booking->user?->wallet?->id ?? 1,
+            'wallet_id' => $booking->user?->wallet?->id,
 
                 'amount' => $amount,
+                'payment_method' => $request->payment_method,
 
-                'type' => 'booking_payment',
+
+                'type' => 'debit',
 
                 'description' =>
                     "دفعة حجز رقم #{$booking->id} ({$request->payment_method})",

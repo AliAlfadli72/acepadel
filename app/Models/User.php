@@ -79,4 +79,19 @@ class User extends Authenticatable
     {
         return $this->hasOne(StaffProfile::class);
     }
+    protected static function booted(): void
+    {
+        static::created(function ($user) {
+
+            if (!$user->playerProfile) {
+                $user->playerProfile()->create([]);
+            }
+
+            if (!$user->wallet) {
+                $user->wallet()->create([
+                    'balance' => 0
+                ]);
+            }
+        });
+    }
 }

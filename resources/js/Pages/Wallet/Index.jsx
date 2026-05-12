@@ -8,7 +8,7 @@ dayjs.locale('ar');
 
 export default function WalletIndex({ wallet, transactions }) {
     const { auth, flash, errors: pageErrors } = usePage().props;
-    const isAdmin = auth?.user?.roles?.includes('Admin') || auth?.user?.roles?.includes('Receptionist');
+    const isAdmin = auth?.user?.roles?.includes('Admin') || auth?.user?.roles?.includes('Receptionist') || auth?.user?.roles?.includes('Manager');
 
     const [showDepositModal, setShowDepositModal] = useState(false);
 

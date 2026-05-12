@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\PlayerProfile;
+use App\Models\Wallet;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,6 +28,20 @@ class DatabaseSeeder extends Seeder
 
         $admin->assignRole('Admin');
 
+        // Player Profile
+        PlayerProfile::create([
+            'user_id' => $admin->id,
+            'rank_level' => 'Beginner',
+                'points' => 0,
+                'matches_played' => 0,
+                'matches_won' => 0,
+        ]);
+
+        // Wallet
+        Wallet::create([
+            'user_id' => $admin->id,
+            'balance' => 0,
+        ]);
         // OTHER USERS
         $users = [
             ['name' => 'Test Manager', 'email' => 'manager@acepadel.com', 'role' => 'Manager'],
@@ -45,6 +61,19 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $user->assignRole($userData['role']);
+            // Player Profile
+            PlayerProfile::create([
+                'user_id' => $user->id,
+                'rank_level' => 'Beginner',
+                'points' => 0,
+                'matches_played' => 0,
+                'matches_won' => 0,
+            ]);
+                        // Wallet
+            Wallet::create([
+                'user_id' => $user->id,
+                'balance' => 0,
+            ]);
         }
     }
 }

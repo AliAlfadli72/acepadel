@@ -46,7 +46,7 @@ class WalletController extends Controller
     {
         // Only Admin or Receptionist can add funds
         $user = Auth::user();
-        if (!$user->hasAnyRole(['Admin', 'Receptionist'])) {
+        if (!$user->hasAnyRole(['Admin', 'Receptionist', 'Manager'])) {
             abort(403, 'غير مصرح لك بإضافة رصيد.');
         }
 

@@ -74,11 +74,11 @@ Route::middleware(['auth'])->group(function () {
     | WALLET
     |--------------------------------------------------------------------------
     */
+     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
 
     Route::middleware('permission:wallet.view')->group(function () {
 
-        Route::get('/wallet', [WalletController::class, 'index'])
-            ->name('wallet.index');
+
 
         Route::post('/wallet/{wallet}/deposit', [WalletController::class, 'deposit'])
             ->middleware('permission:players.edit')
