@@ -3,6 +3,8 @@
 namespace App\Observers;
 
 use App\Models\User;
+use App\Models\Wallet;
+use App\Models\PlayerProfile;
 
 class UserObserver
 {
@@ -11,23 +13,32 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        // Automatically create a wallet
-        $user->wallet()->create([
-            'balance' => 0,
-        ]);
+        /*
+        |------------------------------------------------------------------
+        | Automatically create wallet
+        |------------------------------------------------------------------
+        */
 
-        // Automatically create a player profile
-        $user->playerProfile()->create([
-            'rank_level' => 'Beginner',
-            'points' => 0,
-            'matches_played' => 0,
-            'matches_won' => 0,
-        ]);
-        
-        // Assign default Player role if not assigned
-        if (!$user->hasAnyRole(\Spatie\Permission\Models\Role::all())) {
-            $user->assignRole('Player');
-        }
+        Wallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['balance' => 0]
+        );
+
+        /*
+        |------------------------------------------------------------------
+        | Automatically create player profile
+        |------------------------------------------------------------------
+        */
+
+        PlayerProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'rank_level' => 'Beginner',
+                'points' => 0,
+                'matches_played' => 0,
+                'matches_won' => 0,
+            ]
+        );
     }
 
     /**

@@ -34,9 +34,9 @@ class StaffController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $eligiblePlayers = User::role('Player')
+        $eligiblePlayers = User::whereHas('playerProfile')
             ->whereDoesntHave('roles', function($q) {
-                $q->whereIn('name', ['Receptionist', 'Staff']);
+                $q->whereIn('name', ['Receptionist', 'Staff', 'Manager', 'Coach']);
             })->select('id', 'name', 'email', 'phone')->orderBy('name')->get();
 
         return Inertia::render('Admin/Staff/Index', [
@@ -53,7 +53,7 @@ class StaffController extends Controller
     {
         $request->validate([
             'user_id'        => 'required|exists:users,id',
-            'role'           => 'required|in:Receptionist,Staff',
+            'role'           => 'required|in:Receptionist,Staff,Manager,Coach',
             'position'       => 'nullable|string|max:255',
             'shift_name'     => 'nullable|string|max:255',
             'working_days'   => 'nullable|array',
@@ -67,7 +67,7 @@ class StaffController extends Controller
 
         $user = User::findOrFail($request->user_id);
 
-        if ($user->hasAnyRole(['Receptionist', 'Staff'])) {
+        if ($user->hasAnyRole(['Receptionist', 'Staff', 'Manager', 'Coach'])) {
             return redirect()->back()->withErrors(['user_id' => 'هذا اللاعب هو موظف بالفعل.']);
         }
 
@@ -98,7 +98,7 @@ class StaffController extends Controller
             'phone'          => 'nullable|required_without:email|string|max:255|unique:users,phone,'.$user->id,
             'password'       => ['nullable', Rules\Password::defaults()],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
-            'role'           => 'required|in:Receptionist,Staff',
+            'role'           => 'required|in:Receptionist,Staff,Manager,Coach',
             'position'       => 'nullable|string|max:255',
             'shift_name'     => 'nullable|string|max:255',
             'working_days'   => 'nullable|array',
@@ -166,6 +166,8 @@ class StaffController extends Controller
         // Remove staff roles
         $user->removeRole('Receptionist');
         $user->removeRole('Staff');
+        $user->removeRole('Manager');
+        $user->removeRole('Coach');
 
         // Ensure they still have Player role
         if (!$user->hasRole('Player')) {
