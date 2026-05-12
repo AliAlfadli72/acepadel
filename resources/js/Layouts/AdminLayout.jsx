@@ -1,22 +1,71 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
+import usePermissions from "@/hooks/usePermissions";
 
 export default function AdminLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const { can } = usePermissions();
+    console.log('User Permissions:', usePage().props.permissions);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const menuItems = [
-        { name: 'الرئيسية', icon: 'mdi:view-dashboard-outline', routeName: 'dashboard' },
-        { name: 'الحجوزات', icon: 'mdi:calendar-check-outline', routeName: 'admin.bookings' },
-        { name: 'الفعاليات', icon: 'mdi:trophy-outline', routeName: 'admin.events.index' },
-        { name: 'الملاعب', icon: 'mdi:tennis', routeName: 'admin.courts.index' },
-        { name: 'المدربين', icon: 'mdi:whistle', routeName: 'admin.coaches.index' },
-        { name: 'اللاعبين', icon: 'mdi:account-group-outline', routeName: 'admin.players.index' },
-        ...(user.roles?.includes('Admin') ? [{ name: 'الموظفين', icon: 'mdi:badge-account-horizontal-outline', routeName: 'admin.staff.index' }] : []),
-        ...(user.roles?.includes('Admin') ? [{ name: 'المالية', icon: 'mdi:cash-multiple', routeName: 'admin.finances.index' }] : []),
-        { name: 'المحفظة', icon: 'mdi:wallet-outline', routeName: 'wallet.index' },
-    ];
+const menuItems = [
+
+    {
+        name: 'الرئيسية',
+        icon: 'mdi:view-dashboard-outline',
+        routeName: 'dashboard',
+    },
+
+    can('bookings.view') && {
+        name: 'الحجوزات',
+        icon: 'mdi:calendar-check-outline',
+        routeName: 'admin.bookings',
+    },
+
+    can('events.view') && {
+        name: 'الفعاليات',
+        icon: 'mdi:trophy-outline',
+        routeName: 'admin.events.index',
+    },
+
+    can('courts.view') && {
+        name: 'الملاعب',
+        icon: 'mdi:tennis',
+        routeName: 'admin.courts.index',
+    },
+
+    can('coaches.view') && {
+        name: 'المدربين',
+        icon: 'mdi:whistle',
+        routeName: 'admin.coaches.index',
+    },
+
+    can('players.view') && {
+        name: 'اللاعبين',
+        icon: 'mdi:account-group-outline',
+        routeName: 'admin.players.index',
+    },
+
+    can('staff.view') && {
+        name: 'الموظفين',
+        icon: 'mdi:badge-account-horizontal-outline',
+        routeName: 'admin.staff.index',
+    },
+
+    can('finance.view') && {
+        name: 'المالية',
+        icon: 'mdi:cash-multiple',
+        routeName: 'admin.finances.index',
+    },
+
+    can('wallet.view') && {
+        name: 'المحفظة',
+        icon: 'mdi:wallet-outline',
+        routeName: 'wallet.index',
+    },
+
+].filter(Boolean);
 
     return (
         <div className="min-h-screen bg-gray-50 flex font-arabic text-gray-900" dir="rtl">
@@ -43,7 +92,7 @@ export default function AdminLayout({ header, children }) {
                             return (
                                 <Link
                                     key={index}
-                                    href={route().has(item.routeName) ? route(item.routeName) : '#'}
+                                    href={route(item.routeName)}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                                         isActive 
                                         ? 'bg-[#cbfb45]/10 text-primary font-bold border border-[#cbfb45]/50' 

@@ -1,10 +1,13 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import { Head, useForm, Link, router } from '@inertiajs/react';
+import { Head, useForm, Link, router, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import Swal from 'sweetalert2';
+import usePermissions from "@/hooks/usePermissions";
 
 export default function Index({ events }) {
+    const { can } = usePermissions();
+    const { auth } = usePage().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
 
@@ -29,6 +32,11 @@ export default function Index({ events }) {
     });
 
     const handleCreate = () => {
+
+        if (!can('events.create')) {
+            return;
+        }
+
         setEditMode(false);
         reset();
         setData('id', null);
@@ -37,6 +45,10 @@ export default function Index({ events }) {
     };
 
     const handleEdit = (event) => {
+
+         if (!can('events.edit')) {
+            return;
+        }
         setEditMode(true);
         setData({
             id: event.id,
@@ -47,7 +59,11 @@ export default function Index({ events }) {
             category: event.category,
             level: event.level,
             date: event.date ? event.date.split('T')[0] : '',
-            time: event.time ? (event.time.includes('T') ? event.time.split('T')[1].substring(0, 5) : event.time.substring(0, 5)) : '',
+
+            time: event.time
+                ? event.time.split(':').slice(0, 2).join(':')
+                : '',
+
             fee: event.fee,
             prize_ar: event.prize_ar || '',
             prize_en: event.prize_en || '',
@@ -95,8 +111,30 @@ export default function Index({ events }) {
             cancelButtonText: 'إلغاء'
         }).then((result) => {
             if (result.isConfirmed) {
-                router.delete(route('admin.events.destroy', id));
-            }
+            router.delete(route('admin.events.destroy', id), {
+
+                onError: (errors) => {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'تعذر حذف الفعالية',
+                        text: errors.error || 'حدث خطأ غير متوقع',
+                        confirmButtonText: 'حسناً',
+                        confirmButtonColor: '#d33',
+                    });
+                },
+
+                onSuccess: () => {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم حذف الفعالية',
+                        text: 'تم حذف الفعالية واسترجاع الرسوم للمشتركين.',
+                        confirmButtonColor: '#10b981',
+                    });
+                }
+            });            
+        }
         });
     };
 
@@ -119,8 +157,8 @@ export default function Index({ events }) {
     };
 
     return (
-        <AdminLayout header="إدارة الفعاليات">
-            <Head title="إدارة الفعاليات" />
+        <AdminLayout header=" الفعاليات">
+            <Head title=" الفعاليات" />
 
             <div className="max-w-7xl mx-auto space-y-6">
                 
@@ -133,13 +171,15 @@ export default function Index({ events }) {
                         </h2>
                         <p className="text-sm text-gray-500 mt-1">إدارة فعاليات الأكاديمية ومتابعة طلبات التسجيل</p>
                     </div>
-                    <button 
-                        onClick={handleCreate}
-                        className="btn-primary"
-                    >
-                        <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
-                        إضافة فعالية جديدة
-                    </button>
+                    {can('events.create') && (
+                        <button 
+                            onClick={handleCreate}
+                            className="btn-primary"
+                        >
+                            <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
+                            إضافة فعالية جديدة
+                        </button>
+                    )}
                 </div>
 
                 {/* Grid */}
@@ -159,12 +199,16 @@ export default function Index({ events }) {
                                         <Link href={route('admin.events.show', event.id)} className="text-gray-400 hover:text-green-500 transition-colors">
                                             <Icon icon="mdi:eye-outline" className="w-5 h-5" />
                                         </Link>
-                                        <button onClick={() => handleEdit(event)} className="text-gray-400 hover:text-blue-500 transition-colors">
-                                            <Icon icon="mdi:pencil-outline" className="w-5 h-5" />
-                                        </button>
-                                        <button onClick={() => handleDelete(event.id)} className="text-gray-400 hover:text-red-500 transition-colors">
-                                            <Icon icon="mdi:trash-can-outline" className="w-5 h-5" />
-                                        </button>
+                                        {can('events.edit') && (
+                                            <button onClick={() => handleEdit(event)} className="text-gray-400 hover:text-blue-500 transition-colors">
+                                                <Icon icon="mdi:pencil-outline" className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                        {can('events.delete') && (
+                                            <button onClick={() => handleDelete(event.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                                <Icon icon="mdi:trash-can-outline" className="w-5 h-5" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                                 
@@ -185,45 +229,172 @@ export default function Index({ events }) {
                                         <span>{event.fee > 0 ? `${event.fee} ل.س` : 'مجاني'}</span>
                                     </div>
                                 </div>
-
                                 <div className="pt-4 border-t border-gray-100">
-                                    {event.pending_registrations_count > 0 && (
-                                        <div className="mb-3 bg-amber-50 text-amber-700 px-3 py-2 rounded-lg text-sm flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Icon icon="mdi:alert-circle-outline" className="w-4 h-4" />
-                                                <span>{event.pending_registrations_count} طلب جديد</span>
-                                            </div>
-                                        </div>
-                                    )}
 
-                                    {/* Inline registration list */}
-                                    <div className="space-y-2">
-                                        <h4 className="text-xs font-bold text-gray-500 uppercase">الطلبات الأخيرة</h4>
-                                        {event.registrations && event.registrations.length > 0 ? (
-                                            event.registrations.map(reg => (
-                                                <div key={reg.id} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg text-sm">
-                                                    <span className="font-semibold text-gray-700">{reg.user.name}</span>
-                                                    <div className="flex items-center gap-2">
-                                                        {reg.status === 'pending' && (
-                                                            <>
-                                                                <button onClick={() => router.post(route('admin.events.registrations.status', [event.id, reg.id]), { status: 'approved' })} className="text-green-600 hover:bg-green-100 p-1 rounded">
-                                                                    <Icon icon="mdi:check" className="w-4 h-4" />
-                                                                </button>
-                                                                <button onClick={() => router.post(route('admin.events.registrations.status', [event.id, reg.id]), { status: 'rejected' })} className="text-red-600 hover:bg-red-100 p-1 rounded">
-                                                                    <Icon icon="mdi:close" className="w-4 h-4" />
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {reg.status === 'approved' && <span className="text-green-600 text-xs font-bold px-2">مقبول</span>}
-                                                        {reg.status === 'rejected' && <span className="text-red-600 text-xs font-bold px-2">مرفوض</span>}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-xs text-gray-400 text-center py-2">لا توجد طلبات بعد.</p>
-                                        )}
-                                    </div>
-                                </div>
+    {/* ================= ADMIN VIEW ================= */}
+    {can('events.edit') ? (
+        <>
+
+            {event.pending_registrations_count > 0 && (
+                <div className="mb-3 bg-amber-50 text-amber-700 px-3 py-2 rounded-lg text-sm flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Icon
+                            icon="mdi:alert-circle-outline"
+                            className="w-4 h-4"
+                        />
+                        <span>
+                            {event.pending_registrations_count} طلب جديد
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-2">
+
+                <h4 className="text-xs font-bold text-gray-500 uppercase">
+                    الطلبات الأخيرة
+                </h4>
+
+                {event.registrations && event.registrations.length > 0 ? (
+
+                    event.registrations.map(reg => (
+
+                        <div
+                            key={reg.id}
+                            className="flex items-center justify-between bg-gray-50 p-2 rounded-lg text-sm"
+                        >
+
+                            <span className="font-semibold text-gray-700">
+                                {reg.user.name}
+                            </span>
+
+                            <div className="flex items-center gap-2">
+
+                                {reg.status === 'pending' && (
+                                    <>
+                                        <button
+                                            onClick={() =>
+                                                router.post(
+                                                    route(
+                                                        'admin.events.registrations.status',
+                                                        [event.id, reg.id]
+                                                    ),
+                                                    { status: 'approved' }
+                                                )
+                                            }
+                                            className="text-green-600 hover:bg-green-100 p-1 rounded"
+                                        >
+                                            <Icon
+                                                icon="mdi:check"
+                                                className="w-4 h-4"
+                                            />
+                                        </button>
+
+                                        <button
+                                            onClick={() =>
+                                                router.post(
+                                                    route(
+                                                        'admin.events.registrations.status',
+                                                        [event.id, reg.id]
+                                                    ),
+                                                    { status: 'rejected' }
+                                                )
+                                            }
+                                            className="text-red-600 hover:bg-red-100 p-1 rounded"
+                                        >
+                                            <Icon
+                                                icon="mdi:close"
+                                                className="w-4 h-4"
+                                            />
+                                        </button>
+                                    </>
+                                )}
+
+                                {reg.status === 'approved' && (
+                                    <span className="text-green-600 text-xs font-bold px-2">
+                                        مقبول
+                                    </span>
+                                )}
+
+                                {reg.status === 'rejected' && (
+                                    <span className="text-red-600 text-xs font-bold px-2">
+                                        مرفوض
+                                    </span>
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    ))
+
+                ) : (
+
+                    <p className="text-xs text-gray-400 text-center py-2">
+                        لا توجد طلبات بعد.
+                    </p>
+
+                )}
+
+            </div>
+
+        </>
+    ) : (
+
+        /* ================= PLAYER VIEW ================= */
+
+        (() => {
+
+            const myRegistration = event.registrations?.find(
+                reg => reg.user_id === auth.user.id
+            );
+
+            if (!myRegistration) return null;
+
+            return (
+                <div className="bg-gray-50 rounded-xl p-3">
+
+                    <div className="flex items-center justify-between">
+
+                        <div className="flex items-center gap-2">
+                            <Icon
+                                icon="mdi:account-check-outline"
+                                className="w-5 h-5 text-primary"
+                            />
+
+                            <span className="text-sm font-bold text-gray-700">
+                                أنت مسجل في هذه الفعالية
+                            </span>
+                        </div>
+
+                        {myRegistration.status === 'pending' && (
+                            <span className="text-amber-600 text-xs font-bold bg-amber-100 px-3 py-1 rounded-full">
+                                قيد المراجعة
+                            </span>
+                        )}
+
+                        {myRegistration.status === 'approved' && (
+                            <span className="text-green-600 text-xs font-bold bg-green-100 px-3 py-1 rounded-full">
+                                مقبول
+                            </span>
+                        )}
+
+                        {myRegistration.status === 'rejected' && (
+                            <span className="text-red-600 text-xs font-bold bg-red-100 px-3 py-1 rounded-full">
+                                مرفوض
+                            </span>
+                        )}
+
+                    </div>
+
+                </div>
+            );
+
+        })()
+
+    )}
+
+</div>
                             </div>
                         </div>
                     ))}
@@ -236,8 +407,8 @@ export default function Index({ events }) {
                 </div>
 
                 {/* Create/Edit Modal */}
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+                    {isModalOpen && (can('events.create') || can('events.edit')) && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
                         <div className="bg-white rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                 <h3 className="text-xl font-bold text-gray-900">
@@ -318,8 +489,49 @@ export default function Index({ events }) {
                                             <input type="date" min={!editMode ? new Date().toISOString().split('T')[0] : undefined} className="form-input w-full rounded-xl border-gray-200" value={data.date} onChange={e => setData('date', e.target.value)} required />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">الوقت</label>
-                                            <input type="time" className="form-input w-full rounded-xl border-gray-200" value={data.time} onChange={e => setData('time', e.target.value)} required />
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                الوقت
+                                            </label>
+
+                                            <select
+                                                className="form-input w-full rounded-xl border-gray-200 bg-[position:left_0.5rem_center] pl-8 pr-3"
+                                                value={data.time}
+                                                onChange={(e) => setData('time', e.target.value)}
+                                                required
+                                            >
+                                                <option value="">-- اختر الوقت --</option>
+
+                                                {Array.from({ length: 72 }).map((_, index) => {
+
+                                                    // Start from 06:00
+                                                    const totalMinutes = (6 * 60) + (index * 15);
+
+                                                    const hour = String(
+                                                        Math.floor(totalMinutes / 60)
+                                                    ).padStart(2, '0');
+
+                                                    const minute = String(
+                                                        totalMinutes % 60
+                                                    ).padStart(2, '0');
+
+                                                    const time = `${hour}:${minute}`;
+
+                                                    return (
+                                                        <option
+                                                            key={time}
+                                                            value={time}
+                                                        >
+                                                            {time}
+                                                        </option>
+                                                    );
+                                                })}
+                                            </select>
+
+                                            {errors.time && (
+                                                <p className="text-red-500 text-xs mt-1">
+                                                    {errors.time}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">رسوم التسجيل (ل.س)</label>
@@ -375,10 +587,65 @@ export default function Index({ events }) {
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-gray-100">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">صورة الفعالية</label>
-                                        <input type="file" accept="image/*" onChange={e => setData('image', e.target.files[0])} className="form-input w-full rounded-xl border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
-                                        <p className="text-xs text-gray-500 mt-2">اختياري. يفضل رفع صورة بأبعاد مستطيلة (Landscape).</p>
+                                    <div className="pt-4 border-t border-gray-100 space-y-3">
+                                        
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            صورة الفعالية
+                                        </label>
+
+                                        {/* Image Preview */}
+                                        {(data.image || (editMode && events.find(e => e.id === data.id)?.image_path)) && (
+                                            <div className="flex justify-center">
+                                                <div className="w-full max-w-md h-52 rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                                                    <img
+                                                        src={
+                                                            data.image
+                                                                ? URL.createObjectURL(data.image)
+                                                                : `/storage/${events.find(e => e.id === data.id)?.image_path}`
+                                                        }
+                                                        alt="Event Preview"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Upload Area */}
+                                        <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-primary transition-colors bg-gray-50/50">
+                                            
+                                            <Icon
+                                                icon="mdi:image-plus"
+                                                className="w-14 h-14 mx-auto text-gray-300 mb-3"
+                                            />
+
+                                            <label className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/10 text-primary font-bold cursor-pointer hover:bg-primary/20 transition-colors">
+                                                <Icon icon="mdi:upload" className="w-5 h-5" />
+                                                اختيار صورة
+
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={e => setData('image', e.target.files[0])}
+                                                />
+                                            </label>
+
+                                            <p className="text-xs text-gray-500 mt-3">
+                                                اختياري — يفضل استخدام صورة أفقية عالية الجودة
+                                            </p>
+
+                                            {data.image && (
+                                                <p className="text-sm font-bold text-emerald-600 mt-2">
+                                                    {data.image.name}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {errors.image && (
+                                            <p className="text-red-500 text-xs">
+                                                {errors.image}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">

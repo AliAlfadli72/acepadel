@@ -290,9 +290,16 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                         </div>
                                         <div className="absolute -bottom-8 inset-x-0 flex justify-center">
                                             <div className="w-16 h-16 rounded-full border-4 border-white bg-white overflow-hidden flex items-center justify-center shadow-sm">
-                                                {staffMember.image_path ? (
-                                                    <img src={`/storage/${staffMember.image_path}`} alt={staffMember.name} className="w-full h-full object-cover" />
-                                                ) : (
+                                                    {staffMember.image_path ? (
+                                                        <img
+                                                            src={`/storage/${staffMember.image_path}`}
+                                                            alt={staffMember.name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
                                                     <Icon icon="mdi:account" className="w-8 h-8 text-gray-400" />
                                                 )}
                                             </div>

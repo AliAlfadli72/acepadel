@@ -3,10 +3,11 @@ import { Head, router, Link } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
+import usePermissions from "@/hooks/usePermissions";
 import 'dayjs/locale/en';
 
 export default function Show({ event }) {
-    
+    const { can } = usePermissions();
     const getStatusStyle = (status) => {
         switch (status) {
             case 'upcoming': return 'bg-blue-600 text-white border-blue-500';
@@ -26,6 +27,10 @@ export default function Show({ event }) {
     };
 
     const handleUpdateStatus = (newStatus) => {
+
+         if (!can('events.edit')) {
+            return;
+        }
         if (event.status === newStatus) return;
         
         Swal.fire({
@@ -48,6 +53,10 @@ export default function Show({ event }) {
     };
 
     const handleUpdateRegistrationStatus = (registrationId, status) => {
+
+        if (!can('events.edit')) {
+            return;
+        }
         Swal.fire({
             title: status === 'approved' ? 'تأكيد القبول' : 'تأكيد الرفض',
             text: `هل أنت متأكد من ${status === 'approved' ? 'قبول' : 'رفض'} هذا اللاعب؟`,
@@ -69,6 +78,11 @@ export default function Show({ event }) {
     };
 
     const handleUpdatePlacement = (registrationId, placement) => {
+
+        if (!can('events.edit')) {
+            return;
+        }
+
         if (event.status !== 'completed') {
             Swal.fire({
                 title: 'عذراً',
@@ -288,8 +302,9 @@ export default function Show({ event }) {
                                                     <td className="px-6 py-5 text-center">
                                                         {reg.status === 'approved' ? (
                                                             <div className="relative inline-block w-40">
-                                                                <select 
-                                                                    value={reg.placement || ''} 
+                                                                <select
+                                                                    disabled={!can('events.edit')}
+                                                                        value={reg.placement || ''} 
                                                                     onChange={(e) => handleUpdatePlacement(reg.id, e.target.value)}
                                                                     className={`bg-white border-2 text-gray-900 text-sm font-black rounded-xl focus:ring-[#cbfb45] focus:border-[#cbfb45] block w-full p-2.5 shadow-sm pr-8 appearance-none transition-all hover:border-gray-300 ${event.status !== 'completed' ? 'border-gray-100 cursor-pointer' : 'border-gray-200'}`}
                                                                 >
@@ -308,8 +323,8 @@ export default function Show({ event }) {
                                                     </td>
                                                     <td className="px-8 py-5 text-left">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            {reg.status !== 'approved' && (
-                                                                <button 
+                                                            {can('events.edit') && reg.status !== 'approved' && (            
+                                                        <button 
                                                                     onClick={() => handleUpdateRegistrationStatus(reg.id, 'approved')}
                                                                     className="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-xl text-xs font-black transition-colors border border-emerald-200 shadow-sm flex items-center gap-1"
                                                                 >
@@ -317,7 +332,7 @@ export default function Show({ event }) {
                                                                     قبول
                                                                 </button>
                                                             )}
-                                                            {reg.status !== 'rejected' && (
+                                                            {can('events.edit') && reg.status !== 'rejected' && (
                                                                 <button 
                                                                     onClick={() => handleUpdateRegistrationStatus(reg.id, 'rejected')}
                                                                     className="text-rose-700 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-xl text-xs font-black transition-colors border border-rose-200 shadow-sm flex items-center gap-1"
@@ -349,8 +364,9 @@ export default function Show({ event }) {
                     <div className="space-y-8">
                         
                         {/* Status Controller */}
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-                            <h3 className="text-2xl font-black text-gray-900 mb-2 flex items-center gap-3">
+                            {can('events.edit') && (
+                            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                                <h3 className="text-2xl font-black text-gray-900 mb-2 flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-xl bg-gray-50 text-gray-900 flex items-center justify-center border border-gray-200 shadow-sm">
                                     <Icon icon="mdi:cog-transfer" className="w-7 h-7" />
                                 </div>
@@ -379,6 +395,7 @@ export default function Show({ event }) {
                                 </button>
                             </div>
                         </div>
+                            )}
 
                         {/* Financial Analytics Redesigned */}
                         <div className="bg-gray-900 p-8 rounded-[2.5rem] shadow-2xl border border-gray-800 relative overflow-hidden group">
@@ -412,6 +429,7 @@ export default function Show({ event }) {
                                         <div className="bg-gradient-to-r from-emerald-500 to-[#cbfb45] h-2 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(203,251,69,0.5)]" style={{ width: `${Math.min(100, (approvedCount / (event.max_participants || 1)) * 100)}%` }}></div>
                                     </div>
                                 </div>
+                                {can('finance.view') && (
 
                                 <div className="relative bg-gradient-to-br from-[#cbfb45] to-[#a3d132] rounded-3xl p-6 shadow-xl shadow-[#cbfb45]/20 overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
                                     <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
@@ -423,6 +441,8 @@ export default function Show({ event }) {
                                         {Number(totalRevenue).toLocaleString('en-US')} <span className="text-sm font-bold opacity-80">ل.س</span>
                                     </p>
                                 </div>
+                              )}
+
 
                                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:bg-white/10 transition-colors">
                                     <p className="text-gray-400 text-sm font-bold mb-2 flex items-center gap-2">
@@ -435,6 +455,7 @@ export default function Show({ event }) {
                                 </div>
 
                             </div>
+                            
                         </div>
 
                     </div>

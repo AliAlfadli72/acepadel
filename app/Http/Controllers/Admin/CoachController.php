@@ -9,7 +9,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
-
+use App\Services\ImageUploadService;
 class CoachController extends Controller
 {
     public function index()
@@ -132,7 +132,11 @@ class CoachController extends Controller
             if ($coach->image_path) {
                 Storage::disk('public')->delete($coach->image_path);
             }
-            $coach->image_path = $request->file('image')->store('coaches', 'public');
+            $coach->image_path = ImageUploadService::upload(
+                $request->file('image'),
+                'coaches',
+                $coach->image_path
+            );        
         }
 
         $coach->save();
@@ -163,19 +167,91 @@ class CoachController extends Controller
 
         return redirect()->back()->with('success', 'تم تحديث بيانات المدرب بنجاح.');
     }
-
     public function destroy(User $coach)
     {
-        if (!$coach->hasRole('Coach')) {
-            abort(403, 'غير مصرح.');
-        }
+        try {
 
-        if ($coach->image_path) {
-            Storage::disk('public')->delete($coach->image_path);
-        }
-        
-        $coach->delete();
+            /*
+            |--------------------------------------------------------------------------
+            | Ensure User Is Coach
+            |--------------------------------------------------------------------------
+            */
 
-        return redirect()->back()->with('success', 'تم حذف المدرب بنجاح.');
+            if (!$coach->hasRole('Coach')) {
+
+                abort(403, 'غير مصرح.');
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Check Future Sessions
+            |--------------------------------------------------------------------------
+            */
+
+            $hasFutureBookings = $coach->coachProfile
+                ?->bookings()
+                ->where('start_time', '>', now())
+                ->whereIn('status', [
+                    'pending',
+                    'approved'
+                ])
+                ->exists();
+
+            if ($hasFutureBookings) {
+
+                return redirect()->back()->withErrors([
+                    'error' => 'لا يمكن حذف المدرب لوجود جلسات تدريب مستقبلية.'
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete Image
+            |--------------------------------------------------------------------------
+            */
+
+            if ($coach->image_path) {
+
+                Storage::disk('public')->delete(
+                    $coach->image_path
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Remove Coach Role
+            |--------------------------------------------------------------------------
+            */
+
+            $coach->removeRole('Coach');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete Coach Profile
+            |--------------------------------------------------------------------------
+            */
+
+            if ($coach->coachProfile) {
+
+                $coach->coachProfile->courts()->detach();
+
+                $coach->coachProfile->availabilities()->delete();
+
+                $coach->coachProfile->delete();
+            }
+
+            return redirect()->back()->with(
+                'success',
+                'تم حذف المدرب بنجاح.'
+            );
+
+        } catch (\Exception $e) {
+
+            return redirect()->back()->withErrors([
+                'error' => $e->getMessage()
+            ]);
+        }
     }
+
+
 }

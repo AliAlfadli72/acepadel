@@ -5,11 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
+import usePermissions from "@/hooks/usePermissions";
 import 'dayjs/locale/ar';
 
 dayjs.locale('ar');
 
 export default function BookingsIndex({ bookings, courts, players, coaches, stats, filters }) {
+    const { can } = usePermissions();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // ── local filter state (mirrors URL params) ────────────────────────
@@ -61,6 +64,10 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
     };
 
     const updateStatus = (id, action) => {
+
+    if (!can('players.edit')) {
+        return;
+    }
         const msgs = { approve: 'تأكيد هذا الحجز؟', reject: 'إلغاء هذا الحجز؟', complete: 'تعليمه كمكتمل؟' };
         
         Swal.fire({
@@ -74,10 +81,77 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
             cancelButtonText: 'إلغاء'
         }).then((result) => {
             if (result.isConfirmed) {
-                router.post(route(`admin.bookings.${action}`, id), {}, { preserveScroll: true });
-            }
+            router.post(
+                route(`admin.bookings.${action}`, id),
+                {},
+                {
+                    preserveScroll: true,
+
+                    onSuccess: () => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'تم تنفيذ العملية بنجاح',
+                            timer: 1500,
+                            showConfirmButton: false,
+                        });
+                    },
+
+                    onError: (errors) => {
+
+                        console.log(errors);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'خطأ',
+                            text:
+                                errors.error ||
+                                errors.message ||
+                                'حدث خطأ غير متوقع',
+                        });
+                    },
+                }
+            );           
+         }
         });
     };
+    const getPaymentBadge = (status) => {
+
+        const map = {
+
+            unpaid: [
+                'غير مدفوع',
+                'bg-red-100 text-red-600 border-red-200'
+            ],
+
+            partial: [
+                'دفع جزئي',
+                'bg-yellow-100 text-yellow-700 border-yellow-200'
+            ],
+
+            paid: [
+                'مدفوع',
+                'bg-green-100 text-green-700 border-green-200'
+            ],
+        };
+
+        const [label, cls] = map[status] || [
+            '—',
+            'bg-gray-100 text-gray-500'
+        ];
+
+        return (
+            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${cls}`}>
+                {label}
+            </span>
+        );
+    };
+    const [paymentModal, setPaymentModal] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState(null);
+
+    const [paymentData, setPaymentData] = useState({
+        amount: '',
+        payment_method: 'cash',
+    });
 
     const getStatusBadge = (s) => {
         const map = {
@@ -89,6 +163,39 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
         const [label, cls] = map[s] || ['—', 'bg-gray-100 text-gray-500'];
         return <span className={`px-3 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span>;
     };
+    const openPaymentModal = (booking) => {
+
+        setSelectedBooking(booking);
+
+        setPaymentData({
+            amount: booking.total_price - (booking.paid_amount || 0),
+            payment_method: 'cash',
+        });
+
+        setPaymentModal(true);
+    };
+    const submitPayment = () => {
+
+    router.post(
+        route('admin.bookings.payment', selectedBooking.id),
+        paymentData,
+        {
+            preserveScroll: true,
+
+            onSuccess: () => {
+
+                setPaymentModal(false);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تمت إضافة الدفعة بنجاح',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+        }
+    );
+};
 
     const statusButtons = [
         { key: 'all',       label: 'الكل' },
@@ -106,14 +213,15 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
     ];
 
     return (
-        <AdminLayout header="إدارة الحجوزات">
-            <Head title="إدارة الحجوزات" />
+        <AdminLayout header=" الحجوزات">
+            <Head title=" الحجوزات" />
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl space-y-6">
 
                     {/* ── Stats Cards ───────────────────────────────── */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {can('bookings.manage') && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
                             { label: 'إجمالي الحجوزات', value: stats.total,    icon: 'mdi:calendar-check',    color: 'text-primary bg-primary/10' },
                             { label: 'قيد الانتظار',     value: stats.pending,  icon: 'mdi:clock-outline',     color: 'text-yellow-600 bg-yellow-50' },
@@ -131,6 +239,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                             </div>
                         ))}
                     </div>
+                        )}
 
                     {/* ── Header + Add Button ───────────────────────── */}
                     <div className="flex justify-between items-center">
@@ -140,6 +249,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                 {bookings.total} حجز{hasActiveFilters && <span className="text-primary font-bold"> (فلتر مفعّل)</span>}
                             </p>
                         </div>
+                        {can('bookings.create') && (
                         <button
                             onClick={() => setIsModalOpen(true)}
                             className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors"
@@ -147,13 +257,20 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                             <Icon icon="mdi:calendar-plus" className="w-5 h-5" />
                             حجز جديد (يدوي)
                         </button>
+                        )}
                     </div>
 
                     {/* ── Filter Bar ────────────────────────────────── */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
                         {/* Row 1: search + date + court */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {/* Search */}
+                        <div className={`grid gap-3 ${
+                            can('bookings.manage')
+                                ? 'grid-cols-1 md:grid-cols-3'
+                                : 'grid-cols-1 md:grid-cols-2'
+                        }`}>                           
+                         {/* Search */}
+                         {can('bookings.manage') && (
+
                             <div className="relative">
                                 <Icon icon="mdi:magnify" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
@@ -165,6 +282,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                     className="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-primary focus:border-primary"
                                 />
                             </div>
+                            )}
 
                             {/* Date */}
                             <div className="relative">
@@ -193,6 +311,8 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
 
                         {/* Row 2: status + time_slot + search button + reset */}
                         <div className="flex flex-wrap gap-2 items-center justify-between">
+                            {can('bookings.manage') && (
+
                             <div className="flex flex-wrap gap-2">
                                 {/* Status buttons */}
                                 {statusButtons.map(s => (
@@ -227,6 +347,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                     </button>
                                 ))}
                             </div>
+                                )}
 
                             <div className="flex gap-2">
                                 <button
@@ -260,10 +381,20 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                         <th className="px-5 py-4">الملعب</th>
                                         <th className="px-5 py-4">المدرب</th>
                                         <th className="px-5 py-4">التاريخ والوقت</th>
-                                        <th className="px-5 py-4">السعر</th>
+                                        {can('bookings.edit') && (
+                                            <th className="px-5 py-4">السعر</th>
+                                        )}
+                                         {/* {can('bookings.edit') && ( */}
+                                        <th className="px-5 py-4">الدفع</th>
+                                        {/*  )} */}
+                                        {/* {can('bookings.edit') && ( */}
+                                        <th className="px-5 py-4">المدفوع</th>
+                                        {/* )} */}
                                         <th className="px-5 py-4">الحالة</th>
-                                        <th className="px-5 py-4">إجراءات</th>
-                                    </tr>
+                                       {can('players.create') && (
+                                            <th className="px-5 py-4">إجراءات</th>
+                                            )}                                 
+                                        </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {bookings.data.map((booking) => {
@@ -328,16 +459,26 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                                 </td>
 
                                                 {/* Price */}
-                                                <td className="px-5 py-4 font-bold text-green-600 text-sm" dir="ltr">
-                                                    {parseInt(booking.total_price).toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">ل.س</span>
+                                                {can('bookings.edit') && (
+                                                    <td className="px-5 py-4 font-bold text-green-600 text-sm" dir="ltr">
+                                                        {parseInt(booking.total_price).toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">ل.س</span>
+                                                    </td>
+                                                )}
+                                                <td className="px-5 py-4">
+                                                    {getPaymentBadge(booking.payment_status)}
+                                                </td>
+
+                                                <td className="px-5 py-4 font-bold text-primary">
+                                                    {parseInt(booking.paid_amount || 0).toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">ل.س</span>
                                                 </td>
 
                                                 {/* Status */}
                                                 <td className="px-5 py-4">{getStatusBadge(booking.status)}</td>
 
                                                 {/* Actions */}
-                                                <td className="px-5 py-4">
-                                                    <div className="flex items-center gap-1.5">
+                                                {can('players.create') && (
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex items-center gap-1.5">
                                                         {booking.status === 'pending' && (<>
                                                             <button onClick={() => updateStatus(booking.id, 'approve')} className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors" title="تأكيد">
                                                                 <Icon icon="mdi:check" className="w-4 h-4" />
@@ -354,8 +495,20 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                                                 <Icon icon="mdi:close" className="w-4 h-4" />
                                                             </button>
                                                         </>)}
+                                                        {booking.payment_status !== 'paid' && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openPaymentModal(booking)}
+                                                                className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                                                title="إضافة دفعة"
+                                                            >
+                                                                <Icon icon="mdi:cash-plus" className="w-4 h-4" />
+                                                            </button>
+                                                        )}
                                                     </div>
+                                                    
                                                 </td>
+                                                     )} 
                                             </tr>
                                         );
                                     })}
@@ -455,13 +608,43 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                         className="w-full rounded-xl border-gray-200 focus:border-primary focus:ring-primary" required />
                                     {errors.date && <p className="text-red-500 text-xs">{errors.date}</p>}
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-gray-700">وقت البدء</label>
-                                    <input type="time" value={data.start_time} onChange={e => setData('start_time', e.target.value)}
-                                        className="w-full rounded-xl border-gray-200 focus:border-primary focus:ring-primary" required />
-                                    {errors.start_time && <p className="text-red-500 text-xs">{errors.start_time}</p>}
-                                    {errors.time       && <p className="text-red-500 text-xs">{errors.time}</p>}
-                                </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-bold text-gray-700">
+                                            وقت البدء
+                                        </label>
+
+                                        <select
+                                            value={data.start_time}
+                                            onChange={(e) => setData('start_time', e.target.value)}
+                                            className="w-full rounded-xl border-gray-200 focus:border-primary focus:ring-primary"
+                                            required
+                                        >
+                                            {Array.from({ length: 96 }).map((_, index) => {
+                                                const hour = String(Math.floor(index / 4)).padStart(2, '0');
+                                                const minute = String((index % 4) * 15).padStart(2, '0');
+
+                                                const time = `${hour}:${minute}`;
+
+                                                return (
+                                                    <option key={time} value={time}>
+                                                        {time}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+
+                                        {errors.start_time && (
+                                            <p className="text-red-500 text-xs">
+                                                {errors.start_time}
+                                            </p>
+                                        )}
+
+                                        {errors.time && (
+                                            <p className="text-red-500 text-xs">
+                                                {errors.time}
+                                            </p>
+                                        )}
+                                    </div>
                             </div>
 
                             <div className="space-y-2">
@@ -485,8 +668,91 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                             </div>
                         </form>
                     </div>
+
                 </div>
+                
             )}
+                                {paymentModal && (
+
+<div className="fixed inset-0 z-[80] flex items-center justify-center px-4">
+
+    <div
+        className="absolute inset-0 bg-black/40"
+        onClick={() => setPaymentModal(false)}
+    />
+
+    <div className="bg-white rounded-2xl p-6 w-full max-w-md relative z-10">
+
+        <h3 className="text-xl font-bold text-primary mb-6">
+            إضافة دفعة
+        </h3>
+
+        <div className="space-y-4">
+
+            <div>
+                <label className="block text-sm font-bold mb-2">
+                    المبلغ
+                </label>
+
+                <input
+                    type="number"
+                    value={paymentData.amount}
+                    onChange={(e) =>
+                        setPaymentData({
+                            ...paymentData,
+                            amount: e.target.value
+                        })
+                    }
+                    className="w-full rounded-xl border-gray-200"
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-bold mb-2">
+                    طريقة الدفع
+                </label>
+
+                <select
+                    value={paymentData.payment_method}
+                    onChange={(e) =>
+                        setPaymentData({
+                            ...paymentData,
+                            payment_method: e.target.value
+                        })
+                    }
+                    className="w-full rounded-xl border-gray-200"
+                >
+                    <option value="cash">كاش</option>
+                    <option value="wallet">محفظة</option>
+                    <option value="card">بطاقة</option>
+                    <option value="transfer">تحويل</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+
+            <button
+                onClick={() => setPaymentModal(false)}
+                className="px-4 py-2 rounded-xl bg-gray-100"
+            >
+                إلغاء
+            </button>
+
+            <button
+                onClick={submitPayment}
+                className="px-4 py-2 rounded-xl bg-primary text-white"
+            >
+                حفظ الدفعة
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+)}
         </AdminLayout>
     );
 }

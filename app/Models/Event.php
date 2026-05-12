@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Event extends Model
 {
+        use SoftDeletes;
     protected $fillable = [
         'title_ar', 'title_en', 'desc_ar', 'desc_en',
         'category', 'level', 'date', 'time', 'fee',
@@ -40,4 +43,6 @@ class Event extends Model
     {
         return $this->hasMany(EventRegistration::class);
     }
+
+
 }

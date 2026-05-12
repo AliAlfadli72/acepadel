@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import usePermissions from "@/hooks/usePermissions";
 
 const RANKS = ['مبتدئ', 'متوسط', 'متقدم', 'محترف', 'نخبة'];
 
@@ -29,6 +30,7 @@ const Field = ({ label, children }) => (
 );
 
 export default function PlayersIndex({ players, filters, stats }) {
+    const { can } = usePermissions();
     const [isModalOpen, setIsModalOpen]   = useState(false);
     const [editingPlayer, setEditingPlayer] = useState(null);
     const [search, setSearch]             = useState(filters?.search || '');
@@ -43,13 +45,30 @@ export default function PlayersIndex({ players, filters, stats }) {
     const resetFilters = () => { setSearch(''); setRank(''); router.get(route('admin.players.index')); };
 
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
-        name:'', email:'', phone:'', password:'', password_confirmation:'',
-        image:null, rank_level:'مبتدئ', points:0, wallet_balance:0, matches_played:0, matches_won:0,
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        password_confirmation: '',
+        image: null,
+        rank_level: 'مبتدئ',
+        points: 0,
+        wallet_balance: 0,
+        matches_played: 0,
+        matches_won: 0,
     });
 
-    const openAdd = () => { clearErrors(); reset(); setEditingPlayer(null); setIsModalOpen(true); };
+    const openAdd = () => { 
+            if (!can('players.create')) {
+                return;
+            }
+        clearErrors(); reset(); setEditingPlayer(null); setIsModalOpen(true); };
 
     const openEdit = (p) => {
+
+        if (!can('players.edit')) {
+            return;
+        }
         clearErrors();
         setEditingPlayer(p);
         setData({
@@ -91,6 +110,9 @@ export default function PlayersIndex({ players, filters, stats }) {
     };
 
     const deletePlayer = (id) => {
+            if (!can('players.delete')) {
+                return;
+            }
         Swal.fire({
             title: 'تأكيد الحذف',
             text: 'حذف هذا اللاعب نهائياً؟',
@@ -108,8 +130,8 @@ export default function PlayersIndex({ players, filters, stats }) {
     };
 
     return (
-        <AdminLayout header="إدارة اللاعبين">
-            <Head title="إدارة اللاعبين" />
+        <AdminLayout header="اللاعبين">
+            <Head title="اللاعبين" />
             <div className="py-6">
                 <div className="mx-auto max-w-7xl space-y-6">
 
@@ -117,7 +139,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
                             { label:'إجمالي اللاعبين',  value: stats.total,       icon:'mdi:account-group',   color:'text-primary bg-primary/10' },
-                            { label:'لديهم رصيد',        value: stats.with_wallet, icon:'mdi:wallet',          color:'text-green-600 bg-green-50' },
+                            ...(can('players.edit') ? [{ label:'لديهم رصيد',        value: stats.with_wallet, icon:'mdi:wallet',          color:'text-green-600 bg-green-50' }] : []),
                             { label:'المستوى الأعلى',    value: stats.rank_counts?.['نخبة'] || 0, icon:'mdi:trophy', color:'text-purple-600 bg-purple-50' },
                             { label:'الصفحة الحالية',    value: `${players.from||0}–${players.to||0}`, icon:'mdi:format-list-numbered', color:'text-blue-600 bg-blue-50' },
                         ].map(c => (
@@ -136,9 +158,12 @@ export default function PlayersIndex({ players, filters, stats }) {
                             <h3 className="text-xl font-bold text-primary">اللاعبين المسجلين</h3>
                             <p className="text-gray-400 text-sm">{players.total} لاعب{(search||rank) && <span className="text-primary font-bold"> · فلتر مفعّل</span>}</p>
                         </div>
-                        <button onClick={openAdd} className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors">
+                        {can('players.create') && (
+                        <button onClick={openAdd}
+                        className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors">
                             <Icon icon="mdi:account-plus" className="w-5 h-5" />إضافة لاعب
                         </button>
+                        )}
                     </div>
 
                     {/* Filter bar */}
@@ -187,8 +212,14 @@ export default function PlayersIndex({ players, filters, stats }) {
                                         <th className="px-5 py-3.5">المستوى</th>
                                         <th className="px-5 py-3.5">النقاط</th>
                                         <th className="px-5 py-3.5">المباريات</th>
+                                        {can('players.create') && (
+
                                         <th className="px-5 py-3.5">المحفظة</th>
+                                        )}
+                                       {can('players.create') && (
+
                                         <th className="px-5 py-3.5">إجراءات</th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -228,23 +259,41 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                     <div className="text-xs text-gray-600">{profile?.matches_played || 0} مباراة</div>
                                                     <div className="text-xs text-green-600 font-bold">{winRate}% فوز</div>
                                                 </td>
-                                                {/* Wallet */}
-                                                <td className="px-5 py-3.5">
-                                                    <span className={`font-bold text-sm ${(p.wallet?.balance||0) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                        {parseInt(p.wallet?.balance||0).toLocaleString('en-US')} <span className="text-xs font-normal text-gray-400">ل.س</span>
-                                                    </span>
-                                                </td>
-                                                {/* Actions */}
-                                                <td className="px-5 py-3.5">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <button onClick={() => openEdit(p)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="تعديل">
-                                                            <Icon icon="mdi:pencil" className="w-4 h-4" />
-                                                        </button>
-                                                        <button onClick={() => deletePlayer(p.id)} className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" title="حذف">
-                                                            <Icon icon="mdi:delete-outline" className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                   {can('players.edit') && (
+
+                                                    <td className="px-5 py-3.5">
+                                                        <span className={`font-bold text-sm ${(p.wallet?.balance||0) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                            {parseInt(p.wallet?.balance||0).toLocaleString('en-US')} <span className="text-xs font-normal text-gray-400">ل.س</span>
+                                                        </span>
+                                                    </td>
+                                                    )}
+                                                    {(can('players.edit') || can('players.delete')) && (
+                                                    <td className="px-5 py-3.5">
+                                                        <div className="flex items-center gap-1.5">
+
+                                                            {can('players.edit') && (
+                                                                <button
+                                                                    onClick={() => openEdit(p)}
+                                                                    className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                                                    title="تعديل"
+                                                                >
+                                                                    <Icon icon="mdi:pencil" className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+
+                                                            {can('players.delete') && (
+                                                                <button
+                                                                    onClick={() => deletePlayer(p.id)}
+                                                                    className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+                                                                    title="حذف"
+                                                                >
+                                                                    <Icon icon="mdi:delete-outline" className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+
+                                                        </div>
+                                                    </td>
+                                                    )}
                                             </tr>
                                         );
                                     })}
@@ -303,12 +352,39 @@ export default function PlayersIndex({ players, filters, stats }) {
                                         : <Icon icon="mdi:camera" className="w-6 h-6 text-gray-300" />}
                                     <input type="file" accept="image/*" onChange={e => setData('image', e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </div>
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <Field label="الاسم الكامل *"><input type="text" value={data.name} onChange={e => setData('name', e.target.value)} placeholder="اسم اللاعب" className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" /></Field>
-                                    <Field label="الجوال أو البريد *">
-                                        <input type="text" value={data.phone} onChange={e => setData('phone', e.target.value)} placeholder="0912345678 أو email@..." className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" />
-                                    </Field>
-                                </div>
+                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                                        <Field label="الاسم الكامل *">
+                                            <input
+                                                type="text"
+                                                value={data.name}
+                                                onChange={e => setData('name', e.target.value)}
+                                                placeholder="اسم اللاعب"
+                                                className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm"
+                                            />
+                                        </Field>
+
+                                        <Field label="رقم الجوال *">
+                                            <input
+                                                type="text"
+                                                value={data.phone}
+                                                onChange={e => setData('phone', e.target.value)}
+                                                placeholder="0912345678"
+                                                className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm"
+                                            />
+                                        </Field>
+
+                                        <Field label="البريد الإلكتروني *">
+                                            <input
+                                                type="email"
+                                                value={data.email}
+                                                onChange={e => setData('email', e.target.value)}
+                                                placeholder="example@email.com"
+                                                className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm"
+                                            />
+                                        </Field>
+
+                                    </div>
                             </div>
                             {errors.image && <p className="text-red-500 text-xs">{errors.image}</p>}
                             {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}

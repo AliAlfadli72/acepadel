@@ -67,6 +67,7 @@ export default function Booking({ courts = [] }) {
   const [availableCoaches,   setAvailableCoaches]   = useState([]);
   const [isFetchingCoaches,  setIsFetchingCoaches]  = useState(false);
   const [selectedCoach,      setSelectedCoach]      = useState(null);
+  const [email, setEmail] = useState(auth?.user?.email || "");
 
   const chosenCourt = courts.find(c => c.id === selectedCourt);
   const coachExtraCost = selectedCoach ? parseFloat(selectedCoach.hourly_rate) * duration : 0;
@@ -173,6 +174,7 @@ export default function Booking({ courts = [] }) {
       start_time,
       end_time,
       guest_name:  name,
+      guest_email: email,
       guest_phone: phone,
       coach_id:    selectedCoach?.id || null,
     }, {
@@ -558,29 +560,52 @@ export default function Booking({ courts = [] }) {
                       {isAr ? "أنت تحجز كزائر. سيتم تسجيل طلبك للمراجعة وسيتصل بك أحد موظفينا لتأكيد الحجز." : "You are booking as a guest. Your request will be recorded and our staff will contact you to confirm."}
                     </p>
                   </div>
-                  <div>
-                    <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isAr ? "font-arabic" : ""}`}>
-                      {isAr ? "الاسم الكامل" : "Full Name"}
-                    </label>
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
-                      className={`w-full border border-gray-300 bg-white rounded-xl px-4 py-3 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm ${isAr ? "font-arabic" : ""}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isAr ? "font-arabic" : ""}`}>
-                      {isAr ? "رقم الهاتف" : "Phone Number"}
-                    </label>
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+963 XXX XXX XXX"
-                      dir="ltr"
-                      className="w-full border border-gray-300 bg-white rounded-xl px-4 py-3 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
-                    />
-                  </div>
+                    <div className="space-y-5">
+
+                      {/* FULL NAME */}
+                      <div>
+                        <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isAr ? "font-arabic" : ""}`}>
+                          {isAr ? "الاسم الكامل" : "Full Name"}
+                        </label>
+
+                        <input
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
+                          className={`w-full border border-gray-300 bg-white rounded-xl px-4 py-3 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm ${isAr ? "font-arabic" : ""}`}
+                        />
+                      </div>
+
+                      {/* EMAIL */}
+                      <div>
+                        <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isAr ? "font-arabic" : ""}`}>
+                          {isAr ? "البريد الإلكتروني" : "Email Address"}
+                        </label>
+
+                        <input
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="example@email.com"
+                          type="email"
+                          className="w-full border border-gray-300 bg-white rounded-xl px-4 py-3 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                        />
+                      </div>
+
+                      {/* PHONE */}
+                      <div>
+                        <label className={`block text-sm font-semibold text-gray-800 mb-2 ${isAr ? "font-arabic" : ""}`}>
+                          {isAr ? "رقم الهاتف" : "Phone Number"}
+                        </label>
+
+                        <input
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+963 XXX XXX XXX"
+                          className="w-full border border-gray-300 bg-white rounded-xl px-4 py-3 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                        />
+                      </div>
+
+                    </div>
                 </>
               )}
             </div>

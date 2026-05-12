@@ -16,7 +16,11 @@ return new class extends Migration
             $table->string('name');
             $table->string('type')->default('indoor');
             $table->boolean('is_active')->default(true);
+             $table->string('image_path')->nullable();
+            $table->integer('price')->default(0);
+            $table->text('description')->nullable();
             $table->timestamps();
+             $table->softDeletes();
         });
     }
 

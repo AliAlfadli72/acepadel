@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use App\Services\ImageUploadService;
 class EventController extends Controller
 {
     /**
@@ -47,12 +47,15 @@ class EventController extends Controller
             'prize_en' => 'nullable|string|max:255',
             'max_participants' => 'required|integer|min:0',
             'color_class' => 'nullable|string|max:50',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:10240',
             'status' => 'required|in:upcoming,ongoing,completed',
         ]);
-
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('events', 'public');
+
+            $validated['image_path'] = ImageUploadService::upload(
+                $request->file('image'),
+                'events'
+            );
         }
 
         \App\Models\Event::create($validated);
@@ -78,26 +81,115 @@ class EventController extends Controller
             'prize_en' => 'nullable|string|max:255',
             'max_participants' => 'required|integer|min:0',
             'color_class' => 'nullable|string|max:50',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:10240',
             'status' => 'required|in:upcoming,ongoing,completed',
         ]);
-
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('events', 'public');
-        }
 
+            $validated['image_path'] = ImageUploadService::upload(
+                $request->file('image'),
+                'events',
+                $event->image_path
+            );
+        }
         $event->update($validated);
 
         return back()->with('success', 'تم تحديث الفعالية بنجاح.');
     }
-
     public function destroy(string $id)
-    {
-        $event = \App\Models\Event::findOrFail($id);
-        $event->delete();
+{
+    try {
 
-        return back()->with('success', 'تم حذف الفعالية بنجاح.');
+        $event = \App\Models\Event::with([
+            'registrations.user.wallet'
+        ])->findOrFail($id);
+
+        \DB::transaction(function () use ($event) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Refund Approved Registrations
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($event->registrations as $registration) {
+
+                // refund only approved players
+                if ($registration->status !== 'approved') {
+                    continue;
+                }
+
+                if (!$registration->user) {
+                    continue;
+                }
+
+                $wallet = $registration->user->wallet;
+
+                if (!$wallet) {
+                    continue;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Refund Wallet
+                |--------------------------------------------------------------------------
+                */
+
+                app(\App\Services\WalletService::class)->deposit(
+                    $wallet,
+                    $event->fee,
+                    "استرجاع رسوم فعالية #{$event->id}",
+                    auth()->id(),
+                    $event
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cancel Registration
+                |--------------------------------------------------------------------------
+                */
+
+                $registration->update([
+                    'status' => 'cancelled'
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete Event Image
+            |--------------------------------------------------------------------------
+            */
+
+            if ($event->image_path) {
+
+                ImageUploadService::delete(
+                    $event->image_path
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete Event
+            |--------------------------------------------------------------------------
+            */
+
+            $event->delete();
+        });
+
+        return back()->with(
+            'success',
+            'تم حذف الفعالية واسترجاع الرسوم بنجاح.'
+        );
+
+    } catch (\Exception $e) {
+
+        return back()->withErrors([
+            'error' => $e->getMessage()
+        ]);
     }
+}
+
+
 
     public function registrations(string $id)
     {
@@ -105,16 +197,84 @@ class EventController extends Controller
         return response()->json($event->registrations);
     }
 
-    public function updateRegistrationStatus(\Illuminate\Http\Request $request, string $eventId, string $registrationId)
+    public function updateRegistrationStatus(
+        \Illuminate\Http\Request $request,
+        string $eventId,
+        string $registrationId
+    )
     {
         $request->validate([
             'status' => 'required|in:approved,rejected',
         ]);
 
-        $registration = \App\Models\EventRegistration::where('event_id', $eventId)->findOrFail($registrationId);
-        $registration->update(['status' => $request->status]);
+        $registration = \App\Models\EventRegistration::with([
+            'user.wallet',
+            'event'
+        ])->where('event_id', $eventId)
+        ->findOrFail($registrationId);
 
-        $message = $request->status === 'approved' ? 'تمت الموافقة على طلب التسجيل.' : 'تم رفض طلب التسجيل.';
+        $event = $registration->event;
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPROVE REGISTRATION
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->status === 'approved') {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Paid Event
+            |--------------------------------------------------------------------------
+            */
+
+            if ($event->fee > 0) {
+
+                $wallet = $registration->user?->wallet;
+
+                if (!$wallet) {
+
+                    return back()->withErrors([
+                        'error' => 'اللاعب لا يملك محفظة.'
+                    ]);
+                }
+
+                try {
+
+                    app(\App\Services\WalletService::class)
+                        ->eventPayment(
+                            $wallet,
+                            $event,
+                            $event->fee,
+                            "رسوم التسجيل في فعالية #{$event->id}",
+                            auth()->id()
+                        );
+
+                } catch (\Exception $e) {
+
+                    return back()->withErrors([
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Registration Status
+        |--------------------------------------------------------------------------
+        */
+
+        $registration->update([
+            'status' => $request->status
+        ]);
+
+        $message =
+            $request->status === 'approved'
+                ? 'تمت الموافقة على طلب التسجيل.'
+                : 'تم رفض طلب التسجيل.';
+
         return back()->with('success', $message);
     }
 

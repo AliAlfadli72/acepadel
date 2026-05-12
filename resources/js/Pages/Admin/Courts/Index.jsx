@@ -3,8 +3,10 @@ import { Head, useForm, router } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import usePermissions from "@/hooks/usePermissions";
 
 export default function CourtsIndex({ courts }) {
+    const { can } = usePermissions();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCourt, setEditingCourt] = useState(null);
     const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
@@ -20,6 +22,9 @@ export default function CourtsIndex({ courts }) {
     });
 
     const openModal = (court = null) => {
+         if (!can('courts.edit') && !can('courts.create')) {
+            return;
+        }
         clearErrors();
         if (court) {
             setEditingCourt(court);
@@ -72,6 +77,9 @@ export default function CourtsIndex({ courts }) {
     };
 
     const deleteCourt = (id) => {
+        if (!can('courts.delete')) {
+            return;
+        }
         Swal.fire({
             title: 'تأكيد الحذف',
             text: 'هل أنت متأكد من رغبتك في حذف هذا الملعب؟',
@@ -83,8 +91,28 @@ export default function CourtsIndex({ courts }) {
             cancelButtonText: 'إلغاء'
         }).then((result) => {
             if (result.isConfirmed) {
-                router.delete(route('admin.courts.destroy', id));
-            }
+                    router.delete(route('admin.courts.destroy', id), {
+                        onError: (errors) => {
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'تعذر حذف الملعب',
+                                text: errors.error || 'حدث خطأ غير متوقع',
+                                confirmButtonText: 'حسناً',
+                                confirmButtonColor: '#d33',
+                            });
+                        },
+
+                        onSuccess: () => {
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'تم الحذف',
+                                text: 'تم حذف الملعب بنجاح.',
+                                confirmButtonColor: '#10b981',
+                            });
+                        }
+                    });            }
         });
     };
 
@@ -95,8 +123,8 @@ export default function CourtsIndex({ courts }) {
     const totalMatches = courts.reduce((sum, c) => sum + (Number(c.total_matches) || 0), 0);
 
     return (
-        <AdminLayout header="إدارة الملاعب">
-            <Head title="إدارة الملاعب" />
+        <AdminLayout header=" الملاعب">
+            <Head title=" الملاعب" />
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl">
@@ -105,8 +133,11 @@ export default function CourtsIndex({ courts }) {
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h3 className="text-xl font-bold text-primary">الملاعب الحالية</h3>
+                          {can('courts.edit') && (
                             <p className="text-gray-500 text-sm">إدارة كافة ملاعب الأكاديمية وإعداداتها</p>
+                            )}
                         </div>
+                        {can('courts.create') && (
                         <button 
                             onClick={() => openModal()}
                             className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors"
@@ -114,6 +145,7 @@ export default function CourtsIndex({ courts }) {
                             <Icon icon="mdi:plus" className="w-5 h-5" />
                             <span>إضافة ملعب جديد</span>
                         </button>
+                        )}
                     </div>
 
                     {/* Stats */}
@@ -121,7 +153,12 @@ export default function CourtsIndex({ courts }) {
                         {[
                             { label:'إجمالي الملاعب', value: totalCourts, icon:'mdi:tennis', color:'text-primary bg-primary/10' },
                             { label:'الملاعب المتاحة', value: activeCourts, icon:'mdi:check-decagram-outline', color:'text-emerald-600 bg-emerald-50' },
-                            { label:'عائدات الشهر (ل.س)', value: new Intl.NumberFormat('en-US').format(currentMonthRevenue), icon:'mdi:cash-multiple', color:'text-purple-600 bg-purple-50' },
+                            ...(can('finance.view') ? [{
+                                label:'عائدات الشهر (ل.س)',
+                                value: new Intl.NumberFormat('en-US').format(currentMonthRevenue),
+                                icon:'mdi:cash-multiple',
+                                color:'text-purple-600 bg-purple-50'
+                            }] : []),
                             { label:'إجمالي الحجوزات', value: new Intl.NumberFormat('en-US').format(totalMatches), icon:'mdi:calendar-check', color:'text-blue-600 bg-blue-50' },
                         ].map(c => (
                             <div key={c.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
@@ -199,24 +236,38 @@ export default function CourtsIndex({ courts }) {
                                                 </span>
                                             </td>
                                             <td className="px-5 py-3.5 text-center">
+
+                                                {(can('courts.edit') || can('courts.delete')) ? (
+
                                                 <div className="flex items-center justify-center gap-1.5">
+                                                    {can('courts.edit') && (
                                                     <button onClick={() => openModal(court)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="تعديل">
                                                         <Icon icon="mdi:pencil" className="w-4 h-4" />
                                                     </button>
+                                                    )}
+                                                    {can('courts.delete') && (
                                                     <button onClick={() => deleteCourt(court.id)} className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" title="حذف">
                                                         <Icon icon="mdi:delete-outline" className="w-4 h-4" />
                                                     </button>
-                                                </div>
-                                            </td>
+                                                    )}
+                                                        </div>
+
+                                                        ) : (
+                                                            <span className="text-gray-300 text-xs">عرض فقط</span>
+                                                        )}                                     
+                                           </td>
                                         </tr>
                                     )) : (
+                                        
                                         <tr>
                                             <td colSpan="6" className="py-16 text-center">
                                                 <Icon icon="mdi:tennis-court" className="w-14 h-14 text-gray-200 mx-auto mb-3" />
                                                 <p className="text-gray-400 font-bold">لا يوجد ملاعب مضافة حالياً</p>
+                                                {can('courts.edit') && (
                                                 <button onClick={() => openModal()} className="mt-2 text-primary text-sm font-bold hover:underline">
                                                     إضافة الملعب الأول
                                                 </button>
+                                                )}
                                             </td>
                                         </tr>
                                     )}
@@ -324,30 +375,65 @@ export default function CourtsIndex({ courts }) {
 
                             {/* الصورة */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700">صورة الملعب</label>
+                                <label className="block text-sm font-bold text-gray-700">
+                                    صورة الملعب
+                                </label>
+
                                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-primary transition-colors">
-                                    <div className="space-y-1 text-center">
-                                        <Icon icon="mdi:cloud-upload-outline" className="mx-auto h-12 w-12 text-gray-400" />
+                                    <div className="space-y-3 text-center w-full">
+
+                                        {/* Preview */}
+                                        {(data.image || editingCourt?.image_path) && (
+                                            <div className="flex justify-center">
+                                                <div className="w-56 h-36 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
+                                                    <img
+                                                        src={
+                                                            data.image
+                                                                ? URL.createObjectURL(data.image)
+                                                                : `/storage/${editingCourt.image_path}`
+                                                        }
+                                                        alt="Court Preview"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <Icon
+                                            icon="mdi:cloud-upload-outline"
+                                            className="mx-auto h-12 w-12 text-gray-400"
+                                        />
+
                                         <div className="flex text-sm text-gray-600 justify-center">
                                             <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-emerald-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
                                                 <span>رفع صورة</span>
-                                                <input 
-                                                    type="file" 
-                                                    className="sr-only" 
+
+                                                <input
+                                                    type="file"
+                                                    className="sr-only"
                                                     accept="image/*"
                                                     onChange={e => setData('image', e.target.files[0])}
                                                 />
                                             </label>
                                         </div>
-                                        <p className="text-xs text-gray-500">PNG, JPG, WEBP حتى 2MB</p>
+
+                                        <p className="text-xs text-gray-500">
+                                            PNG, JPG, WEBP حتى 2MB
+                                        </p>
+
                                         {data.image && (
-                                            <p className="text-sm font-bold text-emerald-600 mt-2">
+                                            <p className="text-sm font-bold text-emerald-600">
                                                 تم اختيار الملف: {data.image.name}
                                             </p>
                                         )}
                                     </div>
                                 </div>
-                                {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
+
+                                {errors.image && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {errors.image}
+                                    </p>
+                                )}
                             </div>
 
                             {/* أزرار الحفظ */}
@@ -406,6 +492,7 @@ export default function CourtsIndex({ courts }) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 {/* Monthly Stats */}
+                                {can('finance.view') && (
                                 <div className="bg-emerald-50/50 rounded-2xl p-6 border border-emerald-100 relative overflow-hidden group hover:border-emerald-200 transition-colors">
                                     <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
                                     <h5 className="text-sm font-bold text-emerald-800 mb-4 flex items-center gap-2">
@@ -428,14 +515,18 @@ export default function CourtsIndex({ courts }) {
                                         </div>
                                     </div>
                                 </div>
+                                )}
+
+
 
                                 {/* All-Time Stats */}
-                                <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 relative overflow-hidden group hover:border-blue-200 transition-colors">
-                                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
-                                    <h5 className="text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
-                                        <Icon icon="mdi:infinity" className="w-5 h-5" />
-                                        الإحصائيات الإجمالية
-                                    </h5>
+                                {can('finance.view') && (
+                                    <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 relative overflow-hidden group hover:border-blue-200 transition-colors">
+                                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
+                                        <h5 className="text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
+                                            <Icon icon="mdi:infinity" className="w-5 h-5" />
+                                            الإحصائيات الإجمالية
+                                        </h5>
                                     
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-end">
@@ -452,6 +543,7 @@ export default function CourtsIndex({ courts }) {
                                         </div>
                                     </div>
                                 </div>
+                                )}
                             </div>
 
                             <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex items-center gap-4">

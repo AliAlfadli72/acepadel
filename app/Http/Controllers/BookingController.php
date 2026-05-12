@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\BookingService;
 use App\Models\Court;
 use App\Models\Booking;
+use App\Models\User;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -36,57 +37,125 @@ class BookingController extends Controller
             'userBookings' => $userBookings,
         ]);
     }
+    public function guestBooking(){
+            $courts = Court::where('is_active', true)->orderBy('id')->get();
+            return Inertia::render('Booking', [
+                'courts' => $courts,
+            ]);
+    }
 
     /**
      * Store a newly created booking in storage.
      */
-    public function store(Request $request)
-    {
-        \Illuminate\Support\Facades\Log::info('Booking Request:', $request->all());
+public function store(Request $request)
+{
+    $rules = [
+        'court_id'   => 'required|exists:courts,id',
+        'start_time' => 'required|date|after:now',
+        'end_time'   => 'required|date|after:start_time',
+        'coach_id'   => 'nullable|exists:coach_profiles,id',
+    ];
 
-        $rules = [
-            'court_id' => 'required|exists:courts,id',
-            'start_time' => 'required|date|after:now',
-            'end_time' => 'required|date|after:start_time',
-            'coach_id' => 'nullable|exists:coach_profiles,id',
-        ];
+    // Guest validation
+    if (!Auth::check()) {
 
-        // If not authenticated, require guest name and phone
-        if (!Auth::check()) {
-            $rules['guest_name'] = 'required|string|max:255';
-            $rules['guest_phone'] = 'required|string|max:20';
-        }
+        $rules['guest_name']  = 'required|string|max:255';
 
-        try {
-            $request->validate($rules);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Illuminate\Support\Facades\Log::error('Booking Validation Errors:', $e->errors());
-            throw $e;
-        }
+        $rules['guest_email'] = 'required|email|max:255';
+
+        $rules['guest_phone'] = 'required|string|max:30';
+    }
+
+    try {
+
+        $request->validate($rules);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+
+        \Illuminate\Support\Facades\Log::error(
+            'Booking Validation Errors:',
+            $e->errors()
+        );
+
+        throw $e;
+    }
+
+    try {
 
         $court = Court::findOrFail($request->court_id);
-        $pricePerHour = $court->price; // Dynamic price from database
 
-        try {
-            $user = Auth::user(); // Will be null for guests
-            $booking = $this->bookingService->createBooking(
-                $user,
-                $court,
-                $request->start_time,
-                $request->end_time,
-                $pricePerHour,
-                $request->guest_name,
-                $request->guest_phone,
-                $request->coach_id
-            );
-            return redirect()->back()->with([
-                'success' => 'تم إرسال طلب الحجز بنجاح. بانتظار موافقة الإدارة.',
-                'booking_id' => $booking->id
-            ]);
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        $pricePerHour = $court->price;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Detect existing player
+        |--------------------------------------------------------------------------
+        */
+
+        $user = Auth::user();
+
+        // Guest trying to book
+        if (!$user) {
+
+            $guestEmail = trim($request->guest_email);
+            $guestPhone = trim($request->guest_phone);
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERY IMPORTANT:
+            | Match BOTH email + phone to SAME player
+            |--------------------------------------------------------------------------
+            */
+
+            $matchedUser = \App\Models\User::where('email', $guestEmail)
+                ->where('phone', $guestPhone)
+                ->first();
+            if ($matchedUser) {
+                $user = $matchedUser;
+            }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create booking
+        |--------------------------------------------------------------------------
+        */
+
+        $booking = $this->bookingService->createBooking(
+            $user,
+            $court,
+            $request->start_time,
+            $request->end_time,
+            $pricePerHour,
+
+            // Keep guest data if not matched
+            $user ? null : $request->guest_name,
+
+            $request->guest_phone,
+
+            $request->coach_id
+        );
+
+        return redirect()->back()->with([
+            'success'    => 'تم إرسال طلب الحجز بنجاح. بانتظار موافقة الإدارة.',
+            'booking_id' => $booking->id
+        ]);
+
+    } catch (\Exception $e) {
+
+        \Illuminate\Support\Facades\Log::error(
+            'Booking Creation Error:',
+            [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString()
+            ]
+        );
+
+        return redirect()->back()->withErrors([
+            'error' => $e->getMessage()
+        ]);
     }
+}
 
     /**
      * Cancel a booking.

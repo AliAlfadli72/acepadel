@@ -41,6 +41,13 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'booking_id' => fn () => $request->session()->get('booking_id'),
             ],
+            'permissions' => fn () => auth()->check()
+                ? auth()->user()->getAllPermissions()->pluck('name')
+                : [],
+
+            'roles' => fn () => auth()->check()
+                    ? auth()->user()->getRoleNames()
+                    : [],
         ];
     }
 }

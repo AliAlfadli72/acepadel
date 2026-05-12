@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
+import usePermissions from "@/hooks/usePermissions";
 import 'dayjs/locale/ar';
 
 dayjs.locale('ar');
@@ -21,6 +22,8 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
+
+    const { can } = usePermissions();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCoach, setEditingCoach] = useState(null);
     const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
@@ -42,7 +45,15 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
     });
 
     const openModal = (coach = null) => {
-        clearErrors();
+
+        if (coach && !can('coaches.edit')) {
+            return;
+        }
+
+        if (!coach && !can('coaches.create')) {
+            return;
+        }   
+         clearErrors();
         if (coach) {
             setEditingCoach(coach);
             setData({
@@ -116,8 +127,12 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
         }
     };
 
-    const deleteCoach = (id) => {
-        Swal.fire({
+        const deleteCoach = (id) => {
+
+            if (!can('coaches.delete')) {
+                return;
+            }
+            Swal.fire({
             title: 'تأكيد الحذف',
             text: 'هل أنت متأكد من رغبتك في حذف هذا المدرب؟ سيتم إزالة حسابه من النظام بشكل نهائي.',
             icon: 'warning',
@@ -128,8 +143,30 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
             cancelButtonText: 'إلغاء'
         }).then((result) => {
             if (result.isConfirmed) {
-                router.delete(route('admin.coaches.destroy', id));
-            }
+                router.delete(route('admin.coaches.destroy', id), {
+
+                    onError: (errors) => {
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'تعذر حذف المدرب',
+                            text: errors.error || 'حدث خطأ غير متوقع',
+                            confirmButtonText: 'حسناً',
+                            confirmButtonColor: '#d33',
+                        });
+                    },
+
+                    onSuccess: () => {
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'تم الحذف',
+                            text: 'تم حذف المدرب بنجاح.',
+                            confirmButtonColor: '#10b981',
+                        });
+                    }
+                });           
+             }
         });
     };
 
@@ -191,8 +228,8 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
 
     return (
         <>
-        <AdminLayout header="إدارة المدربين">
-            <Head title="إدارة المدربين" />
+        <AdminLayout header=" المدربين">
+            <Head title=" المدربين" />
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl">
@@ -203,6 +240,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                             <h3 className="text-xl font-bold text-primary">المدربين المسجلين</h3>
                             <p className="text-gray-500 text-sm">إدارة حسابات المدربين وتحليل أدائهم في الأكاديمية</p>
                         </div>
+                        {can('coaches.create') && (
                         <button 
                             onClick={() => openModal()}
                             className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors"
@@ -210,6 +248,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                             <Icon icon="mdi:account-plus" className="w-5 h-5" />
                             <span>تعيين مدرب جديد</span>
                         </button>
+                        )}
                     </div>
 
                     {/* الإحصائيات العامة */}
@@ -232,8 +271,9 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                 <div className="text-xl font-black text-gray-900">{new Intl.NumberFormat('en-US').format(totalSessions)}</div>
                             </div>
                         </div>
-                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        {can('finance.view') && (
+                            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                                 <Icon icon="mdi:cash-multiple" className="w-6 h-6" />
                             </div>
                             <div>
@@ -241,6 +281,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                 <div className="text-xl font-black text-emerald-600">{new Intl.NumberFormat('en-US').format(currentMonthRevenue)} <span className="text-[10px] text-gray-400">ل.س</span></div>
                             </div>
                         </div>
+                        )}
                     </div>
 
                     {/* قائمة المدربين (جدول) */}
@@ -272,7 +313,11 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-50 shrink-0 relative group/image">
                                                             {coach.image_path ? (
-                                                                <img src={`/storage/${coach.image_path}`} alt={coach.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-110" />
+                                                                <img
+                                                                    src={`/storage/${coach.image_path}`}
+                                                                    alt={coach.name}
+                                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-110"
+                                                                />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                                                                     <Icon icon="mdi:account-tie" className="w-6 h-6" />
@@ -306,9 +351,11 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                                         <span className="text-sm font-black text-gray-800 text-right" dir="ltr">
                                                             {coach.coach_profile?.total_sessions || 0} جلسة
                                                         </span>
+                                                        {can('finance.view') && (
                                                         <span className="text-xs font-bold text-emerald-600 text-right" dir="ltr">
                                                             {new Intl.NumberFormat('en-US').format(coach.coach_profile?.total_revenue || 0)} ل.س
                                                         </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="py-4 px-6">
@@ -320,27 +367,39 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                                 </td>
                                                 <td className="py-4 px-6">
                                                     <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
-                                                            onClick={() => openAnalytics(coach)}
-                                                            className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
-                                                            title="إحصائيات المدرب"
-                                                        >
-                                                            <Icon icon="mdi:chart-box-outline" className="w-4 h-4" />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => openModal(coach)}
-                                                            className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors"
-                                                            title="تعديل"
-                                                        >
-                                                            <Icon icon="mdi:pencil" className="w-4 h-4" />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => deleteCoach(coach.id)}
-                                                            className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"
-                                                            title="حذف"
-                                                        >
-                                                            <Icon icon="mdi:trash-can-outline" className="w-4 h-4" />
-                                                        </button>
+                                                        {can('finance.view') && (
+                                                            <button 
+                                                                onClick={() => openAnalytics(coach)}
+                                                                className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                                                                title="إحصائيات المدرب"
+                                                            >
+                                                                <Icon icon="mdi:chart-box-outline" className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+
+                                                        {can('coaches.edit') && (
+                                                            <button 
+                                                                onClick={() => openModal(coach)}
+                                                                className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors"
+                                                                title="تعديل"
+                                                            >
+                                                                <Icon icon="mdi:pencil" className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+
+                                                        {can('coaches.delete') && (
+                                                            <button 
+                                                                onClick={() => deleteCoach(coach.id)}
+                                                                className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"
+                                                                title="حذف"
+                                                            >
+                                                                <Icon icon="mdi:trash-can-outline" className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+
+                                                        {!can('coaches.edit') && !can('coaches.delete') && !can('finance.view') && (
+                                                            <span className="text-xs text-gray-300">عرض فقط</span>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -352,12 +411,15 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                             <td colSpan="6" className="py-12 text-center border-b border-gray-50 border-dashed">
                                                 <Icon icon="mdi:whistle" className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                                                 <h4 className="text-base font-bold text-gray-500">لا يوجد مدربين مضافين حالياً</h4>
-                                                <button 
-                                                    onClick={() => openModal()}
-                                                    className="mt-2 text-sm text-primary font-bold hover:underline"
-                                                >
-                                                    تعيين أول مدرب
-                                                </button>
+                                                
+                                                {can('coaches.create') && (
+                                                    <button 
+                                                        onClick={() => openModal()}
+                                                        className="mt-2 text-sm text-primary font-bold hover:underline"
+                                                    >
+                                                        تعيين أول مدرب
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     )}

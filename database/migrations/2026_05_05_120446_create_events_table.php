@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('image_path')->nullable();
             $table->enum('status', ['upcoming', 'ongoing', 'completed'])->default('upcoming');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

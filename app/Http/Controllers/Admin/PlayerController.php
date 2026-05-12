@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageUploadService;
 
 class PlayerController extends Controller
 {
@@ -55,10 +56,10 @@ class PlayerController extends Controller
     {
         $request->validate([
             'name'           => 'required|string|max:255',
-            'email'          => 'nullable|required_without:phone|string|email|max:255|unique:users',
-            'phone'          => 'nullable|required_without:email|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'phone' => 'required|string|max:255|unique:users,phone',
             'password'       => ['required', Rules\Password::defaults()],
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
             'rank_level'     => 'required|string',
             'points'         => 'required|integer|min:0',
             'wallet_balance' => 'required|numeric|min:0',
@@ -67,10 +68,10 @@ class PlayerController extends Controller
         ], [
             'name.required'           => 'الاسم الكامل مطلوب.',
             'name.max'                => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
-            'email.required_without'  => 'البريد الإلكتروني مطلوب في حال عدم إدخال رقم الجوال.',
+            'email.required' => 'البريد الإلكتروني مطلوب.',
+            'phone.required' => 'رقم الجوال مطلوب.',
             'email.email'             => 'صيغة البريد الإلكتروني غير صحيحة.',
             'email.unique'            => 'هذا البريد الإلكتروني مستخدم مسبقاً.',
-            'phone.required_without'  => 'رقم الجوال مطلوب في حال عدم إدخال البريد الإلكتروني.',
             'phone.unique'            => 'رقم الجوال مستخدم مسبقاً.',
             'password.required'       => 'كلمة المرور مطلوبة.',
             'rank_level.required'     => 'المستوى مطلوب.',
@@ -90,8 +91,13 @@ class PlayerController extends Controller
         ]);
 
         $imagePath = null;
+
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('profiles', 'public');
+
+            $imagePath = ImageUploadService::upload(
+                $request->file('image'),
+                'profiles'
+            );
         }
 
         $user = User::create([
@@ -132,10 +138,10 @@ class PlayerController extends Controller
 
         $request->validate([
             'name'           => 'required|string|max:255',
-            'email'          => 'nullable|required_without:phone|string|email|max:255|unique:users,email,'.$user->id,
-            'phone'          => 'nullable|required_without:email|string|max:255|unique:users,phone,'.$user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'phone' => 'required|string|max:255|unique:users,phone,'.$user->id,
             'password'       => ['nullable', Rules\Password::defaults()],
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
             'rank_level'     => 'required|string',
             'points'         => 'required|integer|min:0',
             'wallet_balance' => 'required|numeric|min:0',
@@ -144,10 +150,10 @@ class PlayerController extends Controller
         ], [
             'name.required'            => 'الاسم الكامل مطلوب.',
             'name.max'                 => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
-            'email.required_without'   => 'البريد الإلكتروني مطلوب في حال عدم إدخال رقم الجوال.',
+            'email.required' => 'البريد الإلكتروني مطلوب.',
+            'phone.required' => 'رقم الجوال مطلوب.',
             'email.email'              => 'صيغة البريد الإلكتروني غير صحيحة.',
             'email.unique'             => 'هذا البريد الإلكتروني مستخدم مسبقاً.',
-            'phone.required_without'   => 'رقم الجوال مطلوب في حال عدم إدخال البريد الإلكتروني.',
             'phone.unique'             => 'رقم الجوال مستخدم مسبقاً.',
             'rank_level.required'      => 'المستوى مطلوب.',
             'points.required'          => 'حقل النقاط مطلوب.',
@@ -176,13 +182,13 @@ class PlayerController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($user->image_path) {
-                Storage::disk('public')->delete($user->image_path);
-            }
-            $data['image_path'] = $request->file('image')->store('profiles', 'public');
-        }
 
+            $data['image_path'] = ImageUploadService::upload(
+                $request->file('image'),
+                'profiles',
+                $user->image_path
+            );
+        }
         $user->update($data);
 
         // Update or create player profile
