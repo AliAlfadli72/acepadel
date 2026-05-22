@@ -50,38 +50,39 @@ class PushNotificationService
         }
 
         try {
-            $notification = Notification::create($title, $body);
-            
-            $androidConfig = \Kreait\Firebase\Messaging\AndroidConfig::fromArray([
-                'priority' => 'high',
+            $messageArray = [
+                'token' => $user->fcm_token,
                 'notification' => [
-                    'channel_id' => 'ace_padel_channel',
-                    'sound' => 'default',
-                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                    'title' => $title,
+                    'body' => $body,
                 ],
-            ]);
-
-            $apnsConfig = \Kreait\Firebase\Messaging\ApnsConfig::fromArray([
-                'headers' => [
-                    'apns-priority' => '10',
-                ],
-                'payload' => [
-                    'aps' => [
+                'data' => array_map('strval', $data),
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'channel_id' => 'ace_padel_channel',
                         'sound' => 'default',
-                        'badge' => 1,
+                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
                     ],
                 ],
-            ]);
+                'apns' => [
+                    'headers' => [
+                        'apns-priority' => '10',
+                    ],
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                            'badge' => 1,
+                        ],
+                    ],
+                ],
+            ];
 
-            $message = CloudMessage::withTarget('token', $user->fcm_token)
-                ->withNotification($notification)
-                ->withData($data)
-                ->withAndroidConfig($androidConfig)
-                ->withApnsConfig($apnsConfig);
+            $message = CloudMessage::fromArray($messageArray);
 
             $this->messaging->send($message);
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Log the error
             \Log::error('Firebase Push Error: ' . $e->getMessage());
             return false;
