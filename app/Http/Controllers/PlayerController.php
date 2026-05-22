@@ -20,7 +20,7 @@ public function index(Request $request)
 
     $baseQuery = User::query()
         ->whereHas('playerProfile')
-        ->with('playerProfile');
+        ->with(['playerProfile', 'eventRegistrations.event']);
 
     /*
     |--------------------------------------------------------------------------

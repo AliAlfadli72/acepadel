@@ -31,6 +31,8 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'logo_url' => asset('logo.png'),
+            'icon_url' => asset('icon.png'),
             'auth' => [
                 'user' => $request->user() ? array_merge($request->user()->toArray(), [
                     'roles' => $request->user()->getRoleNames()

@@ -3,6 +3,7 @@ import {  useState , useContext } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { Link, usePage } from "@inertiajs/react";
+import { resolveAsset } from '../utils';
 
 export default function Events({ events }) {
   const { lang } = useContext(LangContext);
@@ -126,7 +127,7 @@ export default function Events({ events }) {
             >
               {event.image_path && (
                   <Link href={route('events.show', event.id)} className="h-48 w-full bg-gray-100 overflow-hidden shrink-0 block">
-                      <img src={`/storage/${event.image_path}`} alt={isArabic ? event.title_ar : event.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={resolveAsset(`/storage/${event.image_path}`)} alt={isArabic ? event.title_ar : event.title_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </Link>
               )}
               <div className="p-8 flex flex-col flex-1">
@@ -147,7 +148,7 @@ export default function Events({ events }) {
                          {getLevelName(event.level)}
                       </span>
                       {event.status === 'completed' && (
-                          <span className={`text-[10px] bg-gray-900 text-[#cbfb45] border border-gray-900 px-3 py-1 rounded-full font-bold ${isArabic ? "font-arabic" : ""}`}>
+                          <span className={`text-[10px] bg-gray-900 text-accent border border-gray-900 px-3 py-1 rounded-full font-bold ${isArabic ? "font-arabic" : ""}`}>
                              {isArabic ? 'مكتملة' : 'Completed'}
                           </span>
                       )}

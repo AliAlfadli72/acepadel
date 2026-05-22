@@ -1043,9 +1043,13 @@ const submitExpense = (e) => {
 
                                                 <p
                                                     className="text-sm text-gray-600 max-w-[250px] truncate bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100/50"
-                                                    title={transaction.description}
+                                                    title={(transaction.description || '')
+                                                        .replace('Court booking #', 'حجز ملعب #')
+                                                        .replace('Refund for cancelled booking #', 'إرجاع حجز ملغي #')}
                                                 >
-                                                    {transaction.description || '-'}
+                                                    {(transaction.description || '-')
+                                                        .replace('Court booking #', 'حجز ملعب #')
+                                                        .replace('Refund for cancelled booking #', 'إرجاع حجز ملغي #')}
                                                 </p>
                                             </td>
 
@@ -1123,7 +1127,7 @@ const submitExpense = (e) => {
                                             href={link.url || '#'}
                                             className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-sans transition-all duration-200 ${
                                                 link.active
-                                                    ? 'bg-primary text-gray-900 font-black shadow-lg shadow-[#cbfb45]/30 border border-[#cbfb45]'
+                                                    ? 'bg-primary text-gray-900 font-black shadow-lg shadow-[#d6e02e]/30 border border-[#d6e02e]'
                                                     : link.url
                                                     ? 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 font-bold'
                                                     : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'

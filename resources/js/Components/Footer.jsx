@@ -1,17 +1,18 @@
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 
 export default function Footer({ lang }) {
+  const { logo_url, icon_url } = usePage().props;
   const isArabic = lang === "ar";
 
   const links = [
-    { path: "/",         label: { ar: "الرئيسية",   en: "Home"    } },
-    { path: "/services", label: { ar: "الخدمات",    en: "Services"} },
-    { path: "/book-court",  label: { ar: "حجز الملاعب",en: "Booking" } },
-    { path: "/events",   label: { ar: "الفعاليات",  en: "Events"  } },
-    { path: "/about",    label: { ar: "من نحن",    en: "About Us"  } },
-    { path: "/contact",  label: { ar: "تواصل",     en: "Contact" } },
+    { routeName: "home",        label: { ar: "الرئيسية",   en: "Home"    } },
+    { routeName: "services",    label: { ar: "الخدمات",    en: "Services"} },
+    { routeName: "booking.guest", label: { ar: "حجز الملاعب",en: "Booking" } },
+    { routeName: "events",      label: { ar: "الفعاليات",  en: "Events"  } },
+    { routeName: "about",       label: { ar: "من نحن",    en: "About Us"  } },
+    { routeName: "contact",     label: { ar: "تواصل",     en: "Contact" } },
   ];
 
   return (
@@ -29,7 +30,7 @@ export default function Footer({ lang }) {
             </p>
           </div>
           <Link
-            href="/book-court"
+            href={route('booking.guest')}
             className="shrink-0 bg-primary text-white px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg"
           >
             <Icon icon="mdi:calendar-check" className="w-5 h-5" />
@@ -43,16 +44,12 @@ export default function Footer({ lang }) {
 
         {/* Brand */}
         <div className="space-y-5 lg:col-span-2">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-              <span className="text-primary font-display font-black text-sm">A</span>
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className={`font-display font-black text-2xl tracking-tight text-white ${isArabic ? "font-arabic" : ""}`}>
-                {isArabic ? "آيس بادل أكاديمي" : "ACE PADEL ACADEMY"}
-              </span>
-              <span className="text-[9px] uppercase tracking-[0.25em] text-white/50">By JYM</span>
-            </div>
+          <Link href={route('home')} className="flex items-center gap-3 group">
+            <img
+              src={logo_url || "/logo.png"}
+              alt="Ace Padel"
+              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform brightness-0 invert"
+            />
           </Link>
           <p className={`text-white/60 text-sm leading-relaxed max-w-xs ${isArabic ? "font-arabic" : ""}`}>
             {isArabic
@@ -89,9 +86,9 @@ export default function Footer({ lang }) {
           </h3>
           <ul className="space-y-3">
             {links.map((link) => (
-              <li key={link.path}>
+              <li key={link.routeName}>
                 <Link
-                  href={link.path}
+                  href={route(link.routeName)}
                   className={`text-white/60 text-sm hover:text-accent transition-colors flex items-center gap-2 ${isArabic ? "font-arabic" : ""}`}
                 >
                   <Icon icon="mdi:chevron-right" className="w-3.5 h-3.5 text-accent/50" />

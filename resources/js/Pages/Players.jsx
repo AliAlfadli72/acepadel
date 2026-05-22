@@ -1,8 +1,9 @@
 import AppLayout, { LangContext } from '../Layouts/AppLayout';
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useContext, useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { router } from "@inertiajs/react";
+import { resolveAsset } from '../utils';
 function FadeIn({ children, delay = 0 }) {
 
     const ref = useRef(null);
@@ -44,6 +45,7 @@ export default function Players({
     );
 
     const [searching, setSearching] = useState(false);
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
 
     /*
     |--------------------------------------------------------------------------
@@ -86,16 +88,69 @@ export default function Players({
     };
 
     const rankColor = (rank) => {
-
+        if (!rank) return "bg-gray-50 text-gray-600 border border-gray-200";
+        const r = rank.toString().trim();
         const colors = {
-            Beginner: "bg-gray-100 text-gray-700",
-            D: "bg-blue-100 text-blue-700",
-            C: "bg-green-100 text-green-700",
-            B: "bg-yellow-100 text-yellow-700",
-            A: "bg-red-100 text-red-700",
+            D: "bg-gray-50 text-gray-600 border border-gray-200",
+            C: "bg-blue-50 text-blue-600 border border-blue-100",
+            B: "bg-green-50 text-green-600 border border-green-100",
+            A: "bg-red-50 text-red-600 border border-red-100",
+            S: "bg-amber-50 text-amber-600 border border-amber-200",
+            Beginner: "bg-gray-50 text-gray-600 border border-gray-200",
+            "مبتدئ": "bg-gray-50 text-gray-600 border border-gray-200",
+            Intermediate: "bg-blue-50 text-blue-600 border border-blue-100",
+            "متوسط": "bg-blue-50 text-blue-600 border border-blue-100",
+            Advanced: "bg-green-50 text-green-600 border border-green-100",
+            "متقدم": "bg-green-50 text-green-600 border border-green-100",
+            Professional: "bg-red-50 text-red-600 border border-red-100",
+            "محترف": "bg-red-50 text-red-600 border border-red-100",
+            Elite: "bg-amber-50 text-amber-600 border border-amber-200",
+            "نخبة": "bg-amber-50 text-amber-600 border border-amber-200",
         };
+        return colors[r] || "bg-gray-50 text-gray-600 border border-gray-200";
+    };
 
-        return colors[rank] || "bg-gray-100 text-gray-700";
+    const getRankLabel = (rank) => {
+        if (!rank) return isArabic ? "مبتدئ" : "Beginner";
+        const r = rank.toString().trim();
+        const translations = {
+            ar: {
+                D: "مبتدئ",
+                Beginner: "مبتدئ",
+                "مبتدئ": "مبتدئ",
+                C: "متوسط",
+                Intermediate: "متوسط",
+                "متوسط": "متوسط",
+                B: "متقدم",
+                Advanced: "متقدم",
+                "متقدم": "متقدم",
+                A: "محترف",
+                Professional: "محترف",
+                "محترف": "محترف",
+                S: "نخبة",
+                Elite: "نخبة",
+                "نخبة": "نخبة",
+            },
+            en: {
+                D: "Beginner",
+                Beginner: "Beginner",
+                "مبتدئ": "Beginner",
+                C: "Intermediate",
+                Intermediate: "Intermediate",
+                "متوسط": "Intermediate",
+                B: "Advanced",
+                Advanced: "Advanced",
+                "متقدم": "Advanced",
+                A: "Professional",
+                Professional: "Professional",
+                "محترف": "Professional",
+                S: "Elite",
+                Elite: "Elite",
+                "نخبة": "Elite",
+            }
+        };
+        const langKey = isArabic ? 'ar' : 'en';
+        return translations[langKey][r] || r;
     };
 
     return (
@@ -249,7 +304,8 @@ export default function Players({
                                             y: -8,
                                             scale: 1.02
                                         }}
-                                        className={`bg-white rounded-[28px] border overflow-hidden transition-all duration-300 relative ${
+                                        onClick={() => setSelectedPlayer(player)}
+                                        className={`bg-white rounded-[28px] border overflow-hidden transition-all duration-300 relative cursor-pointer ${
                                             index === 0
                                                 ? "border-yellow-300 shadow-2xl"
                                                 : "border-gray-100 shadow-card hover:shadow-card-hover"
@@ -279,7 +335,7 @@ export default function Players({
                                                 {player.image_path ? (
 
                                                     <img
-                                                        src={`/storage/${player.image_path}`}
+                                                        src={resolveAsset(`/storage/${player.image_path}`)}
                                                         className="w-full h-full object-cover"
                                                         loading="lazy"
                                                     />
@@ -308,7 +364,7 @@ export default function Players({
                                                 rankColor(player.player_profile?.rank_level)
                                             }`}>
 
-                                                {player.player_profile?.rank_level}
+                                                {getRankLabel(player.player_profile?.rank_level)}
                                             </div>
 
                                             <div className="mt-5 flex justify-center gap-6">
@@ -564,7 +620,8 @@ export default function Players({
                                             y: -6,
                                             scale: 1.02
                                         }}
-                                        className="bg-white rounded-[28px] border border-gray-100 overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300"
+                                        onClick={() => setSelectedPlayer(player)}
+                                        className="bg-white rounded-[28px] border border-gray-100 overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer"
                                     >
 
                                         <div className="p-7">
@@ -576,7 +633,7 @@ export default function Players({
                                                     {player.image_path ? (
 
                                                         <img
-                                                            src={`/storage/${player.image_path}`}
+                                                            src={resolveAsset(`/storage/${player.image_path}`)}
                                                             className="w-full h-full object-cover"
                                                             loading="lazy"
                                                         />
@@ -609,7 +666,7 @@ export default function Players({
                                                 rankColor(player.player_profile?.rank_level)
                                             }`}>
 
-                                                {player.player_profile?.rank_level}
+                                                {getRankLabel(player.player_profile?.rank_level)}
                                             </div>
 
                                             <div className="grid grid-cols-3 gap-4 text-center">
@@ -656,6 +713,225 @@ export default function Players({
                     )}
                 </div>
             </section>
+
+            {/* PLAYER DETAIL MODAL */}
+            <AnimatePresence>
+                {selectedPlayer && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedPlayer(null)}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 20, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.95, y: 20, opacity: 0 }}
+                            transition={{ type: "spring", duration: 0.5 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col max-h-[85vh]"
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setSelectedPlayer(null)}
+                                className={`absolute top-6 ${isArabic ? "left-6" : "right-6"} text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full p-2 transition-all z-10`}
+                            >
+                                <Icon icon="mdi:close" className="w-6 h-6" />
+                            </button>
+
+                            {/* Modal Content Container (Scrollable) */}
+                            <div className="overflow-y-auto p-8 md:p-10 custom-scrollbar">
+                                {/* Profile Header */}
+                                <div className="text-center pb-8 border-b border-gray-100">
+                                    <div className="relative inline-block">
+                                        <div className="w-28 h-28 rounded-full overflow-hidden mx-auto bg-gray-50 border-4 border-primary/10">
+                                            {selectedPlayer.image_path ? (
+                                                <img
+                                                    src={resolveAsset(`/storage/${selectedPlayer.image_path}`)}
+                                                    className="w-full h-full object-cover"
+                                                    alt={selectedPlayer.name}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                                    <Icon
+                                                        icon="mdi:account"
+                                                        className="w-14 h-14 text-gray-400"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <h3 className={`font-black text-primary text-2xl mt-4 ${isArabic ? "font-arabic" : ""}`}>
+                                        {selectedPlayer.name}
+                                    </h3>
+                                    
+                                    {selectedPlayer.phone && (
+                                        <p className="text-sm text-gray-400 mt-1">{selectedPlayer.phone}</p>
+                                    )}
+
+                                    <div className="mt-4">
+                                        <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-bold ${rankColor(selectedPlayer.player_profile?.rank_level)} ${isArabic ? "font-arabic" : ""}`}>
+                                            {isArabic ? "المستوى" : "Level"}: {getRankLabel(selectedPlayer.player_profile?.rank_level)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Stats Section */}
+                                <div className="py-8">
+                                    <h4 className={`text-gray-900 font-bold text-lg mb-6 ${isArabic ? "font-arabic text-right" : "text-left"}`}>
+                                        {isArabic ? "الإحصائيات الشخصية" : "Personal Statistics"}
+                                    </h4>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {/* Points */}
+                                        <div className="bg-[#F8FAF8] rounded-2xl p-5 border border-primary/5 text-center flex flex-col items-center justify-center">
+                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                                                <Icon icon="mdi:stars" className="w-5 h-5 text-primary" />
+                                            </div>
+                                            <div className="font-black text-2xl text-primary leading-none">
+                                                {selectedPlayer.player_profile?.points || 0}
+                                            </div>
+                                            <div className={`text-xs text-gray-400 mt-2 font-medium ${isArabic ? "font-arabic" : ""}`}>
+                                                {isArabic ? "النقاط" : "Points"}
+                                            </div>
+                                        </div>
+
+                                        {/* Matches */}
+                                        <div className="bg-[#F8FAF8] rounded-2xl p-5 border border-primary/5 text-center flex flex-col items-center justify-center">
+                                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+                                                <Icon icon="mdi:sports-tennis" className="w-5 h-5 text-blue-500" />
+                                            </div>
+                                            <div className="font-black text-2xl text-gray-800 leading-none">
+                                                {selectedPlayer.player_profile?.matches_played || 0}
+                                            </div>
+                                            <div className={`text-xs text-gray-400 mt-2 font-medium ${isArabic ? "font-arabic" : ""}`}>
+                                                {isArabic ? "المباريات" : "Matches"}
+                                            </div>
+                                        </div>
+
+                                        {/* Wins */}
+                                        <div className="bg-[#F8FAF8] rounded-2xl p-5 border border-primary/5 text-center flex flex-col items-center justify-center">
+                                            <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center mb-3">
+                                                <Icon icon="mdi:trophy" className="w-5 h-5 text-green-500" />
+                                            </div>
+                                            <div className="font-black text-2xl text-gray-800 leading-none">
+                                                {selectedPlayer.player_profile?.matches_won || 0}
+                                            </div>
+                                            <div className={`text-xs text-gray-400 mt-2 font-medium ${isArabic ? "font-arabic" : ""}`}>
+                                                {isArabic ? "الفوز" : "Wins"}
+                                            </div>
+                                        </div>
+
+                                        {/* Win Rate */}
+                                        <div className="bg-[#F8FAF8] rounded-2xl p-5 border border-primary/5 text-center flex flex-col items-center justify-center">
+                                            <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-3">
+                                                <Icon icon="mdi:percent" className="w-5 h-5 text-orange-500" />
+                                            </div>
+                                            <div className="font-black text-2xl text-gray-800 leading-none">
+                                                {selectedPlayer.player_profile?.matches_played > 0
+                                                    ? ((selectedPlayer.player_profile.matches_won / selectedPlayer.player_profile.matches_played) * 100).toFixed(0)
+                                                    : 0}%
+                                            </div>
+                                            <div className={`text-xs text-gray-400 mt-2 font-medium ${isArabic ? "font-arabic" : ""}`}>
+                                                {isArabic ? "نسبة الفوز" : "Win Rate"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Event Registrations Section */}
+                                <div className="pt-4">
+                                    <h4 className={`text-gray-900 font-bold text-lg mb-6 ${isArabic ? "font-arabic text-right" : "text-left"}`}>
+                                        {isArabic ? "البطولات والفعاليات" : "Tournaments & Events"}
+                                    </h4>
+
+                                    {selectedPlayer.event_registrations && selectedPlayer.event_registrations.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {selectedPlayer.event_registrations.map((reg) => {
+                                                if (!reg.event) return null;
+                                                const eventTitle = isArabic ? reg.event.title_ar : reg.event.title_en;
+                                                const eventDate = reg.event.date ? new Date(reg.event.date).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : (isArabic ? 'غير محدد' : 'Not set');
+                                                
+                                                // Localization for status
+                                                const getStatusText = (status) => {
+                                                    const map = {
+                                                        pending: { ar: 'قيد الانتظار', en: 'Pending' },
+                                                        approved: { ar: 'مقبول', en: 'Approved' },
+                                                        rejected: { ar: 'مرفوض', en: 'Rejected' },
+                                                    };
+                                                    const s = map[status?.toLowerCase()];
+                                                    return s ? (isArabic ? s.ar : s.en) : status;
+                                                };
+
+                                                const getStatusColor = (status) => {
+                                                    const map = {
+                                                        pending: 'bg-yellow-50 text-yellow-600 border border-yellow-100',
+                                                        approved: 'bg-green-50 text-green-600 border border-green-100',
+                                                        rejected: 'bg-red-50 text-red-600 border border-red-100',
+                                                    };
+                                                    return map[status?.toLowerCase()] || 'bg-gray-50 text-gray-500';
+                                                };
+
+                                                const getPlacementLabel = (placement) => {
+                                                    if (!placement) return null;
+                                                    const p = parseInt(placement, 10);
+                                                    if (p === 1) return isArabic ? 'المركز الأول 🥇' : '1st Place 🥇';
+                                                    if (p === 2) return isArabic ? 'المركز الثاني 🥈' : '2nd Place 🥈';
+                                                    if (p === 3) return isArabic ? 'المركز الثالث 🥉' : '3rd Place 🥉';
+                                                    return isArabic ? `المركز ${p}` : `Rank ${p}`;
+                                                };
+
+                                                return (
+                                                    <div
+                                                        key={reg.id}
+                                                        className="bg-white border border-gray-100 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
+                                                                <Icon icon="mdi:trophy-outline" className="w-6 h-6 text-primary" />
+                                                            </div>
+                                                            <div>
+                                                                <h5 className={`font-bold text-gray-900 ${isArabic ? "font-arabic" : ""}`}>
+                                                                    {eventTitle}
+                                                                </h5>
+                                                                <p className={`text-xs text-gray-400 mt-1 flex items-center gap-1.5 ${isArabic ? "font-arabic" : ""}`}>
+                                                                    <Icon icon="mdi:calendar-range" className="w-3.5 h-3.5 text-gray-400" />
+                                                                    {eventDate}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col items-end gap-2 shrink-0">
+                                                            <span className={`px-3 py-1 rounded-full text-[11px] font-bold ${getStatusColor(reg.status)} ${isArabic ? "font-arabic" : ""}`}>
+                                                                {getStatusText(reg.status)}
+                                                            </span>
+                                                            {reg.placement && (
+                                                                <span className={`inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-100 ${isArabic ? "font-arabic" : ""}`}>
+                                                                    <Icon icon="mdi:medal" className="w-4 h-4 text-orange-400" />
+                                                                    {getPlacementLabel(reg.placement)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-10 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                                            <Icon icon="mdi:trophy-off-outline" className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                            <p className={`text-sm text-gray-400 ${isArabic ? "font-arabic" : ""}`}>
+                                                {isArabic ? "لم يشارك هذا اللاعب في أي بطولات بعد." : "This player hasn't participated in any tournaments yet."}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

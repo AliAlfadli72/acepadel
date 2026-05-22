@@ -9,6 +9,8 @@ use App\Models\Expense;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Models\Booking;
+use App\Models\Event;
 
 
 class AdminFinanceController extends Controller
@@ -100,10 +102,8 @@ class AdminFinanceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    $totalDeposits = Transaction::whereIn('type', [
-            'deposit',
-            'bonus',
-        ])
+    $totalDeposits = Transaction::where('type', 'credit')
+        ->where(fn($q) => $q->whereNull('reference_type')->orWhere('reference_type', '!=', Booking::class))
         ->whereBetween('created_at', [
             $startDate,
             $endDate,
@@ -116,9 +116,10 @@ class AdminFinanceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    $totalBookingsRevenue = Transaction::whereIn('type', [
-            'booking_payment',
-            'event_payment',
+    $totalBookingsRevenue = Transaction::where('type', 'debit')
+        ->whereIn('reference_type', [
+            Booking::class,
+            Event::class,
         ])
         ->whereBetween('created_at', [
             $startDate,
@@ -132,10 +133,8 @@ class AdminFinanceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    $totalRefunds = Transaction::where(
-            'type',
-            'refund'
-        )
+    $totalRefunds = Transaction::where('type', 'credit')
+        ->where('reference_type', Booking::class)
         ->whereBetween('created_at', [
             $startDate,
             $endDate,
@@ -148,10 +147,11 @@ class AdminFinanceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    $totalManualAdjustments = Transaction::where(
-            'type',
-            'manual_adjustment'
-        )
+    $totalManualAdjustments = Transaction::where('type', 'debit')
+        ->where(fn($q) => $q->whereNull('reference_type')->orWhereNotIn('reference_type', [
+            Booking::class,
+            Event::class,
+        ]))
         ->whereBetween('created_at', [
             $startDate,
             $endDate,
@@ -164,10 +164,7 @@ class AdminFinanceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    $totalWalletDeductions = Transaction::whereIn('type', [
-            'debit',
-            'deduction',
-        ])
+    $totalWalletDeductions = Transaction::where('type', 'debit')
         ->whereBetween('created_at', [
             $startDate,
             $endDate,
@@ -292,9 +289,10 @@ class AdminFinanceController extends Controller
                 ->copy()
                 ->endOfMonth();
 
-            $monthlyRevenue = Transaction::whereIn('type', [
-                    'booking_payment',
-                    'event_payment',
+            $monthlyRevenue = Transaction::where('type', 'debit')
+                ->whereIn('reference_type', [
+                    Booking::class,
+                    Event::class,
                 ])
                 ->whereBetween('created_at', [
                     $monthStart,
@@ -302,20 +300,16 @@ class AdminFinanceController extends Controller
                 ])
                 ->sum('amount');
 
-            $monthlyDeposits = Transaction::whereIn('type', [
-                    'deposit',
-                    'bonus',
-                ])
+            $monthlyDeposits = Transaction::where('type', 'credit')
+                ->where(fn($q) => $q->whereNull('reference_type')->orWhere('reference_type', '!=', Booking::class))
                 ->whereBetween('created_at', [
                     $monthStart,
                     $monthEnd,
                 ])
                 ->sum('amount');
 
-            $monthlyRefunds = Transaction::where(
-                    'type',
-                    'refund'
-                )
+            $monthlyRefunds = Transaction::where('type', 'credit')
+                ->where('reference_type', Booking::class)
                 ->whereBetween('created_at', [
                     $monthStart,
                     $monthEnd,
@@ -421,24 +415,21 @@ class AdminFinanceController extends Controller
 
         foreach ($days as $date) {
 
-            $dailyRevenue = Transaction::whereIn('type', [
-                    'booking_payment',
-                    'event_payment',
+            $dailyRevenue = Transaction::where('type', 'debit')
+                ->whereIn('reference_type', [
+                    Booking::class,
+                    Event::class,
                 ])
                 ->whereDate('created_at', $date)
                 ->sum('amount');
 
-            $dailyDeposits = Transaction::whereIn('type', [
-                    'deposit',
-                    'bonus',
-                ])
+            $dailyDeposits = Transaction::where('type', 'credit')
+                ->where(fn($q) => $q->whereNull('reference_type')->orWhere('reference_type', '!=', Booking::class))
                 ->whereDate('created_at', $date)
                 ->sum('amount');
 
-            $dailyRefunds = Transaction::where(
-                    'type',
-                    'refund'
-                )
+            $dailyRefunds = Transaction::where('type', 'credit')
+                ->where('reference_type', Booking::class)
                 ->whereDate('created_at', $date)
                 ->sum('amount');
 
@@ -532,11 +523,25 @@ class AdminFinanceController extends Controller
         $request->filled('type')
         && $request->type !== 'all'
     ) {
-
-        $query->where(
-            'type',
-            $request->type
-        );
+        if ($request->type === 'deposit') {
+            $query->where('type', 'credit')
+                  ->where(fn($q) => $q->whereNull('reference_type')->orWhere('reference_type', '!=', Booking::class));
+        } elseif ($request->type === 'booking_payment') {
+            $query->where('type', 'debit')
+                  ->where('reference_type', Booking::class);
+        } elseif ($request->type === 'event_payment') {
+            $query->where('type', 'debit')
+                  ->where('reference_type', Event::class);
+        } elseif ($request->type === 'refund') {
+            $query->where('type', 'credit')
+                  ->where('reference_type', Booking::class);
+        } elseif ($request->type === 'manual_adjustment') {
+            $query->where('type', 'debit')
+                  ->where(fn($q) => $q->whereNull('reference_type')->orWhereNotIn('reference_type', [
+                      Booking::class,
+                      Event::class,
+                  ]));
+        }
     }
 
     /*
@@ -584,7 +589,27 @@ class AdminFinanceController extends Controller
 
     $transactions = $query
         ->paginate(15)
-        ->withQueryString();
+        ->withQueryString()
+        ->through(function ($transaction) {
+            $logicalType = 'deposit';
+            if ($transaction->type === 'credit') {
+                if ($transaction->reference_type === Booking::class) {
+                    $logicalType = 'refund';
+                } else {
+                    $logicalType = 'deposit';
+                }
+            } else { // debit
+                if ($transaction->reference_type === Booking::class) {
+                    $logicalType = 'booking_payment';
+                } elseif ($transaction->reference_type === Event::class) {
+                    $logicalType = 'event_payment';
+                } else {
+                    $logicalType = 'manual_adjustment';
+                }
+            }
+            $transaction->type = $logicalType;
+            return $transaction;
+        });
 
     /*
     |--------------------------------------------------------------------------

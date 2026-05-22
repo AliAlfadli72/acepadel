@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react";
 import { router, usePage } from "@inertiajs/react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { resolveAsset } from '../utils';
 
 // Generate next 7 days dynamically
 const generateDays = (lang) => {
@@ -76,9 +77,8 @@ export default function Booking({ courts = [] }) {
   // Fetch availability when court or day changes
   useEffect(() => {
     if (selectedCourt && selectedDay) {
-      fetch(`/api/courts/${selectedCourt}/availability?date=${selectedDay}`)
-        .then(res => res.json())
-        .then(data => setBookedSlots(data.booked_slots || []))
+      axios.get(route('api.courts.availability', selectedCourt), { params: { date: selectedDay } })
+        .then(res => setBookedSlots(res.data.booked_slots || []))
         .catch(err => console.error("Failed to fetch availability", err));
     } else {
       setBookedSlots([]);
@@ -93,7 +93,7 @@ export default function Booking({ courts = [] }) {
       return;
     }
     setIsFetchingCoaches(true);
-    axios.get(`/api/courts/${selectedCourt}/available-coaches`, {
+    axios.get(route('api.courts.coaches', selectedCourt), {
       params: { date: selectedDay, time: selectedSlot }
     }).then(res => {
       const coaches = res.data.coaches || [];
@@ -169,7 +169,7 @@ export default function Booking({ courts = [] }) {
     const { start_time, end_time } = buildDatetimes();
     setSubmitting(true);
 
-    router.post('/book-court', {
+    router.post(route('booking.guest.store'), {
       court_id:    selectedCourt,
       start_time,
       end_time,
@@ -202,7 +202,7 @@ export default function Booking({ courts = [] }) {
           icon: 'error',
           title: isAr ? 'حدث خطأ أثناء الحجز' : 'Booking failed',
           text: errorMessages,
-          confirmButtonColor: '#2C5234',
+           confirmButtonColor: '#222831',
           confirmButtonText: isAr ? 'حسناً' : 'OK'
         });
       },
@@ -283,19 +283,19 @@ export default function Booking({ courts = [] }) {
                         key={c.id}
                         onClick={() => setSelectedCourt(c.id)}
                         className={`rounded-2xl border-2 text-right overflow-hidden transition-all duration-200 ${
-                          isSelected
-                            ? "border-primary shadow-[0_0_0_3px_rgba(44,82,52,0.15)]"
-                            : "border-gray-200 hover:border-primary/50"
+                           isSelected
+                             ? "border-primary shadow-[0_0_0_3px_rgba(34,40,49,0.15)]"
+                             : "border-gray-200 hover:border-primary/50"
                         } bg-white`}
                       >
                         {/* Court Image */}
                         <div className="relative h-36 bg-gray-100">
                           {c.image_path ? (
-                            <img src={`/storage/${c.image_path}`} alt={c.name} className="w-full h-full object-cover" />
+                            <img src={resolveAsset(`/storage/${c.image_path}`)} alt={c.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-[#EEF4EE]">
-                              <Icon icon="mdi:image-outline" className="w-10 h-10 text-[#A7C4A7]" />
-                              <span className={`text-xs text-[#A7C4A7] ${isAr ? "font-arabic" : ""}`}>
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-surface-2">
+                               <Icon icon="mdi:image-outline" className="w-10 h-10 text-gray-400" />
+                               <span className={`text-xs text-gray-400 ${isAr ? "font-arabic" : ""}`}>
                                 {isAr ? "لا توجد صورة" : "No image"}
                               </span>
                             </div>
@@ -359,7 +359,7 @@ export default function Booking({ courts = [] }) {
                   ))}
                 </div>
                 {chosenCourt && (
-                  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ backgroundColor: "#EEF4EE" }}>
+                  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-2">
                     <Icon icon="mdi:cash" className="w-4 h-4 text-primary" />
                     <span className={`text-sm font-black text-primary ${isAr ? "font-arabic" : ""}`}>
                       {isAr ? `التكلفة المتوقعة: ${estimatedPrice.toLocaleString("en-US")} ل.س` : `Estimated: ${estimatedPrice.toLocaleString("en-US")} SYP`}
@@ -498,7 +498,7 @@ export default function Booking({ courts = [] }) {
                 )}
 
                 {selectedCoach && (
-                  <div className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ backgroundColor: "#EEF4EE" }}>
+                  <div className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-2">
                     <Icon icon="mdi:check-circle" className="w-4 h-4 text-primary" />
                     <span className={`text-sm font-black text-primary ${isAr ? "font-arabic" : ""}`}>
                       {isAr
@@ -642,12 +642,12 @@ export default function Booking({ courts = [] }) {
               <Icon icon="mdi:check-decagram" className="w-12 h-12 text-primary" />
             </div>
             <h2 className={`font-display font-black text-primary text-4xl mb-4 ${isAr ? "font-arabic" : ""}`}>
-              {isAr ? "تم الحجز بنجاح!" : "Booking Confirmed!"}
+              {isAr ? "تم إرسال الطلب بنجاح!" : "Request Sent Successfully!"}
             </h2>
             <p className={`text-gray-600 mb-8 max-w-md mx-auto ${isAr ? "font-arabic" : ""}`}>
               {isAr
-                ? `مرحباً ${name}! حجزك لـ${chosenCourt?.name} في ${selectedSlot} تم تأكيده. سنتصل بك على ${phone}.`
-                : `Hello ${name}! Your booking for ${chosenCourt?.name} at ${selectedSlot} is confirmed. We'll contact you at ${phone}.`}
+                ? `مرحباً ${name}! تم إرسال طلب حجزك لـ ${chosenCourt?.name} في تمام الساعة ${selectedSlot} بنجاح. سنقوم بمراجعة طلبك وإرسال إشعار وتأكيد لك فور اعتماده من قبل الإدارة.`
+                : `Hello ${name}! Your booking request for ${chosenCourt?.name} at ${selectedSlot} has been sent successfully. We will review your request and send you a notification once it is approved by the administration.`}
             </p>
             <div className="rounded-3xl border border-gray-200 p-8 inline-block mb-8 text-left" style={{ backgroundColor: "#F8FAF8" }}>
               <p className={`text-xs uppercase tracking-widest text-gray-500 mb-3 ${isAr ? "font-arabic tracking-normal" : ""}`}>

@@ -30,8 +30,6 @@ Route::get('/about', function () {
 Route::get('/book-court', [BookingController::class, 'guestBooking'])->name('booking.guest');
 
 Route::post('/book-court', [BookingController::class, 'store'])->name('booking.guest.store');
-Route::get('/api/courts/{court}/availability', [BookingController::class, 'getAvailability'])->name('api.courts.availability');
-Route::get('/api/courts/{court}/available-coaches', [BookingController::class, 'getAvailableCoaches'])->name('api.courts.coaches');
 
 Route::get('/players', [PlayerController::class, 'index'])
     ->name('players.index');

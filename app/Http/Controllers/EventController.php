@@ -42,16 +42,17 @@ class EventController extends Controller
                   ->orderBy('placement', 'asc');
         }]);
 
-        $is_registered = false;
+        $user_registration = null;
         if (auth()->check()) {
-            $is_registered = \App\Models\EventRegistration::where('event_id', $event->id)
+            $user_registration = \App\Models\EventRegistration::where('event_id', $event->id)
                 ->where('user_id', auth()->id())
-                ->exists();
+                ->first();
         }
 
         return inertia('EventDetails', [
             'event' => $event,
-            'is_registered' => $is_registered
+            'is_registered' => !is_null($user_registration),
+            'user_registration' => $user_registration
         ]);
     }
     public function register(Request $request, Event $event)

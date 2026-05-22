@@ -4,12 +4,15 @@ import { useState } from 'react';
 import usePermissions from "@/hooks/usePermissions";
 
 export default function AdminLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const { auth, logo_url } = usePage().props;
+    const user = auth.user;
     const { can } = usePermissions();
     console.log('User Permissions:', usePage().props.permissions);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-const menuItems = [
+    const roles = usePage().props.roles || [];
+
+    const menuItems = [
 
     {
         name: 'الرئيسية',
@@ -18,7 +21,7 @@ const menuItems = [
     },
 
     can('bookings.view') && {
-        name: 'الحجوزات',
+        name: roles.includes('Coach') && !roles.includes('Admin') ? 'حجوزاتي كمدرب' : 'الحجوزات',
         icon: 'mdi:calendar-check-outline',
         routeName: 'admin.bookings',
     },
@@ -75,11 +78,8 @@ const menuItems = [
                 <div className="h-full flex flex-col">
                     {/* الشعار */}
                     <div className="h-20 flex items-center px-6 border-b border-gray-100">
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-                                <span className="text-accent font-black text-lg">A</span>
-                            </div>
-                            <span className="font-bold text-lg text-primary">آيس بادل</span>
+                        <Link href={route('home')} className="flex items-center group">
+                            <img src={logo_url || "/logo.png"} alt="Ace Padel Logo" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
                         </Link>
                     </div>
 
@@ -95,7 +95,7 @@ const menuItems = [
                                     href={route(item.routeName)}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                                         isActive 
-                                        ? 'bg-[#cbfb45]/10 text-primary font-bold border border-[#cbfb45]/50' 
+                                        ? 'bg-accent/10 text-primary font-bold border border-accent/50' 
                                         : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
                                     }`}
                                 >

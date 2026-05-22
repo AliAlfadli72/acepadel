@@ -25,9 +25,20 @@ class NewEventNotification extends Notification
 
     public function toDatabase($notifiable)
     {
+        $titleAr = 'فعالية جديدة متاحة 🌟';
+        $msgAr = 'تم إضافة فعالية جديدة: ' . $this->event->title_ar . '. سجل الآن قبل اكتمال العدد!';
+
+        $titleEn = 'New Event Available 🌟';
+        $msgEn = 'A new event has been added: ' . $this->event->title_en . '. Register now before slots run out!';
+
         return [
-            'title' => 'فعالية جديدة متاحة 🌟',
-            'message' => 'تم إضافة فعالية جديدة: ' . $this->event->title_ar . '. سجل الآن قبل اكتمال العدد!',
+            'title_ar' => $titleAr,
+            'message_ar' => $msgAr,
+            'title_en' => $titleEn,
+            'message_en' => $msgEn,
+            // Fallback default
+            'title' => $titleAr,
+            'message' => $msgAr,
             'type' => 'new_event',
             'event_id' => $this->event->id,
         ];
@@ -35,9 +46,16 @@ class NewEventNotification extends Notification
 
     public function toFcm($notifiable)
     {
+        $locale = $notifiable->locale ?? 'ar';
+
+        $title = $locale === 'en' ? 'New Event Available 🌟' : 'فعالية جديدة متاحة 🌟';
+        $body = $locale === 'en'
+            ? 'A new event has been added: ' . $this->event->title_en . '. Register now before slots run out!'
+            : 'تم إضافة فعالية جديدة: ' . $this->event->title_ar . '. سجل الآن قبل اكتمال العدد!';
+
         return [
-            'title' => 'فعالية جديدة متاحة 🌟',
-            'body' => 'تم إضافة فعالية جديدة: ' . $this->event->title_ar . '. سجل الآن قبل اكتمال العدد!',
+            'title' => $title,
+            'body' => $body,
             'data' => [
                 'type' => 'new_event',
                 'event_id' => (string) $this->event->id,

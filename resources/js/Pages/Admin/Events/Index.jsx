@@ -4,6 +4,7 @@ import { Head, useForm, Link, router, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import Swal from 'sweetalert2';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../../../utils';
 
 export default function Index({ events }) {
     const { can } = usePermissions();
@@ -188,7 +189,7 @@ export default function Index({ events }) {
                         <div key={event.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
                             <div className={`h-2 ${event.color_class.split(' ')[0]}`}></div>
                             {event.image_path && (
-                                <img src={`/storage/${event.image_path}`} alt={event.title_ar} className="h-40 w-full object-cover" />
+                                <img src={resolveAsset(`/storage/${event.image_path}`)} alt={event.title_ar} className="h-40 w-full object-cover" />
                             )}
                             <div className="p-5 flex-1 flex flex-col">
                                 <div className="flex justify-between items-start mb-4">
@@ -601,7 +602,7 @@ export default function Index({ events }) {
                                                         src={
                                                             data.image
                                                                 ? URL.createObjectURL(data.image)
-                                                                : `/storage/${events.find(e => e.id === data.id)?.image_path}`
+                                                                : resolveAsset(`/storage/${events.find(e => e.id === data.id)?.image_path}`)
                                                         }
                                                         alt="Event Preview"
                                                         className="w-full h-full object-cover"

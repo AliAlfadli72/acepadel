@@ -7,6 +7,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../../../utils';
 import 'dayjs/locale/ar';
 
 dayjs.locale('ar');
@@ -116,7 +117,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                         title: 'يوجد خطأ في المدخلات',
                         text: Object.values(errs).join('\n'),
                         confirmButtonText: 'حسناً',
-                        confirmButtonColor: '#2C5234'
+                        confirmButtonColor: '#222831'
                     });
                 },
             });
@@ -243,7 +244,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                         {can('coaches.create') && (
                         <button 
                             onClick={() => openModal()}
-                            className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors"
+                            className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors"
                         >
                             <Icon icon="mdi:account-plus" className="w-5 h-5" />
                             <span>تعيين مدرب جديد</span>
@@ -314,7 +315,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                                         <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-50 shrink-0 relative group/image">
                                                             {coach.image_path ? (
                                                                 <img
-                                                                    src={`/storage/${coach.image_path}`}
+                                                                    src={resolveAsset(`/storage/${coach.image_path}`)}
                                                                     alt={coach.name}
                                                                     className="w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-110"
                                                                 />
@@ -483,7 +484,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                             {data.image ? (
                                                 <img src={URL.createObjectURL(data.image)} className="w-full h-full object-cover" />
                                             ) : (editingCoach && editingCoach.image_path) ? (
-                                                <img src={`/storage/${editingCoach.image_path}`} className="w-full h-full object-cover" />
+                                                <img src={resolveAsset(`/storage/${editingCoach.image_path}`)} className="w-full h-full object-cover" />
                                             ) : (
                                                 <Icon icon="mdi:camera-plus" className="w-8 h-8 text-gray-400 group-hover:text-primary transition-colors" />
                                             )}
@@ -781,7 +782,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                             
                             <div className="w-16 h-16 rounded-full border-2 border-white/20 bg-white overflow-hidden shadow-lg shrink-0">
                                 {analyticsCoach.image_path ? (
-                                    <img src={`/storage/${analyticsCoach.image_path}`} alt={analyticsCoach.name} className="w-full h-full object-cover" />
+                                    <img src={resolveAsset(`/storage/${analyticsCoach.image_path}`)} alt={analyticsCoach.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
                                         <Icon icon="mdi:account-tie" className="w-8 h-8 text-gray-400" />
@@ -791,7 +792,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                             <div className="text-white flex-1">
                                 <h3 className="text-2xl font-black">{analyticsCoach.name}</h3>
                                 <p className="text-white/80 text-sm flex items-center gap-1 mt-1 font-medium">
-                                    <Icon icon="mdi:star-circle" className="w-4 h-4 text-[#cbfb45]" />
+                                    <Icon icon="mdi:star-circle" className="w-4 h-4 text-[#d6e02e]" />
                                     {analyticsCoach.coach_profile?.specialty || 'مدرب'}
                                 </p>
                             </div>
@@ -832,8 +833,8 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                                 <defs>
                                                     <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#cbfb45" stopOpacity={0.4}/>
-                                                        <stop offset="95%" stopColor="#cbfb45" stopOpacity={0}/>
+                                                        <stop offset="5%" stopColor="#d6e02e" stopOpacity={0.4}/>
+                                                        <stop offset="95%" stopColor="#d6e02e" stopOpacity={0}/>
                                                     </linearGradient>
                                                 </defs>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
@@ -851,7 +852,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                                     strokeWidth={3}
                                                     fillOpacity={1} 
                                                     fill="url(#colorSessions)" 
-                                                    activeDot={{ r: 6, fill: '#111827', stroke: '#cbfb45', strokeWidth: 2 }}
+                                                    activeDot={{ r: 6, fill: '#111827', stroke: '#d6e02e', strokeWidth: 2 }}
                                                 />
                                             </AreaChart>
                                         </ResponsiveContainer>

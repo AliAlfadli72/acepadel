@@ -257,6 +257,15 @@ public function store(Request $request)
         $dayOfWeek = $datetime->dayOfWeek;
         $timeString = $datetime->format('H:i:s');
 
+        \Log::info("getAvailableCoaches parameters received", [
+            'court_id' => $court->id,
+            'date' => $date,
+            'time' => $time,
+            'parsed_datetime' => $datetime->toDateTimeString(),
+            'day_of_week' => $dayOfWeek,
+            'time_string' => $timeString
+        ]);
+
         // Get coaches attached to this court
         $coaches = $court->coaches()
             ->with('user')

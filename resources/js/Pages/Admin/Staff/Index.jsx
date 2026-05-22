@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { resolveAsset } from '../../../utils';
 
 export default function StaffIndex({ staff, eligiblePlayers, filters }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -187,7 +188,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                 onClick={() => handleWorkingDaysToggle(day.value)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                                     isSelected
-                                        ? 'bg-[#cbfb45] text-primary shadow-sm border border-[#cbfb45]'
+                                        ? 'bg-[#d6e02e] text-primary shadow-sm border border-[#d6e02e]'
                                         : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
                                 }`}
                             >
@@ -260,7 +261,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                             </form>
                             <button 
                                 onClick={openAddModal}
-                                className="w-full sm:w-auto bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#b5e03e] transition-colors whitespace-nowrap"
+                                className="w-full sm:w-auto bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#b8c21a] transition-colors whitespace-nowrap"
                             >
                                 <Icon icon="mdi:badge-account-outline" className="w-5 h-5" />
                                 <span>ترقية لاعب لموظف</span>
@@ -282,7 +283,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                         <div className="absolute top-2 right-2">
                                             <span className={`text-[10px] font-bold px-2 py-1 rounded-md border ${
                                                 staffMember.roles?.[0]?.name === 'Staff' 
-                                                ? 'bg-[#cbfb45]/20 text-[#6a871d] border-[#cbfb45]/50'
+                                                ? 'bg-[#d6e02e]/20 text-[#858e0a] border-[#d6e02e]/50'
                                                 : 'bg-blue-100 text-blue-700 border-blue-200'
                                             }`}>
                                                 {staffMember.roles?.[0]?.name === 'Staff' ? 'موظف' : 'مستقبل'}
@@ -292,7 +293,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                             <div className="w-16 h-16 rounded-full border-4 border-white bg-white overflow-hidden flex items-center justify-center shadow-sm">
                                                     {staffMember.image_path ? (
                                                         <img
-                                                            src={`/storage/${staffMember.image_path}`}
+                                                            src={resolveAsset(`/storage/${staffMember.image_path}`)}
                                                             alt={staffMember.name}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => {
@@ -435,7 +436,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-sm z-20">
                             <h3 className="text-xl font-bold text-primary flex items-center gap-2">
-                                <Icon icon="mdi:badge-account-outline" className="w-6 h-6 text-[#cbfb45]" />
+                                <Icon icon="mdi:badge-account-outline" className="w-6 h-6 text-[#d6e02e]" />
                                 ترقية لاعب إلى موظف
                             </h3>
                             <button type="button" onClick={closeModal} className="text-gray-400 hover:text-red-500 transition-colors">
@@ -494,7 +495,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl font-bold bg-[#cbfb45] text-primary hover:bg-[#b5e03e] transition-colors flex items-center gap-2 text-sm shadow-sm"
+                                    className="px-5 py-2.5 rounded-xl font-bold bg-[#d6e02e] text-primary hover:bg-[#b8c21a] transition-colors flex items-center gap-2 text-sm shadow-sm"
                                     disabled={processing}
                                 >
                                     {processing && <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />}
@@ -526,7 +527,7 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                     {data.image ? (
                                         <img src={URL.createObjectURL(data.image)} className="w-full h-full object-cover" />
                                     ) : (editingStaff && editingStaff.image_path) ? (
-                                        <img src={`/storage/${editingStaff.image_path}`} className="w-full h-full object-cover" />
+                                        <img src={resolveAsset(`/storage/${editingStaff.image_path}`)} className="w-full h-full object-cover" />
                                     ) : (
                                         <Icon icon="mdi:camera-plus" className="w-6 h-6 text-gray-400 group-hover:text-primary transition-colors" />
                                     )}

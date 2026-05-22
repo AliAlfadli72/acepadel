@@ -30,8 +30,8 @@ export default {
                 arabic: ['Cairo', 'sans-serif'],
             },
             boxShadow: {
-                'green-glow': '0 0 15px rgba(44, 82, 52, 0.4)',
-                'card-hover': '0 8px 40px rgba(15,26,19,0.12)',
+                'green-glow': '0 0 15px rgba(34, 40, 49, 0.4)',
+                'card-hover': '0 8px 40px rgba(34, 40, 49, 0.12)',
             }
         },
     },

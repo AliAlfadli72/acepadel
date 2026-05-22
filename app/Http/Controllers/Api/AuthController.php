@@ -20,28 +20,55 @@ class AuthController extends Controller
         $profile = $user->playerProfile;
         $wallet  = $user->wallet;
 
+        // جلب أهم دور للمستخدم بالأولوية:
+        // Coach يغلب Player (شخص لاعب ومدرب → يُعامَل كمدرب في التطبيق)
+        $roles = $user->getRoleNames();
+        if ($roles->contains('Coach')) {
+            $role = 'Coach';
+        } elseif ($roles->contains('Admin')) {
+            $role = 'Admin';
+        } elseif ($roles->contains('Manager')) {
+            $role = 'Manager';
+        } elseif ($roles->contains('Receptionist')) {
+            $role = 'Receptionist';
+        } elseif ($roles->contains('Staff')) {
+            $role = 'Staff';
+        } else {
+            $role = $roles->first() ?? 'Player';
+        }
+
         return [
             'id'         => $user->id,
             'name'       => $user->name,
             'email'      => $user->email,
             'phone'      => $user->phone,
             'image_path' => $user->image_path,
+            'role'       => $role,
             'profile'    => $profile ? [
                 'rank_level'     => $profile->rank_level  ?? 'D',
                 'points'         => $profile->points       ?? 0,
                 'matches_played' => $profile->matches_played ?? 0,
                 'matches_won'    => $profile->matches_won  ?? 0,
+                'win_rate'       => $profile->matches_played > 0
+                    ? round(($profile->matches_won / $profile->matches_played) * 100)
+                    : 0,
+                'events_count'   => \App\Models\EventRegistration::where('user_id', $user->id)->count(),
             ] : [
                 'rank_level'     => 'D',
                 'points'         => 0,
                 'matches_played' => 0,
                 'matches_won'    => 0,
+                'win_rate'       => 0,
+                'events_count'   => 0,
             ],
             'wallet' => $wallet ? [
                 'balance' => $wallet->balance ?? 0,
             ] : [
                 'balance' => 0,
             ],
+            'notif_bookings' => (bool) ($user->notif_bookings ?? true),
+            'notif_events'   => (bool) ($user->notif_events ?? true),
+            'notif_offers'   => (bool) ($user->notif_offers ?? false),
         ];
     }
 
@@ -84,6 +111,9 @@ class AuthController extends Controller
 
             // إنشاء محفظة فارغة تلقائياً
             $user->wallet()->create(['balance' => 0]);
+
+            // تعيين دور Player تلقائياً لكل مستخدم جديد
+            $user->assignRole('Player');
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -203,6 +233,71 @@ class AuthController extends Controller
                 'message' => 'بيانات التحقق غير صالحة.',
                 'errors'  => $e->errors(),
             ], 422);
+        }
+    }
+
+    public function updateNotificationSettings(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            $request->validate([
+                'notif_bookings' => 'required|boolean',
+                'notif_events'   => 'required|boolean',
+                'notif_offers'   => 'required|boolean',
+            ]);
+
+            $user->notif_bookings = $request->notif_bookings;
+            $user->notif_events = $request->notif_events;
+            $user->notif_offers = $request->notif_offers;
+            $user->save();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم تحديث إعدادات الإشعارات بنجاح',
+                'data'    => $this->buildUserData($user),
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'بيانات التحقق غير صالحة.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'فشل تحديث الإعدادات: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateFcmToken(Request $request)
+    {
+        try {
+            $request->validate([
+                'fcm_token' => 'required|string',
+            ]);
+
+            $user = $request->user();
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'FCM Token updated successfully',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'بيانات التحقق غير صالحة.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'فشل تحديث رمز FCM: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

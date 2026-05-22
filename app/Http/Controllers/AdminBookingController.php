@@ -293,6 +293,11 @@ class AdminBookingController extends Controller
             $booking->user->notify(new \App\Notifications\BookingConfirmedNotification($booking));
         }
 
+        // Notify the coach if assigned
+        if ($booking->coachProfile && $booking->coachProfile->user) {
+            $booking->coachProfile->user->notify(new \App\Notifications\CoachSessionConfirmedNotification($booking));
+        }
+
         return redirect()->back()->with('success', 'تم تأكيد الحجز بنجاح.');
     }
 
@@ -391,7 +396,7 @@ class AdminBookingController extends Controller
             $wallet,
             $booking,
             $booking->total_price,
-            "Court booking #{$booking->id}",
+            "حجز ملعب #{$booking->id}",
             auth()->id()
         );
 
@@ -453,6 +458,11 @@ class AdminBookingController extends Controller
                     ['booking_id' => $booking->id, 'status' => $request->status]
                 );
             }
+        }
+
+        // Notify the coach if status is approved and coach is assigned
+        if ($request->status === 'approved' && $booking->coachProfile && $booking->coachProfile->user) {
+            $booking->coachProfile->user->notify(new \App\Notifications\CoachSessionConfirmedNotification($booking));
         }
 
         return back()->with('success', 'تم تحديث حالة الحجز بنجاح');
@@ -536,6 +546,9 @@ class AdminBookingController extends Controller
 
                 'description' =>
                     "دفعة حجز رقم #{$booking->id} ({$request->payment_method})",
+
+                'reference_type' => Booking::class,
+                'reference_id' => $booking->id,
 
                 'created_by' => auth()->id(),
             ]);

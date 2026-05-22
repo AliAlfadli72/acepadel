@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../../../utils';
 
 const RANKS = ['مبتدئ', 'متوسط', 'متقدم', 'محترف', 'نخبة'];
 
@@ -100,7 +101,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                         title: 'يوجد خطأ في المدخلات',
                         text: Object.values(errs).join('\n'),
                         confirmButtonText: 'حسناً',
-                        confirmButtonColor: '#2C5234'
+                        confirmButtonColor: '#222831'
                     });
                 }
             });
@@ -160,7 +161,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                         </div>
                         {can('players.create') && (
                         <button onClick={openAdd}
-                        className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors">
+                        className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors">
                             <Icon icon="mdi:account-plus" className="w-5 h-5" />إضافة لاعب
                         </button>
                         )}
@@ -233,7 +234,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-9 h-9 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                            {p.image_path ? <img src={`/storage/${p.image_path}`} className="w-full h-full object-cover" /> : <Icon icon="mdi:account" className="w-5 h-5 text-gray-400" />}
+                                                            {p.image_path ? <img src={resolveAsset(`/storage/${p.image_path}`)} className="w-full h-full object-cover" /> : <Icon icon="mdi:account" className="w-5 h-5 text-gray-400" />}
                                                         </div>
                                                         <div>
                                                             <div className="font-bold text-primary">{p.name}</div>
@@ -348,7 +349,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center flex-shrink-0 relative">
                                     {data.image ? <img src={URL.createObjectURL(data.image)} className="w-full h-full object-cover" />
-                                        : editingPlayer?.image_path ? <img src={`/storage/${editingPlayer.image_path}`} className="w-full h-full object-cover" />
+                                        : editingPlayer?.image_path ? <img src={resolveAsset(`/storage/${editingPlayer.image_path}`)} className="w-full h-full object-cover" />
                                         : <Icon icon="mdi:camera" className="w-6 h-6 text-gray-300" />}
                                     <input type="file" accept="image/*" onChange={e => setData('image', e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </div>

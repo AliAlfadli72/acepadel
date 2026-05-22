@@ -82,7 +82,7 @@ export default function Dashboard({ stats = {} }) {
                         variants={itemVariants}
                         className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden"
                     >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#cbfb45]/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#d6e02e]/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                         <div className="relative z-10">
                             <h3 className="text-2xl font-bold text-gray-900 mb-2">
                                 أهلاً بك، {auth.user.name} 👋
@@ -123,7 +123,7 @@ export default function Dashboard({ stats = {} }) {
                             variants={itemVariants}
                             className="lg:col-span-1 bg-gray-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-gray-900/20 group"
                         >
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-[#cbfb45]/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:bg-[#cbfb45]/20 transition-all duration-700"></div>
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-[#d6e02e]/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:bg-[#d6e02e]/20 transition-all duration-700"></div>
                             <div className="absolute -bottom-10 -left-10 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
                                 <Icon
                                     icon={
@@ -131,7 +131,7 @@ export default function Dashboard({ stats = {} }) {
                                             ? "mdi:cash-multiple"
                                             : "mdi:wallet"
                                     }
-                                    className="w-64 h-64 text-[#cbfb45]"
+                                    className="w-64 h-64 text-[#d6e02e]"
                                 />
                             </div>
                             <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-gray-900 to-transparent z-10 pointer-events-none"></div>
@@ -160,7 +160,7 @@ export default function Dashboard({ stats = {} }) {
                                                           0
                                                       ).toLocaleString("en-US")}
                                             </span>
-                                            <span className="text-xl text-[#cbfb45]">
+                                            <span className="text-xl text-[#d6e02e]">
                                                 ل.س
                                             </span>
                                         </h3>
@@ -173,7 +173,7 @@ export default function Dashboard({ stats = {} }) {
                                                 ? "mdi:trending-up"
                                                 : "mdi:shield-check"
                                         }
-                                        className="text-[#cbfb45] w-5 h-5"
+                                        className="text-[#d6e02e] w-5 h-5"
                                     />
                                     <span className="font-medium">
                                         {canViewFinance
@@ -294,7 +294,7 @@ export default function Dashboard({ stats = {} }) {
                         {/* 3. Upcoming Events / Activity */}
                         <motion.div
                             variants={itemVariants}
-                            className="lg:col-span-1 bg-[#cbfb45] rounded-[2rem] p-8 text-gray-900 relative overflow-hidden shadow-xl shadow-[#cbfb45]/20 group"
+                            className="lg:col-span-1 bg-[#d6e02e] rounded-[2rem] p-8 text-gray-900 relative overflow-hidden shadow-xl shadow-[#d6e02e]/20 group"
                         >
                             <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiMwMDAwMDAiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50 pointer-events-none"></div>
                             <div className="absolute -bottom-6 -left-6 text-black/5 group-hover:rotate-12 transition-transform duration-700">
@@ -436,7 +436,7 @@ export default function Dashboard({ stats = {} }) {
                                 <h4 className="text-lg font-bold text-primary flex items-center gap-2">
                                     <Icon
                                         icon="mdi:chart-areaspline"
-                                        className="w-6 h-6 text-[#cbfb45]"
+                                        className="w-6 h-6 text-[#d6e02e]"
                                     />
                                     {canViewFinance
                                         ? "إيرادات آخر 7 أيام"
@@ -466,12 +466,12 @@ export default function Dashboard({ stats = {} }) {
                                                 >
                                                     <stop
                                                         offset="5%"
-                                                        stopColor="#cbfb45"
+                                                        stopColor="#d6e02e"
                                                         stopOpacity={0.4}
                                                     />
                                                     <stop
                                                         offset="95%"
-                                                        stopColor="#cbfb45"
+                                                        stopColor="#d6e02e"
                                                         stopOpacity={0}
                                                     />
                                                 </linearGradient>

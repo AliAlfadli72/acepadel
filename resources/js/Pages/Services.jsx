@@ -141,7 +141,7 @@ export default function Services() {
               <div className={idx % 2 !== 0 ? "lg:order-2" : ""}>
                 <div className="relative rounded-[28px] overflow-hidden shadow-card-hover aspect-[4/3]">
                   <img
-                    src={svc.image}
+                    src={route('home').replace(/\/$/, '') + svc.image}
                     alt={isArabic ? svc.title.ar : svc.title.en}
                     className="w-full h-full object-cover"
                   />
@@ -180,7 +180,7 @@ export default function Services() {
                 </ul>
 
                 <div className="flex items-center gap-4 flex-wrap">
-                  <Link href="/book-court" className="btn-primary">
+                  <Link href={route('booking.guest')} className="btn-primary">
                     <Icon icon="mdi:calendar-check" className="w-5 h-5" />
                     {isArabic ? "احجز الآن" : "Book Now"}
                   </Link>

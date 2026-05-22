@@ -5,7 +5,8 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const { auth, logo_url, roles = [] } = usePage().props;
+    const user = auth.user;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (
@@ -15,11 +16,12 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href="/" className="flex items-center gap-2 group">
-                                    <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                                        <span className="text-accent font-black text-sm">A</span>
-                                    </div>
-                                    <span className="font-bold text-lg text-primary font-arabic">آيس بادل | لوحة التحكم</span>
+                                <Link href={route('home')} className="flex items-center group">
+                                    <img
+                                        src={logo_url || "/logo.png"}
+                                        alt="Ace Padel"
+                                        className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+                                    />
                                 </Link>
                             </div>
 
@@ -45,14 +47,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     المحفظة الإلكترونية
                                 </NavLink>
-                                {/* رابط الإدارة - يظهر فقط للمدراء */}
-                                {user.role === 'admin' && (
+                                {/* رابط الإدارة / المدرب */}
+                                {(roles.includes('Admin') || roles.includes('Manager') || roles.includes('Receptionist') || roles.includes('Coach')) && (
                                     <NavLink
                                         href={route('admin.bookings')}
                                         active={route().current('admin.bookings')}
                                         className="text-primary font-bold border-accent font-arabic"
                                     >
-                                        إدارة الحجوزات
+                                        {roles.includes('Coach') && !roles.includes('Admin') ? 'حجوزاتي كمدرب' : 'إدارة الحجوزات'}
                                     </NavLink>
                                 )}
                             </div>
@@ -176,13 +178,13 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             المحفظة الإلكترونية
                         </ResponsiveNavLink>
-                        {user.role === 'admin' && (
+                        {(roles.includes('Admin') || roles.includes('Manager') || roles.includes('Receptionist') || roles.includes('Coach')) && (
                             <ResponsiveNavLink
                                 href={route('admin.bookings')}
                                 active={route().current('admin.bookings')}
                                 className="font-arabic"
                             >
-                                إدارة الحجوزات
+                                {roles.includes('Coach') && !roles.includes('Admin') ? 'حجوزاتي كمدرب' : 'إدارة الحجوزات'}
                             </ResponsiveNavLink>
                         )}
                     </div>

@@ -8,16 +8,16 @@
    CSS CUSTOM PROPERTIES
    =========================== */
 :root {
-  --primary:      #2C5234;
-  --primary-dark: #1E3A24;
-  --accent:       #DFFF00;
-  --accent-dark:  #C4E000;
+  --primary:      #222831;
+  --primary-dark: #1a1f26;
+  --accent:       #d6e02e;
+  --accent-dark:  #b8c21a;
   --white:        #FFFFFF;
-  --surface:      #F8FAF8;
-  --surface-2:    #EEF4EE;
-  --text-main:    #0F1A13;
-  --text-muted:   #637060;
-  --border:       #D9E8D9;
+  --surface:      #F9F9F9;
+  --surface-2:    #EEEEEE;
+  --text-main:    #1A1D20;
+  --text-muted:   #616161;
+  --border:       #E0E0E0;
 }
 
 /* ===========================
@@ -86,28 +86,28 @@ body {
 }
 
 .glass-green {
-  background: rgba(44, 82, 52, 0.06);
+  background: rgba(34, 40, 49, 0.06);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(44, 82, 52, 0.12);
+  border: 1px solid rgba(34, 40, 49, 0.12);
 }
 
 /* ===========================
    GREEN GRADIENT UTILITIES
    =========================== */
 .bg-forest-gradient {
-  background: linear-gradient(135deg, #2C5234 0%, #1E3A24 100%);
+  background: linear-gradient(135deg, #222831 0%, #1a1f26 100%);
 }
 
 .text-gradient-green {
-  background: linear-gradient(135deg, #2C5234, #3D6E47);
+  background: linear-gradient(135deg, #222831, #393e46);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-accent {
-  background: linear-gradient(135deg, #C4E000, #DFFF00);
+  background: linear-gradient(135deg, #b8c21a, #d6e02e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -244,7 +244,7 @@ body {
 }
 .btn-primary:hover {
   background: var(--primary-dark);
-  box-shadow: 0 8px 30px rgba(44,82,52,0.4);
+  box-shadow: 0 8px 30px rgba(34,40,49,0.4);
   transform: translateY(-2px);
 }
 
@@ -264,7 +264,7 @@ body {
 }
 .btn-accent:hover {
   background: var(--accent-dark);
-  box-shadow: 0 8px 30px rgba(223,255,0,0.4);
+  box-shadow: 0 8px 30px rgba(214,224,46,0.4);
   transform: translateY(-2px);
 }
 

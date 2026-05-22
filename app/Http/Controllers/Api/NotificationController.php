@@ -16,7 +16,22 @@ class NotificationController extends Controller
         $user = $request->user();
         if (!$user) return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
 
-        $notifications = $user->notifications()->latest()->get();
+        $locale = app()->getLocale();
+        $notifications = $user->notifications()->latest()->get()->map(function ($notification) use ($locale) {
+            $data = $notification->data;
+            if (is_array($data)) {
+                $data['title'] = $locale === 'en' && isset($data['title_en']) 
+                    ? $data['title_en'] 
+                    : ($data['title_ar'] ?? $data['title'] ?? 'إشعار جديد');
+                
+                $data['message'] = $locale === 'en' && isset($data['message_en']) 
+                    ? $data['message_en'] 
+                    : ($data['message_ar'] ?? $data['message'] ?? '');
+                
+                $notification->data = $data;
+            }
+            return $notification;
+        });
 
         return response()->json([
             'status' => 'success',

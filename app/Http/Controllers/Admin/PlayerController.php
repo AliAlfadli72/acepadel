@@ -60,7 +60,6 @@ class PlayerController extends Controller
             'phone' => 'required|string|max:255|unique:users,phone',
             'password'       => ['required', Rules\Password::defaults()],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
-            'rank_level'     => 'required|string',
             'points'         => 'required|integer|min:0',
             'wallet_balance' => 'required|numeric|min:0',
             'matches_played' => 'required|integer|min:0',
@@ -74,7 +73,6 @@ class PlayerController extends Controller
             'email.unique'            => 'هذا البريد الإلكتروني مستخدم مسبقاً.',
             'phone.unique'            => 'رقم الجوال مستخدم مسبقاً.',
             'password.required'       => 'كلمة المرور مطلوبة.',
-            'rank_level.required'     => 'المستوى مطلوب.',
             'points.required'         => 'حقل النقاط مطلوب.',
             'points.integer'          => 'النقاط يجب أن تكون رقماً صحيحاً.',
             'points.min'              => 'النقاط يجب أن تكون 0 أو أكثر.',
@@ -113,16 +111,18 @@ class PlayerController extends Controller
 
         // Update auto-created player profile
         $user->playerProfile()->update([
-            'rank_level' => $request->rank_level,
-            'points' => $request->points,
+            'points'         => $request->points,
             'matches_played' => $request->matches_played,
-            'matches_won' => $request->matches_won,
+            'matches_won'    => $request->matches_won,
+            // rank_level يُحسب تلقائياً من النقاط
         ]);
 
         // Update auto-created wallet
-        $user->wallet()->update([
-            'balance' => $request->wallet_balance,
-        ]);
+        if ($request->wallet_balance > 0) {
+            $walletService = app(\App\Services\WalletService::class);
+            $wallet = $user->wallet ?: $user->wallet()->firstOrCreate([], ['balance' => 0]);
+            $walletService->deposit($wallet, $request->wallet_balance, 'رصيد ابتدائي عند تسجيل اللاعب (أدمن)', auth()->id());
+        }
 
         return redirect()->back()->with('success', 'تم إضافة اللاعب بنجاح');
     }
@@ -140,7 +140,6 @@ class PlayerController extends Controller
             'phone' => 'required|string|max:255|unique:users,phone,'.$user->id,
             'password'       => ['nullable', Rules\Password::defaults()],
             'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
-            'rank_level'     => 'required|string',
             'points'         => 'required|integer|min:0',
             'wallet_balance' => 'required|numeric|min:0',
             'matches_played' => 'required|integer|min:0',
@@ -153,7 +152,6 @@ class PlayerController extends Controller
             'email.email'              => 'صيغة البريد الإلكتروني غير صحيحة.',
             'email.unique'             => 'هذا البريد الإلكتروني مستخدم مسبقاً.',
             'phone.unique'             => 'رقم الجوال مستخدم مسبقاً.',
-            'rank_level.required'      => 'المستوى مطلوب.',
             'points.required'          => 'حقل النقاط مطلوب.',
             'points.integer'           => 'النقاط يجب أن تكون رقماً صحيحاً.',
             'points.min'               => 'النقاط يجب أن تكون 0 أو أكثر.',
@@ -193,18 +191,34 @@ class PlayerController extends Controller
         PlayerProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'rank_level' => $request->rank_level,
-                'points' => $request->points,
+                'points'         => $request->points,
                 'matches_played' => $request->matches_played,
-                'matches_won' => $request->matches_won,
+                'matches_won'    => $request->matches_won,
+                // rank_level يُحسب تلقائياً من النقاط
             ]
         );
 
         // Update or create wallet
-        Wallet::updateOrCreate(
-            ['user_id' => $user->id],
-            ['balance' => $request->wallet_balance]
-        );
+        if ($request->has('wallet_balance') && $request->wallet_balance !== null) {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0]
+            );
+
+            $oldBalance = (float) $wallet->balance;
+            $newBalance = (float) $request->wallet_balance;
+
+            if ($newBalance !== $oldBalance) {
+                $walletService = app(\App\Services\WalletService::class);
+                if ($newBalance > $oldBalance) {
+                    $diff = $newBalance - $oldBalance;
+                    $walletService->deposit($wallet, $diff, 'شحن رصيد من قبل الإدارة', auth()->id());
+                } else {
+                    $diff = $oldBalance - $newBalance;
+                    $walletService->manualAdjustment($wallet, $diff, 'تعديل رصيد يدوي (خصم) من قبل الإدارة', auth()->id());
+                }
+            }
+        }
 
         return redirect()->back()->with('success', 'تم تحديث بيانات اللاعب بنجاح');
     }

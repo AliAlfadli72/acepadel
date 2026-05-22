@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../../../utils';
 import 'dayjs/locale/ar';
 
 dayjs.locale('ar');
@@ -45,6 +46,19 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
         }
     }, []);
 
+    // Auto-polling (every 10 seconds) to ensure real-time updates for receptionist
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({
+                only: ['bookings', 'stats'],
+                preserveScroll: true,
+                preserveState: true
+            });
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     // Send filters to server — pass ALL current values explicitly to avoid stale-closure bugs
     const go = (overrides = {}) => {
         const p = {
@@ -79,7 +93,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
 
     const updateStatus = (id, action) => {
 
-    if (!can('players.edit')) {
+    if (!can('bookings.approve') && !can('bookings.edit')) {
         return;
     }
         const msgs = { approve: 'تأكيد هذا الحجز؟', reject: 'إلغاء هذا الحجز؟', complete: 'تعليمه كمكتمل؟' };
@@ -154,7 +168,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
         ];
 
         return (
-            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${cls}`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold border whitespace-nowrap inline-block ${cls}`}>
                 {label}
             </span>
         );
@@ -170,12 +184,12 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
     const getStatusBadge = (s) => {
         const map = {
             pending:   ['قيد الانتظار', 'bg-yellow-100 text-yellow-700 border-yellow-200'],
-            approved:  ['مؤكد',         'bg-[#cbfb45]/20 text-[#6a871d] border-[#cbfb45]/50'],
+            approved:  ['مؤكد',         'bg-[#d6e02e]/20 text-[#858e0a] border-[#d6e02e]/50'],
             completed: ['مكتمل',        'bg-gray-100 text-gray-600 border-gray-200'],
             cancelled: ['ملغي',         'bg-red-100 text-red-600 border-red-200'],
         };
         const [label, cls] = map[s] || ['—', 'bg-gray-100 text-gray-500'];
-        return <span className={`px-3 py-1 rounded-full text-xs font-bold border ${cls}`}>{label}</span>;
+        return <span className={`px-3 py-1 rounded-full text-xs font-bold border whitespace-nowrap inline-block ${cls}`}>{label}</span>;
     };
     const openPaymentModal = (booking) => {
 
@@ -234,7 +248,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                 <div className="mx-auto max-w-7xl space-y-6">
 
                     {/* ── Stats Cards ───────────────────────────────── */}
-                        {can('bookings.manage') && (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
                             { label: 'إجمالي الحجوزات', value: stats.total,    icon: 'mdi:calendar-check',    color: 'text-primary bg-primary/10' },
@@ -253,7 +266,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                             </div>
                         ))}
                     </div>
-                        )}
 
                     {/* ── Header + Add Button ───────────────────────── */}
                     <div className="flex justify-between items-center">
@@ -266,7 +278,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                         {can('bookings.create') && (
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors"
+                            className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors"
                         >
                             <Icon icon="mdi:calendar-plus" className="w-5 h-5" />
                             حجز جديد (يدوي)
@@ -277,14 +289,8 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                     {/* ── Filter Bar ────────────────────────────────── */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
                         {/* Row 1: search + date + court */}
-                        <div className={`grid gap-3 ${
-                            can('bookings.manage')
-                                ? 'grid-cols-1 md:grid-cols-3'
-                                : 'grid-cols-1 md:grid-cols-2'
-                        }`}>                           
+                        <div className={`grid gap-3 grid-cols-1 md:grid-cols-3`}>                           
                          {/* Search */}
-                         {can('bookings.manage') && (
-
                             <div className="relative">
                                 <Icon icon="mdi:magnify" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
@@ -296,7 +302,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                     className="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-primary focus:border-primary"
                                 />
                             </div>
-                            )}
 
                             {/* Date */}
                             <div className="relative">
@@ -325,8 +330,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
 
                         {/* Row 2: status + time_slot + search button + reset */}
                         <div className="flex flex-wrap gap-2 items-center justify-between">
-                            {can('bookings.manage') && (
-
                             <div className="flex flex-wrap gap-2">
                                 {/* Status buttons */}
                                 {statusButtons.map(s => (
@@ -361,7 +364,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                     </button>
                                 ))}
                             </div>
-                                )}
 
                             <div className="flex gap-2">
                                 <button
@@ -405,7 +407,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                         <th className="px-5 py-4">المدفوع</th>
                                         {/* )} */}
                                         <th className="px-5 py-4">الحالة</th>
-                                       {can('players.create') && (
+                                        {can('bookings.approve') && (
                                             <th className="px-5 py-4">إجراءات</th>
                                             )}                                 
                                         </tr>
@@ -426,7 +428,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                                     <div className="flex items-center gap-2.5">
                                                         <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                             {booking.user?.image_path
-                                                                ? <img src={`/storage/${booking.user.image_path}`} className="w-full h-full object-cover" />
+                                                                ? <img src={resolveAsset(`/storage/${booking.user.image_path}`)} className="w-full h-full object-cover" />
                                                                 : <Icon icon="mdi:account" className="w-4 h-4 text-gray-400" />}
                                                         </div>
                                                         <div>
@@ -490,7 +492,7 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                                                 <td className="px-5 py-4">{getStatusBadge(booking.status)}</td>
 
                                                 {/* Actions */}
-                                                {can('players.create') && (
+                                                {can('bookings.approve') && (
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center gap-1.5">
                                                         {booking.status === 'pending' && (<>

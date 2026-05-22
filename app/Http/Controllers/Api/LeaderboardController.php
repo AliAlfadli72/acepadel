@@ -20,10 +20,12 @@ class LeaderboardController extends Controller
                         if ($reg->event) {
                             $events[] = [
                                 'id' => $reg->event->id,
-                                'name' => $reg->event->name,
+                                'name' => $reg->event->title,
+                                'title_ar' => $reg->event->title_ar,
+                                'title_en' => $reg->event->title_en,
                                 'status' => $reg->status,
                                 'placement' => $reg->placement,
-                                'start_date' => $reg->event->start_date,
+                                'start_date' => $reg->event->date ? $reg->event->date->toDateString() : null,
                             ];
                         }
                     }

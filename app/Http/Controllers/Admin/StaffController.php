@@ -148,10 +148,26 @@ class StaffController extends Controller
         );
 
         // Update or create wallet
-        Wallet::updateOrCreate(
-            ['user_id' => $user->id],
-            ['balance' => $request->wallet_balance]
-        );
+        if ($request->has('wallet_balance') && $request->wallet_balance !== null) {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0]
+            );
+
+            $oldBalance = (float) $wallet->balance;
+            $newBalance = (float) $request->wallet_balance;
+
+            if ($newBalance !== $oldBalance) {
+                $walletService = app(\App\Services\WalletService::class);
+                if ($newBalance > $oldBalance) {
+                    $diff = $newBalance - $oldBalance;
+                    $walletService->deposit($wallet, $diff, 'شحن رصيد من قبل الإدارة', auth()->id());
+                } else {
+                    $diff = $oldBalance - $newBalance;
+                    $walletService->manualAdjustment($wallet, $diff, 'تعديل رصيد يدوي (خصم) من قبل الإدارة', auth()->id());
+                }
+            }
+        }
 
         return redirect()->back()->with('success', 'تم تحديث بيانات الموظف بنجاح');
     }

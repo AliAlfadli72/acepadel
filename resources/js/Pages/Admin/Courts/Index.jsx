@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../../../utils';
 
 export default function CourtsIndex({ courts }) {
     const { can } = usePermissions();
@@ -140,7 +141,7 @@ export default function CourtsIndex({ courts }) {
                         {can('courts.create') && (
                         <button 
                             onClick={() => openModal()}
-                            className="bg-[#cbfb45] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b5e03e] transition-colors"
+                            className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors"
                         >
                             <Icon icon="mdi:plus" className="w-5 h-5" />
                             <span>إضافة ملعب جديد</span>
@@ -194,7 +195,7 @@ export default function CourtsIndex({ courts }) {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                         {court.image_path ? (
-                                                            <img src={`/storage/${court.image_path}`} alt={court.name} className="w-full h-full object-cover" />
+                                                            <img src={resolveAsset(`/storage/${court.image_path}`)} alt={court.name} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <Icon icon="mdi:tennis-court" className="w-5 h-5 text-gray-400" />
                                                         )}
@@ -390,7 +391,7 @@ export default function CourtsIndex({ courts }) {
                                                         src={
                                                             data.image
                                                                 ? URL.createObjectURL(data.image)
-                                                                : `/storage/${editingCourt.image_path}`
+                                                                : resolveAsset(`/storage/${editingCourt.image_path}`)
                                                         }
                                                         alt="Court Preview"
                                                         className="w-full h-full object-cover"
@@ -472,7 +473,7 @@ export default function CourtsIndex({ courts }) {
                             </button>
                             <div className="flex items-center gap-4 text-white">
                                 <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg">
-                                    <Icon icon="mdi:tennis-court" className="w-8 h-8 text-[#cbfb45]" />
+                                    <Icon icon="mdi:tennis-court" className="w-8 h-8 text-[#d6e02e]" />
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-bold">{analyticsCourt.name}</h3>

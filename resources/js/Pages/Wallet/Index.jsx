@@ -99,7 +99,7 @@ export default function WalletIndex({ wallet, transactions }) {
                             <div className="relative mt-6">
                                 <button
                                     onClick={() => setShowDepositModal(true)}
-                                    className="flex items-center gap-2 bg-[#cbfb45] text-primary font-bold px-5 py-2.5 rounded-xl hover:bg-[#b5e03e] transition-colors"
+                                    className="flex items-center gap-2 bg-accent text-primary font-bold px-5 py-2.5 rounded-xl hover:bg-accent-dark transition-colors"
                                 >
                                     <Icon icon="mdi:plus-circle" className="w-5 h-5" />
                                     إضافة رصيد
@@ -141,7 +141,9 @@ export default function WalletIndex({ wallet, transactions }) {
                                                     {dayjs(tx.created_at).format('DD MMM YYYY - HH:mm')}
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-800 font-medium">
-                                                    {tx.description || '—'}
+                                                    {(tx.description || '—')
+                                                        .replace('Court booking #', 'حجز ملعب #')
+                                                        .replace('Refund for cancelled booking #', 'إرجاع حجز ملغي #')}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {tx.type === 'credit' ? (

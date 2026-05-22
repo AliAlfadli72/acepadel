@@ -29,6 +29,9 @@ class User extends Authenticatable
         'otp_expires_at',
         'password',
         'fcm_token',
+        'notif_bookings',
+        'notif_events',
+        'notif_offers',
     ];
 
     /**
@@ -53,6 +56,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'otp_expires_at' => 'datetime',
+            'notif_bookings' => 'boolean',
+            'notif_events' => 'boolean',
+            'notif_offers' => 'boolean',
         ];
     }
 

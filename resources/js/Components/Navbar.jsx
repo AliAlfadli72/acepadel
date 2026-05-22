@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
 
 export default function Navbar({ lang, setLang }) {
-  const { url } = usePage();
+  const { url, logo_url, icon_url } = usePage().props;
   const isArabic   = lang === "ar";
   const [scrolled,  setScrolled]  = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -18,13 +18,12 @@ export default function Navbar({ lang, setLang }) {
   useEffect(() => { setMobileOpen(false); }, [url]);
 
   const links = [
-    { path: "/",        label: { ar: "الرئيسية",  en: "Home"    } },
-    { path: "/services",label: { ar: "الخدمات",   en: "Services"} },
-    { path: "/book-court", label: { ar: "الحجز",     en: "Booking" } },
-    { path: "/events",  label: { ar: "الفعاليات", en: "Events"  } },
-      {path: "/players", label: { ar: "اللاعبين",  en: "Players" } },
-    { path: "/about",   label: { ar: "من نحن",   en: "About Us"  } },
-    { path: "/contact", label: { ar: "تواصل",    en: "Contact" } },
+    { routeName: "home",        label: { ar: "الرئيسية",  en: "Home"    } },
+    { routeName: "services",    label: { ar: "الخدمات",   en: "Services"} },
+    { routeName: "events",      label: { ar: "الفعاليات", en: "Events"  } },
+    { routeName: "players.index", label: { ar: "اللاعبين",  en: "Players" } },
+    { routeName: "about",       label: { ar: "من نحن",   en: "About Us"  } },
+    { routeName: "contact",     label: { ar: "تواصل",    en: "Contact" } },
   ];
 
   return (
@@ -38,27 +37,18 @@ export default function Navbar({ lang, setLang }) {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-8 h-[72px] flex items-center justify-between">
 
-          {/* LOGO */}
-          <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-green-glow group-hover:scale-105 transition-transform">
-              <span className="text-accent font-display font-black text-sm leading-none">A</span>
-            </div>
-            <div className="hidden sm:flex flex-col leading-none">
-              <span className={`font-display font-black text-xl tracking-tight text-primary ${isArabic ? "font-arabic" : ""}`}>
-                {isArabic ? "آيس بادل" : "ACE PADEL"}
-              </span>
-              <span className="text-[9px] uppercase tracking-[0.25em] text-gray-500">Academy</span>
-            </div>
+          <Link href={route('home')} className="flex items-center gap-3 group shrink-0">
+            <img src={logo_url || "/logo.png"} alt="Ace Padel" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
           </Link>
 
           {/* DESKTOP NAV */}
           <nav className="hidden lg:flex items-center gap-8">
             {links.map((link) => {
-              const isActive = url === link.path || (link.path !== '/' && url.startsWith(link.path));
+              const isActive = route().current(link.routeName) || (link.routeName === 'events' && route().current('events.*')) || (link.routeName === 'players.index' && route().current('players.*'));
               return (
                 <Link
-                  key={link.path}
-                  href={link.path}
+                  key={link.routeName}
+                  href={route(link.routeName)}
                   className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover-underline ${
                     isActive ? "text-primary" : "text-gray-500 hover:text-primary"
                   } ${isArabic ? "font-arabic text-sm tracking-normal" : ""}`}
@@ -79,10 +69,11 @@ export default function Navbar({ lang, setLang }) {
           {/* ACTIONS */}
           <div className="flex items-center gap-3">
 
+
             {/* Auth Link */}
             {usePage().props.auth?.user ? (
               <Link
-                href="/dashboard"
+                href={route('dashboard')}
                 className="hidden md:flex items-center gap-2 text-xs font-semibold text-primary bg-emerald-50 border border-gray-200 px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all"
               >
                 <Icon icon="mdi:account" className="w-4 h-4" />
@@ -90,7 +81,7 @@ export default function Navbar({ lang, setLang }) {
               </Link>
             ) : (
               <Link
-                href="/login"
+                href={route('login')}
                 className="hidden md:flex items-center gap-2 text-xs font-semibold text-primary bg-emerald-50 border border-gray-200 px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all"
               >
                 <Icon icon="mdi:login" className="w-4 h-4" />
@@ -108,7 +99,7 @@ export default function Navbar({ lang, setLang }) {
 
             {/* Book CTA */}
             <Link
-              href="/book-court"
+              href={route('booking.guest')}
               className="hidden sm:flex btn-accent text-xs py-2.5 px-5"
             >
               <Icon icon="mdi:calendar-check" className="w-4 h-4" />
@@ -139,11 +130,11 @@ export default function Navbar({ lang, setLang }) {
           >
             <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col gap-4">
               {links.map((link) => {
-                const isActive = url === link.path || (link.path !== '/' && url.startsWith(link.path));
+                const isActive = route().current(link.routeName) || (link.routeName === 'events' && route().current('events.*')) || (link.routeName === 'players.index' && route().current('players.*'));
                 return (
                   <Link
-                    key={link.path}
-                    href={link.path}
+                    key={link.routeName}
+                    href={route(link.routeName)}
                     className={`text-sm font-semibold py-2 border-b border-gray-100 flex items-center justify-between ${
                       isActive ? "text-primary" : "text-gray-600"
                     } ${isArabic ? "font-arabic" : ""}`}
@@ -153,7 +144,7 @@ export default function Navbar({ lang, setLang }) {
                   </Link>
                 );
               })}
-              <Link href="/book-court" className="btn-primary text-center justify-center mt-2">
+              <Link href={route('booking.guest')} className="btn-primary text-center justify-center mt-2">
                 <Icon icon="mdi:calendar-check" className="w-4 h-4" />
                 {isArabic ? "احجز الآن" : "Book Your Court"}
               </Link>

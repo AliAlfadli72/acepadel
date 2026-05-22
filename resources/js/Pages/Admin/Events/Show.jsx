@@ -1,18 +1,48 @@
+import { useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../../../utils';
 import 'dayjs/locale/en';
 
 export default function Show({ event }) {
     const { can } = usePermissions();
+    const { flash, errors } = usePage().props;
+
+    useEffect(() => {
+        if (flash?.success) {
+            Swal.fire({
+                title: 'نجاح',
+                text: flash.success,
+                icon: 'success',
+                confirmButtonText: 'حسناً',
+                customClass: {
+                    popup: 'rounded-3xl',
+                    confirmButton: 'bg-[#d6e02e] text-gray-900 px-6 py-2 rounded-xl font-bold font-arabic'
+                }
+            });
+        }
+        if (flash?.error || errors?.error) {
+            Swal.fire({
+                title: 'خطأ',
+                text: flash?.error || errors?.error,
+                icon: 'error',
+                confirmButtonText: 'حسناً',
+                customClass: {
+                    popup: 'rounded-3xl',
+                    confirmButton: 'bg-rose-600 text-white px-6 py-2 rounded-xl font-bold font-arabic'
+                }
+            });
+        }
+    }, [flash, errors]);
     const getStatusStyle = (status) => {
         switch (status) {
             case 'upcoming': return 'bg-blue-600 text-white border-blue-500';
             case 'ongoing': return 'bg-emerald-600 text-white border-emerald-500';
-            case 'completed': return 'bg-[#cbfb45] text-gray-900 border-[#b5e03e]';
+            case 'completed': return 'bg-[#d6e02e] text-gray-900 border-[#b8c21a]';
             default: return 'bg-gray-600 text-white border-gray-500';
         }
     };
@@ -135,7 +165,7 @@ export default function Show({ event }) {
                     {event.image_path ? (
                         <div className="absolute inset-0">
                             <img 
-                                src={`/storage/${event.image_path}`} 
+                                src={resolveAsset(`/storage/${event.image_path}`)} 
                                 alt={event.title_ar} 
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                             />
@@ -175,7 +205,7 @@ export default function Show({ event }) {
                         
                         {/* Event Details Card */}
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#cbfb45]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#d6e02e]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                             
                             <h3 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-xl bg-gray-50 text-gray-900 flex items-center justify-center border border-gray-100 shadow-sm">
@@ -275,9 +305,9 @@ export default function Show({ event }) {
                                                 <tr key={reg.id} className="hover:bg-gray-50 transition-colors group">
                                                     <td className="px-8 py-5">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center font-black text-lg border border-gray-200 group-hover:bg-[#cbfb45] group-hover:border-[#cbfb45] group-hover:text-gray-900 transition-all shadow-sm overflow-hidden">
+                                                            <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center font-black text-lg border border-gray-200 group-hover:bg-[#d6e02e] group-hover:border-[#d6e02e] group-hover:text-gray-900 transition-all shadow-sm overflow-hidden">
                                                                 {reg.user?.image_path ? (
-                                                                    <img src={`/storage/${reg.user.image_path}`} className="w-full h-full object-cover" />
+                                                                    <img src={resolveAsset(`/storage/${reg.user.image_path}`)} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     reg.user?.name?.charAt(0) || <Icon icon="mdi:account" className="w-6 h-6" />
                                                                 )}
@@ -306,7 +336,7 @@ export default function Show({ event }) {
                                                                     disabled={!can('events.edit')}
                                                                         value={reg.placement || ''} 
                                                                     onChange={(e) => handleUpdatePlacement(reg.id, e.target.value)}
-                                                                    className={`bg-white border-2 text-gray-900 text-sm font-black rounded-xl focus:ring-[#cbfb45] focus:border-[#cbfb45] block w-full p-2.5 shadow-sm pr-8 appearance-none transition-all hover:border-gray-300 ${event.status !== 'completed' ? 'border-gray-100 cursor-pointer' : 'border-gray-200'}`}
+                                                                    className={`bg-white border-2 text-gray-900 text-sm font-black rounded-xl focus:ring-[#d6e02e] focus:border-[#d6e02e] block w-full p-2.5 shadow-sm pr-8 appearance-none transition-all hover:border-gray-300 ${event.status !== 'completed' ? 'border-gray-100 cursor-pointer' : 'border-gray-200'}`}
                                                                 >
                                                                     <option value="">-- غير محدد --</option>
                                                                     <option value="1">1 - الأول</option>
@@ -389,7 +419,7 @@ export default function Show({ event }) {
                                 </button>
                                 <button 
                                     onClick={() => handleUpdateStatus('completed')}
-                                    className={`w-full py-5 rounded-2xl font-black transition-all flex items-center justify-center gap-2 border-2 ${event.status === 'completed' ? 'bg-gray-900 text-[#cbfb45] border-gray-900 shadow-xl shadow-gray-900/30' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-900 hover:text-gray-900 hover:bg-gray-50'}`}
+                                    className={`w-full py-5 rounded-2xl font-black transition-all flex items-center justify-center gap-2 border-2 ${event.status === 'completed' ? 'bg-gray-900 text-[#d6e02e] border-gray-900 shadow-xl shadow-gray-900/30' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-900 hover:text-gray-900 hover:bg-gray-50'}`}
                                 >
                                     <Icon icon="mdi:check-circle-outline" className="w-6 h-6" /> مكتملة
                                 </button>
@@ -400,11 +430,11 @@ export default function Show({ event }) {
                         {/* Financial Analytics Redesigned */}
                         <div className="bg-gray-900 p-8 rounded-[2.5rem] shadow-2xl border border-gray-800 relative overflow-hidden group">
                             {/* Decorative background elements */}
-                            <div className="absolute top-0 left-0 w-48 h-48 bg-[#cbfb45]/10 rounded-full blur-[60px] -translate-x-1/2 -translate-y-1/2 group-hover:bg-[#cbfb45]/20 transition-colors duration-700 pointer-events-none"></div>
+                            <div className="absolute top-0 left-0 w-48 h-48 bg-[#d6e02e]/10 rounded-full blur-[60px] -translate-x-1/2 -translate-y-1/2 group-hover:bg-[#d6e02e]/20 transition-colors duration-700 pointer-events-none"></div>
                             <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] translate-x-1/3 translate-y-1/3 group-hover:bg-emerald-500/20 transition-colors duration-700 pointer-events-none"></div>
                             
                             <h3 className="text-2xl font-black mb-8 flex items-center gap-3 relative z-10 text-white">
-                                <div className="w-12 h-12 rounded-2xl bg-white/10 text-[#cbfb45] flex items-center justify-center border border-white/20 backdrop-blur-md shadow-inner">
+                                <div className="w-12 h-12 rounded-2xl bg-white/10 text-[#d6e02e] flex items-center justify-center border border-white/20 backdrop-blur-md shadow-inner">
                                     <Icon icon="mdi:finance" className="w-7 h-7" />
                                 </div>
                                 قسم المالية والإحصاءات
@@ -426,12 +456,12 @@ export default function Show({ event }) {
                                         <span className="text-4xl font-black text-white font-arabic drop-shadow-md">{Number(approvedCount).toLocaleString('en-US')}</span>
                                     </div>
                                     <div className="w-full bg-gray-800 rounded-full h-2 mt-5 overflow-hidden border border-gray-700/50">
-                                        <div className="bg-gradient-to-r from-emerald-500 to-[#cbfb45] h-2 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(203,251,69,0.5)]" style={{ width: `${Math.min(100, (approvedCount / (event.max_participants || 1)) * 100)}%` }}></div>
+                                        <div className="bg-gradient-to-r from-emerald-500 to-[#d6e02e] h-2 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(214,224,46,0.5)]" style={{ width: `${Math.min(100, (approvedCount / (event.max_participants || 1)) * 100)}%` }}></div>
                                     </div>
                                 </div>
                                 {can('finance.view') && (
 
-                                <div className="relative bg-gradient-to-br from-[#cbfb45] to-[#a3d132] rounded-3xl p-6 shadow-xl shadow-[#cbfb45]/20 overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
+                                <div className="relative bg-gradient-to-br from-[#d6e02e] to-[#b8c21a] rounded-3xl p-6 shadow-xl shadow-[#d6e02e]/20 overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
                                     <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
                                     <p className="text-gray-800 text-sm font-black mb-2 flex items-center gap-2 relative z-10">
                                         <Icon icon="mdi:cash-multiple" className="w-5 h-5 text-gray-900" />

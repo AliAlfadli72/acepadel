@@ -6,8 +6,9 @@ import { Link, usePage, router } from "@inertiajs/react";
 import Swal from 'sweetalert2';
 import dayjs from "dayjs";
 import 'dayjs/locale/en';
+import { resolveAsset } from '../utils';
 
-export default function EventDetails({ event, is_registered }) {
+export default function EventDetails({ event, is_registered, user_registration }) {
     const { lang } = useContext(LangContext);
     const { auth, flash } = usePage().props;
     const isArabic = lang === "ar";
@@ -60,7 +61,7 @@ export default function EventDetails({ event, is_registered }) {
         switch (status) {
             case 'upcoming': return 'bg-blue-600 text-white border-blue-500';
             case 'ongoing': return 'bg-emerald-600 text-white border-emerald-500';
-            case 'completed': return 'bg-[#cbfb45] text-gray-900 border-[#b5e03e]';
+            case 'completed': return 'bg-[#d6e02e] text-gray-900 border-[#b8c21a]';
             default: return 'bg-gray-600 text-white border-gray-500';
         }
     };
@@ -121,7 +122,7 @@ export default function EventDetails({ event, is_registered }) {
             {/* Full-Bleed Hero Banner */}
             <div className="relative w-full h-[60vh] min-h-[500px] flex items-end">
                 {event.image_path ? (
-                    <img src={`/storage/${event.image_path}`} className="absolute inset-0 w-full h-full object-cover" alt={isArabic ? event.title_ar : event.title_en} />
+                    <img src={resolveAsset(`/storage/${event.image_path}`)} className="absolute inset-0 w-full h-full object-cover" alt={isArabic ? event.title_ar : event.title_en} />
                 ) : (
                     <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
                         <Icon icon="mdi:trophy-outline" className="w-32 h-32 text-gray-800" />
@@ -208,18 +209,45 @@ export default function EventDetails({ event, is_registered }) {
                                         </p>
                                     </div>
                                 </div>
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
+                                    <div className="w-12 h-12 rounded-xl bg-white text-rose-500 flex items-center justify-center shadow-sm shrink-0">
+                                        <Icon icon="mdi:account-group-outline" className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <p className={`text-xs text-gray-500 font-bold mb-1 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "المشاركون المقبولون" : "Approved Participants"}</p>
+                                        <p className="font-black text-gray-900 text-lg font-arabic">
+                                            {Number(event.registrations?.length || 0).toLocaleString(isArabic ? 'ar-EG' : 'en-US')} / {event.max_participants ? Number(event.max_participants).toLocaleString(isArabic ? 'ar-EG' : 'en-US') : '∞'}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             
                             <div className="mt-8">
                                 {event.status !== 'completed' && auth.user ? (
-                                    is_registered ? (
+                                    user_registration ? (
                                         <div className="space-y-4">
-                                            <div className="bg-emerald-50 text-emerald-700 font-black py-4 px-4 rounded-2xl text-center border border-emerald-200 flex items-center justify-center gap-3">
-                                                <Icon icon="mdi:check-decagram" className="w-6 h-6" />
-                                                <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
-                                                    {isArabic ? "لقد قمت بالتسجيل بنجاح" : "Successfully registered"}
-                                                </span>
-                                            </div>
+                                            {user_registration.status === 'pending' ? (
+                                                <div className="bg-amber-50 text-amber-800 font-black py-4 px-4 rounded-2xl text-center border border-amber-200 flex items-center justify-center gap-3">
+                                                    <Icon icon="mdi:clock-outline" className="w-6 h-6 text-amber-600 animate-pulse" />
+                                                    <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
+                                                        {isArabic ? "تم إرسال طلبك وبانتظار موافقة الإدارة ⏳" : "Request sent, pending admin approval ⏳"}
+                                                    </span>
+                                                </div>
+                                            ) : user_registration.status === 'approved' ? (
+                                                <div className="bg-emerald-50 text-emerald-700 font-black py-4 px-4 rounded-2xl text-center border border-emerald-200 flex items-center justify-center gap-3">
+                                                    <Icon icon="mdi:check-decagram" className="w-6 h-6 text-emerald-600" />
+                                                    <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
+                                                        {isArabic ? "لقد تم تسجيلك بنجاح ✅" : "Successfully registered ✅"}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-rose-50 text-rose-700 font-black py-4 px-4 rounded-2xl text-center border border-rose-200 flex items-center justify-center gap-3">
+                                                    <Icon icon="mdi:close-circle" className="w-6 h-6 text-rose-600" />
+                                                    <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
+                                                        {isArabic ? "تم رفض طلب تسجيلك من الإدارة" : "Your registration request was rejected"}
+                                                    </span>
+                                                </div>
+                                            )}
                                             <button onClick={handleCancelRegistration} className="w-full text-center text-sm font-bold text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors py-3 rounded-xl border border-transparent">
                                                 {isArabic ? "إلغاء التسجيل" : "Cancel Registration"}
                                             </button>
@@ -232,7 +260,7 @@ export default function EventDetails({ event, is_registered }) {
                                     )
                                 ) : event.status !== 'completed' && !auth.user ? (
                                     <Link href={route('login')} className="bg-gray-900 hover:bg-black text-white font-bold py-5 px-4 rounded-2xl text-center flex items-center justify-center gap-3 transition-colors shadow-xl shadow-gray-900/20 hover:-translate-y-1">
-                                        <Icon icon="mdi:login" className="w-6 h-6 text-[#cbfb45]" />
+                                        <Icon icon="mdi:login" className="w-6 h-6 text-[#d6e02e]" />
                                         <span className={isArabic ? "font-arabic text-lg" : "text-lg"}>
                                             {isArabic ? "تسجيل الدخول للمشاركة" : "Login to Register"}
                                         </span>
@@ -268,7 +296,7 @@ export default function EventDetails({ event, is_registered }) {
                             <div className="relative rounded-[2.5rem] p-8 md:p-12 overflow-hidden border border-gray-800 bg-gray-900">
                                 {/* Glassmorphism Backgrounds */}
                                 <div className="absolute top-0 right-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50"></div>
-                                <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#cbfb45]/20 rounded-full blur-[100px]"></div>
+                                <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#d6e02e]/20 rounded-full blur-[100px]"></div>
                                 
                                 <h3 className={`text-3xl font-black text-white mb-10 flex items-center gap-4 relative z-10 ${isArabic ? "font-arabic" : ""}`}>
                                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
@@ -283,7 +311,7 @@ export default function EventDetails({ event, is_registered }) {
                                             <div className="flex items-center gap-4">
                                                 <div className="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 shadow-lg relative">
                                                     {reg.user?.image_path ? (
-                                                        <img src={`/storage/${reg.user.image_path}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                        <img src={resolveAsset(`/storage/${reg.user.image_path}`)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                     ) : (
                                                         <Icon icon="mdi:account" className="w-6 h-6 text-gray-500" />
                                                     )}

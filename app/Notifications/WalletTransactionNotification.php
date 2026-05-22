@@ -28,14 +28,24 @@ class WalletTransactionNotification extends Notification
 
     public function toDatabase($notifiable)
     {
-        $title = $this->action === 'add' ? 'شحن المحفظة 💰' : 'خصم من المحفظة 💳';
-        $message = $this->action === 'add' 
+        $titleAr = $this->action === 'add' ? 'شحن المحفظة 💰' : 'خصم من المحفظة 💳';
+        $msgAr = $this->action === 'add' 
             ? 'تم شحن محفظتك بمبلغ ' . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
             : 'تم خصم مبلغ ' . $this->amount . ' ل.س من محفظتك. رصيدك الحالي: ' . $this->newBalance . ' ل.س.';
 
+        $titleEn = $this->action === 'add' ? 'Wallet Top-up 💰' : 'Wallet Deduction 💳';
+        $msgEn = $this->action === 'add'
+            ? 'Your wallet has been topped up with ' . $this->amount . ' SYP. Current balance: ' . $this->newBalance . ' SYP.'
+            : 'An amount of ' . $this->amount . ' SYP has been deducted from your wallet. Current balance: ' . $this->newBalance . ' SYP.';
+
         return [
-            'title' => $title,
-            'message' => $message,
+            'title_ar' => $titleAr,
+            'message_ar' => $msgAr,
+            'title_en' => $titleEn,
+            'message_en' => $msgEn,
+            // Fallback default
+            'title' => $titleAr,
+            'message' => $msgAr,
             'type' => 'wallet_transaction',
             'amount' => $this->amount,
             'new_balance' => $this->newBalance,
@@ -44,10 +54,19 @@ class WalletTransactionNotification extends Notification
 
     public function toFcm($notifiable)
     {
-        $title = $this->action === 'add' ? 'شحن المحفظة 💰' : 'خصم من المحفظة 💳';
-        $body = $this->action === 'add' 
-            ? 'تم شحن محفظتك بمبلغ ' . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
-            : 'تم خصم مبلغ ' . $this->amount . ' ل.س من محفظتك. رصيدك الحالي: ' . $this->newBalance . ' ل.س.';
+        $locale = $notifiable->locale ?? 'ar';
+
+        if ($locale === 'en') {
+            $title = $this->action === 'add' ? 'Wallet Top-up 💰' : 'Wallet Deduction 💳';
+            $body = $this->action === 'add' 
+                ? 'Your wallet has been topped up with ' . $this->amount . ' SYP. Current balance: ' . $this->newBalance . ' SYP.'
+                : 'An amount of ' . $this->amount . ' SYP has been deducted from your wallet. Current balance: ' . $this->newBalance . ' SYP.';
+        } else {
+            $title = $this->action === 'add' ? 'شحن المحفظة 💰' : 'خصم من المحفظة 💳';
+            $body = $this->action === 'add' 
+                ? 'تم شحن محفظتك بمبلغ ' . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
+                : 'تم خصم مبلغ ' . $this->amount . ' ل.س من محفظتك. رصيدك الحالي: ' . $this->newBalance . ' ل.س.';
+        }
 
         return [
             'title' => $title,

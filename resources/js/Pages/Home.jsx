@@ -97,7 +97,7 @@ function BentoCard({ icon, tag, title, desc, link, accentClass = "", isArabic })
       </h3>
       <p className={`text-gray-500 text-sm leading-relaxed flex-grow ${isArabic ? "font-arabic" : ""}`}>{desc}</p>
       <Link
-        href={link}
+        href={route(link)}
         className="mt-6 flex items-center gap-2 text-primary text-xs font-bold uppercase tracking-widest hover:gap-3 transition-all"
       >
         {isArabic ? "اكتشف المزيد" : "Learn More"}
@@ -140,6 +140,7 @@ function TestimonialCard({ name, role, text, rating = 5, isArabic }) {
 export default function Home() {
   const { lang } = useContext(LangContext);
   const isArabic = lang === "ar";
+  const resolveAsset = (path) => route('home').replace(/\/$/, '') + path;
 
   const services = [
     {
@@ -149,7 +150,7 @@ export default function Home() {
       desc: isArabic
         ? "ملاعب بمواصفات الاتحاد الدولي (FIP) مع عشب صناعي من الجيل الثالث وإضاءة LED تمنع الوهج."
         : "FIP-spec courts with 3rd-gen artificial turf and anti-glare LED lighting for an unbeatable game.",
-      link: "/services",
+      link: "services",
       accentClass: "bg-primary/10 text-primary",
     },
     {
@@ -159,7 +160,7 @@ export default function Home() {
       desc: isArabic
         ? "برامج Ace Juniors للناشئين، دروس للمحترفين، وحصص جماعية بإشراف مدربين معتمدين دولياً."
         : "Ace Juniors programs, pro-level coaching, and group sessions with internationally certified trainers.",
-      link: "/services",
+      link: "services",
       accentClass: "bg-accent/20 text-primary",
     },
     {
@@ -169,7 +170,7 @@ export default function Home() {
       desc: isArabic
         ? "تمارين مكملة تركز على القوة الذهنية والثبات العضلي وتقليل الإصابات بأسلوب متطور."
         : "Complementary training focused on mental strength, muscle stability, and injury prevention.",
-      link: "/services",
+      link: "services",
       accentClass: "bg-green-100 text-primary",
     },
     {
@@ -179,7 +180,7 @@ export default function Home() {
       desc: isArabic
         ? "فود كورت يقدم قائمة طعام صحية وتيراس خارجي بإطلالة حيوية على الملاعب لجلسات لا تُنسى."
         : "A healthy food court and open terrace with vibrant views of the courts for unforgettable moments.",
-      link: "/services",
+      link: "services",
       accentClass: "bg-emerald-50 text-primary",
     },
   ];
@@ -226,7 +227,7 @@ export default function Home() {
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/hero-court.png')" }}
+          style={{ backgroundImage: `url('${resolveAsset('/hero-court.png')}')` }}
         >
           <div className="absolute inset-0" style={{ backgroundColor: "rgba(255,255,255,0.78)" }} />
         </div>
@@ -259,7 +260,7 @@ export default function Home() {
                 {isArabic ? (
                   <>
                     آيس<br />
-                    <span className="text-[#2C5234]">بادل</span>{" "}
+                    <span className="text-primary">بادل</span>{" "}
                     <span className="relative inline-block">
                       <span className="relative z-10">أكاديمي</span>
                       <span className="absolute bottom-0 left-0 right-0 h-3 bg-accent/50 -rotate-1 z-0" />
@@ -268,7 +269,7 @@ export default function Home() {
                 ) : (
                   <>
                     ACE<br />
-                    <span className="text-[#2C5234]">PADEL</span>{" "}
+                    <span className="text-primary">PADEL</span>{" "}
                     <span className="relative inline-block">
                       <span className="relative z-10">ACADEMY</span>
                       <span className="absolute bottom-1 left-0 right-0 h-3 bg-accent/50 -rotate-1 z-0" />
@@ -294,11 +295,11 @@ export default function Home() {
                 transition={{ duration: 0.7, delay: 0.35 }}
                 className="flex flex-wrap gap-4"
               >
-                <Link href="/book-court" className="btn-primary">
+                <Link href={route('booking.guest')} className="btn-primary">
                   <Icon icon="mdi:calendar-check" className="w-5 h-5" />
                   {isArabic ? "احجز ملعبك الآن" : "Book Your Court"}
                 </Link>
-                <Link href="/services" className="btn-outline">
+                <Link href={route('services')} className="btn-outline">
                   <Icon icon="mdi:information-outline" className="w-5 h-5" />
                   {isArabic ? "اكتشف خدماتنا" : "Our Services"}
                 </Link>
@@ -333,7 +334,7 @@ export default function Home() {
             >
               <div className="relative rounded-[32px] overflow-hidden shadow-[0_24px_80px_rgba(44,82,52,0.25)] aspect-[4/3]">
                 <img
-                  src="/hero-court.png"
+                  src={resolveAsset('/hero-court.png')}
                   alt="Professional Padel Court — Ace Padel Academy Damascus"
                   className="w-full h-full object-cover"
                 />
@@ -384,9 +385,9 @@ export default function Home() {
       {/* ================================================
           STATS SECTION
           ================================================ */}
-      <section className="border-y border-gray-200" style={{ backgroundColor: "#F8FAF8" }}>
+      <section className="border-b border-slate-200 py-20 px-6" style={{backgroundColor:'#F9F9F9'}}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-200">
             {stats.map((s, i) => (
               <FadeIn key={i} delay={i * 0.1}>
                 <StatCard {...s} isArabic={isArabic} />
@@ -437,7 +438,7 @@ export default function Home() {
             <FadeIn direction="right">
               <div className="relative rounded-[28px] overflow-hidden shadow-card-hover aspect-[4/3]">
                 <img
-                  src="/hero-court.png"
+                  src={resolveAsset('/hero-court.png')}
                   alt="FIP certified padel court"
                   className="w-full h-full object-cover"
                 />
@@ -481,11 +482,11 @@ export default function Home() {
               </ul>
 
               <div className="mt-10 flex gap-4">
-                <Link href="/book-court" className="btn-primary">
+                <Link href={route('booking.guest')} className="btn-primary">
                   <Icon icon="mdi:calendar-plus" className="w-5 h-5" />
                   {isArabic ? "احجز الآن" : "Book a Court"}
                 </Link>
-                <Link href="/services" className="btn-outline">
+                <Link href={route('services')} className="btn-outline">
                   {isArabic ? "معرفة المزيد" : "Learn More"}
                 </Link>
               </div>
@@ -529,7 +530,7 @@ export default function Home() {
                 ))}
               </div>
 
-              <Link href="/services" className="btn-primary">
+              <Link href={route('services')} className="btn-primary">
                 <Icon icon="mdi:arrow-right" className="w-5 h-5" />
                 {isArabic ? "احجز جلسة بيلاتس" : "Book Pilates Session"}
               </Link>
@@ -538,7 +539,7 @@ export default function Home() {
             <FadeIn direction="left" delay={0.15}>
               <div className="relative rounded-[28px] overflow-hidden shadow-card-hover aspect-[4/3]">
                 <img
-                  src="/pilates-studio.png"
+                  src={resolveAsset('/pilates-studio.png')}
                   alt="Ace Pilates Studio — serene wellness experience"
                   className="w-full h-full object-cover"
                 />
@@ -551,10 +552,10 @@ export default function Home() {
       {/* ================================================
           SOCIAL TERRACE SECTION (Forest Green BG)
           ================================================ */}
-      <section className="py-20 text-white overflow-hidden relative" style={{ backgroundColor: "#2C5234" }}>
+      <section className="py-20 text-white overflow-hidden relative" style={{ backgroundColor: "#222831" }}>
         <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "url('/social-terrace.png')", backgroundSize: "cover", backgroundPosition: "center" }} />
-        <div className="absolute inset-0" style={{ backgroundColor: "rgba(44,82,52,0.8)" }} />
+          style={{ backgroundImage: `url('${resolveAsset('/social-terrace.png')}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
+        <div className="absolute inset-0" style={{ backgroundColor: "rgba(34,40,49,0.8)" }} />
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-5 gap-12 items-center">
@@ -594,7 +595,7 @@ export default function Home() {
             <FadeIn className="lg:col-span-2" direction="left" delay={0.2}>
               <div className="relative rounded-[28px] overflow-hidden shadow-2xl aspect-[3/4]">
                 <img
-                  src="/social-terrace.png"
+                  src={resolveAsset('/social-terrace.png')}
                   alt="Ace Padel Social Corner and Terrace"
                   className="w-full h-full object-cover"
                 />
@@ -607,7 +608,7 @@ export default function Home() {
       {/* ================================================
           TESTIMONIALS
           ================================================ */}
-      <section className="py-28 px-6" style={{ backgroundColor: "#F8FAF8" }}>
+      <section className="py-28 px-6" style={{ backgroundColor: "#F9F9F9" }}>
         <div className="max-w-7xl mx-auto">
           <FadeIn>
             <div className="text-center mb-16">
@@ -636,7 +637,7 @@ export default function Home() {
           ================================================ */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="rounded-[40px] p-10 md:p-16 overflow-hidden relative" style={{ backgroundColor: "#2C5234" }}>
+          <div className="rounded-[40px] p-10 md:p-16 overflow-hidden relative" style={{ backgroundColor: "#222831" }}>
             <div className="absolute top-0 right-0 w-80 h-80 bg-accent/10 rounded-full blur-[80px]" />
             <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
               <div>
@@ -676,11 +677,11 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <Link href="/book-court" className="btn-accent text-center justify-center text-base">
+                <Link href={route('booking.guest')} className="btn-accent text-center justify-center text-base">
                   <Icon icon="mdi:calendar-check" className="w-5 h-5" />
                   {isArabic ? "احجز ملعبك الآن" : "Book Your Court Now"}
                 </Link>
-                <Link href="/contact" className="flex items-center justify-center gap-2 text-white/80 border border-white/20 rounded-full px-8 py-4 font-bold text-sm uppercase tracking-widest hover:border-white hover:text-white transition-all">
+                <Link href={route('contact')} className="flex items-center justify-center gap-2 text-white/80 border border-white/20 rounded-full px-8 py-4 font-bold text-sm uppercase tracking-widest hover:border-white hover:text-white transition-all">
                   <Icon icon="mdi:message-outline" className="w-5 h-5" />
                   {isArabic ? "تواصل معنا" : "Contact Us"}
                 </Link>

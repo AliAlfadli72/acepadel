@@ -183,7 +183,7 @@ class BookingService
             $this->walletService->deposit(
                 $booking->user->wallet,
                 $booking->total_price,
-                "Refund for cancelled booking #{$booking->id}",
+                "إرجاع حجز ملغي #{$booking->id}",
                 $cancelledBy->id
             );
 

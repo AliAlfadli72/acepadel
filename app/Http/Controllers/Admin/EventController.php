@@ -275,7 +275,12 @@ class EventController extends Controller
         ]);
         
         if ($registration->user) {
-            $registration->user->notify(new \App\Notifications\EventRegistrationNotification($registration->event));
+            $registration->user->notify(
+                new \App\Notifications\EventRegistrationNotification(
+                    $registration->event,
+                    $request->status   // 'approved' or 'rejected'
+                )
+            );
         }
 
         $message =

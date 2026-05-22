@@ -2,19 +2,20 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
+import { resolveAsset } from '../../utils';
 
 const typeLabel = (type) => type === 'indoor' ? 'داخلي' : 'خارجي';
 const typeColor = (type) => type === 'indoor'
-    ? { bg: '#EEF4EE', color: '#2C5234', border: '#D9E8D9' }
+    ? { bg: '#eeeeee', color: '#222831', border: '#e0e0e0' }
     : { bg: '#FFF8E1', color: '#7A5F00', border: '#FFE082' };
 
 const statusLabel = (s) => ({
     pending:   { label: 'معلّق',    bg: '#FFF8E1', color: '#7A5F00' },
-    approved:  { label: 'مقبول',   bg: '#EEF4EE', color: '#2C5234' },
+    approved:  { label: 'مقبول',   bg: '#eeeeee', color: '#222831' },
     rejected:  { label: 'مرفوض',   bg: '#FEE2E2', color: '#991B1B' },
     cancelled: { label: 'ملغي',    bg: '#F3F4F6', color: '#6B7280' },
     completed: { label: 'مكتمل',   bg: '#EDE9FE', color: '#5B21B6' },
-}[s] || { label: s, bg: '#F3F4F6', color: '#6B7280' });
+}[s?.toLowerCase()] || { label: s, bg: '#F3F4F6', color: '#6B7280' });
 
 const DURATIONS = [
     { value: '1',   label: 'ساعة واحدة',  hours: 1   },
@@ -48,27 +49,55 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
     const [bookedSlots, setBookedSlots] = useState([]);
     const [isFetchingSlots, setIsFetchingSlots] = useState(false);
 
-    // Fetch Booked Slots
+    // Fetch Booked Slots with auto-polling (every 10 seconds)
     useEffect(() => {
         if (!selectedCourt || !data.date) {
             setBookedSlots([]);
             return;
         }
-        setIsFetchingSlots(true);
-        axios.get(route('api.courts.availability', selectedCourt.id), {
-            params: { date: data.date }
-        }).then(res => {
-            setBookedSlots(res.data.booked_slots || []);
-            // If currently selected time is now booked, clear it
-            setData(currentData => {
-                if (res.data.booked_slots.includes(currentData.start_time)) {
-                    return { ...currentData, start_time: '' };
-                }
-                return currentData;
-            });
-        }).catch(err => console.error(err))
-          .finally(() => setIsFetchingSlots(false));
+
+        const fetchSlots = (showSpinner = false) => {
+            if (showSpinner) setIsFetchingSlots(true);
+            axios.get(route('api.courts.availability', selectedCourt.id), {
+                params: { date: data.date }
+            }).then(res => {
+                setBookedSlots(res.data.booked_slots || []);
+                // If currently selected time is now booked, clear it
+                setData(currentData => {
+                    if (res.data.booked_slots.includes(currentData.start_time)) {
+                        return { ...currentData, start_time: '' };
+                    }
+                    return currentData;
+                });
+            }).catch(err => console.error(err))
+              .finally(() => {
+                  if (showSpinner) setIsFetchingSlots(false);
+              });
+        };
+
+        // Initial load with spinner
+        fetchSlots(true);
+
+        // Background polling every 10 seconds (silent)
+        const interval = setInterval(() => {
+            fetchSlots(false);
+        }, 10000);
+
+        return () => clearInterval(interval);
     }, [selectedCourt, data.date]);
+
+    // Auto-polling for player's booking history (every 15 seconds)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({
+                only: ['userBookings'],
+                preserveScroll: true,
+                preserveState: true
+            });
+        }, 15000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Fetch Coaches
 
@@ -132,22 +161,22 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
         setCancelConfirm(null);
     };
 
-    const V = { '--primary': '#2C5234', '--accent': '#DFFF00' };
+    const V = { '--primary': '#222831', '--accent': '#d6e02e' };
 
     return (
         <AppLayout>
             <Head title="حجز الملاعب — آيس بادل" />
 
-            <div dir="rtl" className="min-h-screen" style={{ backgroundColor: '#F8FAF8', fontFamily: "'Cairo', sans-serif" }}>
+            <div dir="rtl" className="min-h-screen" style={{ backgroundColor: '#F9F9F9', fontFamily: "'Cairo', sans-serif" }}>
 
                 {/* ── Hero ── */}
                 <div className="relative overflow-hidden py-16 px-6 text-center"
-                    style={{ background: 'linear-gradient(135deg, #2C5234 0%, #1E3A24 100%)' }}>
+                    style={{ background: 'linear-gradient(135deg, #222831 0%, #1a1f26 100%)' }}>
                     <div className="absolute inset-0 opacity-5 pointer-events-none"
-                        style={{ backgroundImage: 'radial-gradient(circle, #DFFF00 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+                        style={{ backgroundImage: 'radial-gradient(circle, #d6e02e 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
                     <div className="relative z-10 max-w-3xl mx-auto">
                         <span className="inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-4"
-                            style={{ backgroundColor: 'rgba(223,255,0,0.15)', color: '#DFFF00', letterSpacing: '0.15em' }}>
+                            style={{ backgroundColor: 'rgba(214,224,46,0.15)', color: '#d6e02e', letterSpacing: '0.15em' }}>
                             آيس بادل أكاديمي
                         </span>
                         <h1 className="text-4xl font-black text-white mb-3">احجز ملعبك الآن</h1>
@@ -162,7 +191,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                     {/* ── Flash Messages ── */}
                     {flash?.success && (
                         <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border"
-                            style={{ backgroundColor: '#EEF4EE', borderColor: '#D9E8D9', color: '#2C5234' }}>
+                            style={{ backgroundColor: '#eeeeee', borderColor: '#e0e0e0', color: '#222831' }}>
                             <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -189,7 +218,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                             </h2>
 
                             {courts.length === 0 ? (
-                                <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed" style={{ borderColor: '#D9E8D9' }}>
+                                <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed" style={{ borderColor: '#e0e0e0' }}>
                                     <div className="text-5xl mb-3">🏸</div>
                                     <p className="font-bold text-gray-500">لا توجد ملاعب متاحة حالياً</p>
                                 </div>
@@ -203,17 +232,17 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                 onClick={() => selectCourt(court)}
                                                 className="text-right rounded-2xl overflow-hidden border-2 transition-all duration-200"
                                                 style={{
-                                                    borderColor: isSelected ? '#2C5234' : '#E8F0E8',
+                                                    borderColor: isSelected ? '#222831' : '#E8F0E8',
                                                     backgroundColor: '#FFFFFF',
-                                                    boxShadow: isSelected ? '0 0 0 3px rgba(44,82,52,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
+                                                    boxShadow: isSelected ? '0 0 0 3px rgba(34, 40, 49, 0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
                                                     transform: isSelected ? 'translateY(-2px)' : 'none',
                                                 }}>
 
                                                 {/* Court Image */}
                                                 <div className="relative h-36 overflow-hidden"
-                                                    style={{ backgroundColor: '#EEF4EE' }}>
+                                                    style={{ backgroundColor: '#eeeeee' }}>
                                                     {court.image_path ? (
-                                                        <img src={`/storage/${court.image_path}`}
+                                                        <img src={resolveAsset(`/storage/${court.image_path}`)}
                                                             alt={court.name}
                                                             className="w-full h-full object-cover" />
                                                     ) : (
@@ -234,7 +263,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                     {/* Selected Checkmark */}
                                                     {isSelected && (
                                                         <div className="absolute top-2.5 left-2.5 w-6 h-6 rounded-full flex items-center justify-center"
-                                                            style={{ backgroundColor: '#2C5234' }}>
+                                                            style={{ backgroundColor: '#222831' }}>
                                                             <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                             </svg>
@@ -253,7 +282,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                     )}
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs font-bold" style={{ color: '#637060' }}>السعر / ساعة</span>
-                                                        <span className="font-black text-sm" style={{ color: '#2C5234' }}>
+                                                        <span className="font-black text-sm" style={{ color: '#222831' }}>
                                                             {court.price.toLocaleString('en-US')} ل.س
                                                         </span>
                                                     </div>
@@ -267,26 +296,26 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
 
                         {/* Booking Form (1/3 width) */}
                         <div className="xl:col-span-1">
-                            <h2 className="text-xl font-black mb-5" style={{ color: '#0F1A13' }}>
+                            <h2 className="text-xl font-black mb-5" style={{ color: '#1a1d20' }}>
                                 تفاصيل الحجز
                             </h2>
 
                             <div className="rounded-3xl overflow-hidden border"
-                                style={{ backgroundColor: '#FFFFFF', borderColor: '#E8F0E8', boxShadow: '0 4px 24px rgba(44,82,52,0.08)' }}>
+                                style={{ backgroundColor: '#FFFFFF', borderColor: '#e0e0e0', boxShadow: '0 4px 24px rgba(34,40,49,0.08)' }}>
 
                                 {/* Selected Court Preview */}
                                 {selectedCourt && (
                                     <div className="px-5 py-4 border-b flex items-center gap-3"
-                                        style={{ borderColor: '#E8F0E8', backgroundColor: '#F8FAF8' }}>
+                                        style={{ borderColor: '#e0e0e0', backgroundColor: '#eeeeee' }}>
                                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                                            style={{ backgroundColor: '#EEF4EE' }}>
-                                            <svg className="w-5 h-5" style={{ color: '#2C5234' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            style={{ backgroundColor: '#FFFFFF' }}>
+                                            <svg className="w-5 h-5" style={{ color: '#222831' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold" style={{ color: '#637060' }}>الملعب المختار</p>
-                                            <p className="font-black text-sm" style={{ color: '#0F1A13' }}>{selectedCourt.name}</p>
+                                            <p className="text-xs font-bold" style={{ color: '#616161' }}>الملعب المختار</p>
+                                            <p className="font-black text-sm" style={{ color: '#1a1d20' }}>{selectedCourt.name}</p>
                                         </div>
                                     </div>
                                 )}
@@ -295,7 +324,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
 
                                     {/* Date */}
                                     <div>
-                                        <label className="block text-xs font-bold mb-2" style={{ color: '#2C5234' }}>
+                                        <label className="block text-xs font-bold mb-2" style={{ color: '#222831' }}>
                                             📅 التاريخ
                                         </label>
                                         <input type="date"
@@ -304,13 +333,13 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                             min={getLocalFormattedDate()}
                                             required
                                             className="block w-full rounded-xl px-4 py-3 text-sm border transition-all"
-                                            style={{ borderColor: '#D9E8D9', color: '#0F1A13', outline: 'none', fontFamily: "'Cairo', sans-serif" }}
+                                            style={{ borderColor: '#e0e0e0', color: '#0F1A13', outline: 'none', fontFamily: "'Cairo', sans-serif" }}
                                         />
                                     </div>
 
                                     {/* Start Time */}
                                     <div>
-                                        <label className="block text-xs font-bold mb-2" style={{ color: '#2C5234' }}>
+                                        <label className="block text-xs font-bold mb-2" style={{ color: '#222831' }}>
                                             🕐 وقت البدء
                                         </label>
                                         {isFetchingSlots ? (
@@ -328,8 +357,8 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                             style={{
                                                                 opacity: isBooked ? 0.4 : 1,
                                                                 cursor: isBooked ? 'not-allowed' : 'pointer',
-                                                                borderColor: isSelected ? '#2C5234' : isBooked ? '#F3F4F6' : '#D9E8D9',
-                                                                backgroundColor: isSelected ? '#2C5234' : isBooked ? '#F9FAFB' : '#FFFFFF',
+                                                                borderColor: isSelected ? '#222831' : isBooked ? '#F3F4F6' : '#e0e0e0',
+                                                                backgroundColor: isSelected ? '#222831' : isBooked ? '#F9FAFB' : '#FFFFFF',
                                                                 color: isSelected ? '#FFFFFF' : isBooked ? '#9CA3AF' : '#0F1A13',
                                                             }}>
                                                             {slot}
@@ -345,7 +374,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
 
                                     {/* Duration */}
                                     <div>
-                                        <label className="block text-xs font-bold mb-2" style={{ color: '#2C5234' }}>
+                                        <label className="block text-xs font-bold mb-2" style={{ color: '#222831' }}>
                                             ⏱ المدة
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
@@ -354,8 +383,8 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                     onClick={() => setDuration(d.value)}
                                                     className="py-2.5 rounded-xl text-xs font-bold border-2 transition-all"
                                                     style={{
-                                                        borderColor:     duration === d.value ? '#2C5234' : '#D9E8D9',
-                                                        backgroundColor: duration === d.value ? '#2C5234' : '#FFFFFF',
+                                                        borderColor:     duration === d.value ? '#222831' : '#e0e0e0',
+                                                        backgroundColor: duration === d.value ? '#222831' : '#FFFFFF',
                                                         color:           duration === d.value ? '#FFFFFF' : '#637060',
                                                     }}>
                                                     {d.label}
@@ -367,7 +396,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                     {/* Coach Selection */}
                                     {availableCoaches.length > 0 && (
                                         <div>
-                                            <label className="block text-xs font-bold mb-2" style={{ color: '#2C5234' }}>
+                                            <label className="block text-xs font-bold mb-2" style={{ color: '#222831' }}>
                                                 👨‍🏫 إضافة مدرب (اختياري)
                                             </label>
                                             {isFetchingCoaches ? (
@@ -389,8 +418,9 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                                 }}
                                                                 className="flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all"
                                                                 style={{
-                                                                    borderColor: isSelected ? '#2C5234' : '#E8F0E8',
-                                                                    backgroundColor: isSelected ? '#EEF4EE' : '#FFFFFF'
+                                                                    borderColor: isSelected ? '#222831' : '#E8F0E8',
+                                                                    backgroundColor: isSelected ? '#F8FAF8' : '#FFFFFF',
+                                                                    boxShadow: isSelected ? '0 0 0 2px #222831' : 'none'
                                                                 }}>
                                                                 <div>
                                                                     <p className="text-sm font-bold" style={{ color: '#0F1A13' }}>
@@ -401,7 +431,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                                     </p>
                                                                 </div>
                                                                 <div className="text-left">
-                                                                    <p className="text-sm font-black" style={{ color: '#2C5234' }}>
+                                                                    <p className="text-sm font-black" style={{ color: '#222831' }}>
                                                                         +{parseFloat(coach.hourly_rate).toLocaleString('en-US')}
                                                                     </p>
                                                                     <p className="text-[10px]" style={{ color: '#637060' }}>ل.س / ساعة</p>
@@ -416,7 +446,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
 
                                     {/* Price Estimate */}
                                     {selectedCourt && (
-                                        <div className="rounded-2xl p-4" style={{ backgroundColor: '#EEF4EE' }}>
+                                        <div className="rounded-2xl p-4 border" style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}>
                                             <div className="flex justify-between items-center mb-2">
                                                 <span className="text-xs" style={{ color: '#637060' }}>
                                                     الملعب: {selectedCourt.price.toLocaleString('en-US')} × {DURATIONS.find(d=>d.value===duration)?.label}
@@ -429,15 +459,12 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                     </span>
                                                 </div>
                                             )}
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-sm" style={{ color: '#2C5234' }}>التكلفة المتوقعة</span>
-                                                <span className="font-black text-lg" style={{ color: '#2C5234' }}>
+                                            <div className="border-t pt-3 mt-2 flex justify-between items-center">
+                                                <span className="font-bold text-sm" style={{ color: '#222831' }}>الإجمالي</span>
+                                                <span className="font-black text-lg" style={{ color: '#222831' }}>
                                                     {estimatedPrice.toLocaleString('en-US')} ل.س
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] mt-2" style={{ color: '#637060' }}>
-                                                * يتم الخصم من المحفظة بعد موافقة الإدارة
-                                            </p>
                                         </div>
                                     )}
 
@@ -445,9 +472,9 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                     <button type="submit" disabled={processing || !selectedCourt || !data.start_time}
                                         className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-sm transition-all"
                                         style={{
-                                            backgroundColor: processing || !selectedCourt || !data.start_time ? '#637060' : '#2C5234',
+                                            backgroundColor: processing || !selectedCourt || !data.start_time ? '#637060' : '#222831',
                                             color: '#FFFFFF',
-                                            boxShadow: processing || !selectedCourt || !data.start_time ? 'none' : '0 6px 24px rgba(44,82,52,0.3)',
+                                            boxShadow: processing || !selectedCourt || !data.start_time ? 'none' : '0 6px 24px rgba(34,40,49,0.3)',
                                             cursor: processing || !selectedCourt || !data.start_time ? 'not-allowed' : 'pointer',
                                         }}>
                                         {processing ? (
@@ -479,7 +506,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                         </h2>
 
                         {userBookings.length === 0 ? (
-                            <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed" style={{ borderColor: '#D9E8D9' }}>
+                            <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed" style={{ borderColor: '#e0e0e0' }}>
                                 <div className="text-5xl mb-3">📋</div>
                                 <p className="font-bold" style={{ color: '#637060' }}>لم تقم بأي حجز بعد</p>
                                 <p className="text-sm mt-1" style={{ color: '#A7C4A7' }}>اختر ملعبك من الأعلى وابدأ الآن!</p>
@@ -488,7 +515,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                             <div className="rounded-3xl overflow-hidden border" style={{ borderColor: '#E8F0E8' }}>
                                 {/* Table Header */}
                                 <div className="hidden md:grid grid-cols-5 px-6 py-3 text-xs font-black"
-                                    style={{ backgroundColor: '#F8FAF8', color: '#637060', borderBottom: '1px solid #E8F0E8' }}>
+                                    style={{ backgroundColor: '#eeeeee', color: '#637060', borderBottom: '1px solid #E8F0E8' }}>
                                     <span>الملعب</span>
                                     <span>التاريخ والوقت</span>
                                     <span>المدة</span>
@@ -534,7 +561,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                                                 </div>
 
                                                 {/* Price */}
-                                                <div className="text-sm font-black" style={{ color: '#2C5234' }}>
+                                                <div className="text-sm font-black" style={{ color: '#222831' }}>
                                                     {parseFloat(booking.total_price).toLocaleString('en-US')} ل.س
                                                 </div>
 

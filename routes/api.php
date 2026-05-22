@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\CoachController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -36,6 +37,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Profile (Fresh data from server)
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
+    Route::post('/profile/notification-settings', [AuthController::class, 'updateNotificationSettings']);
+    Route::post('/profile/update-fcm-token', [AuthController::class, 'updateFcmToken']);
+
+    // Coach Routes — حجوزات المدرب
+    Route::get('/coach/bookings', [CoachController::class, 'myBookings']);
+
+    // Notifications API (Protected — needs auth to know which user)
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    Route::post('/notifications/test', [\App\Http\Controllers\Api\NotificationController::class, 'test']);
 });
 
 // هذا الرابط (API) سيزود تطبيق الموبايل بمعلومات الأكاديمية
@@ -52,7 +66,11 @@ Route::get('/academy-info', function () {
 
 // Courts API
 Route::get('/courts', [CourtController::class, 'index']);
-Route::get('/courts/{id}/availability', [CourtController::class, 'availability']);
+Route::get('/courts/{id}/availability', [CourtController::class, 'availability'])->name('api.courts.availability');
+Route::get('/courts/{court}/available-coaches', [CoachController::class, 'availableCoaches'])->name('api.courts.coaches');
+
+// Coaches API (public — needed for booking screen)
+Route::get('/coaches', [CoachController::class, 'index']);
 
 // Leaderboard API
 Route::get('/leaderboard', [LeaderboardController::class, 'index']);
@@ -60,10 +78,4 @@ Route::get('/leaderboard', [LeaderboardController::class, 'index']);
 // Events API
 Route::get('/events', [EventController::class, 'index']);
 
-// Notifications API
-Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
-Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
-Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
-Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
-Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
-Route::post('/notifications/test', [\App\Http\Controllers\Api\NotificationController::class, 'test']);
+// Notifications are now inside auth:sanctum group above
