@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Icon } from '@iconify/react';
 import dayjs from 'dayjs';
@@ -25,19 +25,19 @@ const transactionConfig = {
     deposit: {
         label: 'إيداع',
         bg: 'bg-emerald-50',
-        text: 'text-emerald-700',
+        text: 'text-[#10B981]',
         border: 'border-emerald-100/50',
-        amount: 'text-emerald-600 bg-emerald-50/50',
+        amount: 'text-[#10B981] bg-emerald-50/50',
         icon: 'mdi:arrow-bottom-left',
         sign: '+',
     },
 
     booking_payment: {
         label: 'دفع حجز',
-        bg: 'bg-red-50',
-        text: 'text-red-700',
-        border: 'border-red-100/50',
-        amount: 'text-red-600 bg-red-50/50',
+        bg: 'bg-rose-50',
+        text: 'text-[#EF4444]',
+        border: 'border-rose-100/50',
+        amount: 'text-[#EF4444] bg-rose-50/50',
         icon: 'mdi:calendar-remove',
         sign: '-',
     },
@@ -53,9 +53,9 @@ const transactionConfig = {
     expense: {
         label: 'مصروف',
         bg: 'bg-rose-50',
-        text: 'text-rose-700',
+        text: 'text-[#EF4444]',
         border: 'border-rose-100/50',
-        amount: 'text-rose-600 bg-rose-50/50',
+        amount: 'text-[#EF4444] bg-rose-50/50',
         icon: 'mdi:cash-minus',
         sign: '-',
     },
@@ -98,34 +98,28 @@ const transactionConfig = {
 */
 
 const CustomTooltip = ({ active, payload, label }) => {
-
     if (active && payload && payload.length) {
-
         return (
             <div
-                className="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-gray-100 font-arabic text-right"
+                className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 font-arabic text-right"
                 dir="rtl"
             >
-                <p className="font-bold text-gray-900 mb-2">
+                <p className="font-extrabold text-slate-900 mb-2 text-xs">
                     {label}
                 </p>
-
                 {payload.map((entry, index) => (
-
                     <div
                         key={index}
-                        className="flex items-center gap-2 text-sm mb-1"
+                        className="flex items-center gap-2 text-[11px] font-semibold mb-1"
                     >
                         <div
-                            className="w-2.5 h-2.5 rounded-full"
+                            className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: entry.color }}
                         />
-
-                        <span className="text-gray-600">
+                        <span className="text-slate-500">
                             {entry.name}:
                         </span>
-
-                        <span className="font-bold font-sans text-gray-900">
+                        <span className="font-bold font-sans text-slate-800 mr-auto">
                             {Number(entry.value).toLocaleString('en-US')} ل.س
                         </span>
                     </div>
@@ -133,7 +127,6 @@ const CustomTooltip = ({ active, payload, label }) => {
             </div>
         );
     }
-
     return null;
 };
 export default function AdminFinancesIndex({
@@ -293,187 +286,110 @@ const submitExpense = (e) => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-6"
+                    className="bg-white border border-slate-200/60 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-slate-100 w-full overflow-hidden"
                 >
-
-                    {/* Revenue */}
-
-                    <motion.div
-                        variants={itemVariants}
-                        className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-                    >
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-50 rounded-full" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <p className="text-sm text-gray-500 font-bold mb-1">
-                                    أرباح الحجوزات
-                                </p>
-
-                                <p className="text-3xl font-black text-gray-900 font-sans">
-                                    {Number(stats.total_bookings_revenue || 0).toLocaleString('en-US')}
-
-                                    <span className="text-sm mr-1 text-gray-400">
-                                        ل.س
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                <Icon icon="mdi:calendar-check" className="w-7 h-7" />
-                            </div>
+                    {/* Segment 1: Booking Revenue */}
+                    <div className="p-6 flex-1 flex items-center justify-between">
+                        <div>
+                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1.5">
+                                أرباح الحجوزات
+                            </p>
+                            <p className="text-xl font-bold text-[#0F172A] font-sans">
+                                {Number(stats.total_bookings_revenue || 0).toLocaleString('en-US')}
+                                <span className="text-xs mr-1 text-[#64748B] font-medium">ل.س</span>
+                            </p>
                         </div>
-                    </motion.div>
-
-                    {/* Deposits */}
-
-                    <motion.div
-                        variants={itemVariants}
-                        className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-                    >
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <p className="text-sm text-gray-500 font-bold mb-1">
-                                    إجمالي الإيداعات
-                                </p>
-
-                                <p className="text-3xl font-black text-gray-900 font-sans">
-                                    {Number(stats.total_deposits || 0).toLocaleString('en-US')}
-
-                                    <span className="text-sm mr-1 text-gray-400">
-                                        ل.س
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
-                                <Icon icon="mdi:cash-plus" className="w-7 h-7" />
-                            </div>
+                        <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#10B981] flex items-center justify-center">
+                            <Icon icon="mdi:calendar-check" className="w-5 h-5" />
                         </div>
-                    </motion.div>
+                    </div>
 
-                    {/* Refunds */}
-
-                    <motion.div
-                        variants={itemVariants}
-                        className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-                    >
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <p className="text-sm text-gray-500 font-bold mb-1">
-                                    الاسترجاعات
-                                </p>
-
-                                <p className="text-3xl font-black text-gray-900 font-sans">
-                                    {Number(stats.total_refunds || 0).toLocaleString('en-US')}
-
-                                    <span className="text-sm mr-1 text-gray-400">
-                                        ل.س
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
-                                <Icon icon="mdi:cash-refund" className="w-7 h-7" />
-                            </div>
+                    {/* Segment 2: Deposits */}
+                    <div className="p-6 flex-1 flex items-center justify-between">
+                        <div>
+                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1.5">
+                                إجمالي الإيداعات
+                            </p>
+                            <p className="text-xl font-bold text-[#0F172A] font-sans">
+                                {Number(stats.total_deposits || 0).toLocaleString('en-US')}
+                                <span className="text-xs mr-1 text-[#64748B] font-medium">ل.س</span>
+                            </p>
                         </div>
-                    </motion.div>
-                    {/* Expenses */}
-
-                    <motion.div
-                        variants={itemVariants}
-                        className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-                    >
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-rose-50 rounded-full" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <p className="text-sm text-gray-500 font-bold mb-1">
-                                    المصروفات
-                                </p>
-
-                                <p className="text-3xl font-black text-gray-900 font-sans">
-                                    {Number(stats.total_expenses || 0).toLocaleString('en-US')}
-
-                                    <span className="text-sm mr-1 text-gray-400">
-                                        ل.س
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600">
-                                <Icon icon="mdi:cash-minus" className="w-7 h-7" />
-                            </div>
+                        <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#10B981] flex items-center justify-center">
+                            <Icon icon="mdi:cash-plus" className="w-5 h-5" />
                         </div>
-                    </motion.div>
+                    </div>
 
-                    {/* Net Revenue */}
-
-                    <motion.div
-                        variants={itemVariants}
-                        className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-                    >
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-50 rounded-full" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <p className="text-sm text-gray-500 font-bold mb-1">
-                                    صافي الأرباح
-                                </p>
-
-                                <p className="text-3xl font-black text-gray-900 font-sans">
-                                    {Number(stats.net_revenue || 0).toLocaleString('en-US')}
-
-                                    <span className="text-sm mr-1 text-gray-400">
-                                        ل.س
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
-                                <Icon icon="mdi:finance" className="w-7 h-7" />
-                            </div>
+                    {/* Segment 3: Refunds */}
+                    <div className="p-6 flex-1 flex items-center justify-between">
+                        <div>
+                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1.5">
+                                الاسترجاعات
+                            </p>
+                            <p className="text-xl font-bold text-[#EF4444] font-sans">
+                                {Number(stats.total_refunds || 0).toLocaleString('en-US')}
+                                <span className="text-xs mr-1 text-[#64748B] font-medium">ل.س</span>
+                            </p>
                         </div>
-                    </motion.div>
-
-                    {/* Wallets */}
-
-                    <motion.div
-                        variants={itemVariants}
-                        className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-                    >
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-50 rounded-full" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <p className="text-sm text-gray-500 font-bold mb-1">
-                                    أرصدة المحافظ
-                                </p>
-
-                                <p className="text-3xl font-black text-gray-900 font-sans">
-                                    {Number(stats.total_wallets_balance || 0).toLocaleString('en-US')}
-
-                                    <span className="text-sm mr-1 text-gray-400">
-                                        ل.س
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
-                                <Icon icon="mdi:wallet" className="w-7 h-7" />
-                            </div>
+                        <div className="w-9 h-9 rounded-full bg-rose-50 text-[#EF4444] flex items-center justify-center">
+                            <Icon icon="mdi:cash-refund" className="w-5 h-5" />
                         </div>
-                    </motion.div>
+                    </div>
+
+                    {/* Segment 4: Expenses */}
+                    <div className="p-6 flex-1 flex items-center justify-between">
+                        <div>
+                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1.5">
+                                المصروفات
+                            </p>
+                            <p className="text-xl font-bold text-[#EF4444] font-sans">
+                                {Number(stats.total_expenses || 0).toLocaleString('en-US')}
+                                <span className="text-xs mr-1 text-[#64748B] font-medium">ل.س</span>
+                            </p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full bg-rose-50 text-[#EF4444] flex items-center justify-center">
+                            <Icon icon="mdi:cash-minus" className="w-5 h-5" />
+                        </div>
+                    </div>
+
+                    {/* Segment 5: Net Profit */}
+                    <div className="p-6 flex-1 flex items-center justify-between">
+                        {(() => {
+                            const isNegative = (stats.net_revenue || 0) < 0;
+                            return (
+                                <>
+                                    <div>
+                                        <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1.5">
+                                            صافي الأرباح
+                                        </p>
+                                        <p className={`text-xl font-bold ${isNegative ? 'text-[#EF4444]' : 'text-[#10B981]'} font-sans`}>
+                                            {Number(stats.net_revenue || 0).toLocaleString('en-US')}
+                                            <span className="text-xs mr-1 text-[#64748B] font-medium">ل.س</span>
+                                        </p>
+                                    </div>
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isNegative ? 'bg-rose-50 text-[#EF4444]' : 'bg-emerald-50 text-[#10B981]'}`}>
+                                        <Icon icon="mdi:finance" className="w-5 h-5" />
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
+
+                    {/* Segment 6: Wallets */}
+                    <div className="p-6 flex-1 flex items-center justify-between">
+                        <div>
+                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1.5">
+                                أرصدة المحافظ
+                            </p>
+                            <p className="text-xl font-bold text-[#0F172A] font-sans">
+                                {Number(stats.total_wallets_balance || 0).toLocaleString('en-US')}
+                                <span className="text-xs mr-1 text-[#64748B] font-medium">ل.س</span>
+                            </p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#10B981] flex items-center justify-center">
+                            <Icon icon="mdi:wallet" className="w-5 h-5" />
+                        </div>
+                    </div>
                 </motion.div>
 
                 {/* Chart */}
@@ -482,23 +398,23 @@ const submitExpense = (e) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 lg:p-8"
+                    className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.01)] border border-slate-200/60 p-6 lg:p-8"
                 >
 
                     <div className="flex items-center justify-between mb-8">
 
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900">
+                            <h2 className="text-lg font-extrabold text-slate-900">
                                 الأداء المالي الشهري
                             </h2>
 
-                            <p className="text-sm text-gray-500 mt-1">
-                                تحليل الإيرادات والإيداعات والاسترجاعات
+                            <p className="text-xs text-slate-500 mt-0.5">
+                                تحليل الإيرادات والإيداعات والاسترجاعات والمصروفات
                             </p>
                         </div>
 
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                            <Icon icon="mdi:chart-bell-curve-cumulative" className="w-6 h-6" />
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700">
+                            <Icon icon="mdi:chart-bell-curve-cumulative" className="w-5 h-5" />
                         </div>
                     </div>
 
@@ -519,21 +435,20 @@ const submitExpense = (e) => {
                                 <defs>
 
                                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.15}/>
+                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
                                     </linearGradient>
                                     <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.15}/>
+                                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
                                     </linearGradient>
                                     <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35}/>
-                                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.15}/>
+                                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
                                     </linearGradient>
-
                                     <linearGradient id="colorDeposits" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.15}/>
+                                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                                     </linearGradient>
 
                                 </defs>
@@ -542,7 +457,7 @@ const submitExpense = (e) => {
                                     dataKey="date"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#9ca3af', fontSize: 12 }}
+                                    tick={{ fill: '#64748B', fontSize: 10, fontWeight: 'bold' }}
                                     dy={10}
                                 />
                                 
@@ -550,15 +465,15 @@ const submitExpense = (e) => {
                                 <YAxis
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#9ca3af', fontSize: 12 }}
-                                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                                    tick={{ fill: '#64748B', fontSize: 10, fontWeight: 'bold' }}
+                                    tickFormatter={(value) => `${(value / 1000).toLocaleString('en-US')}k`}
                                     dx={-10}
                                 />
 
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     vertical={false}
-                                    stroke="#f3f4f6"
+                                    stroke="#F1F5F9"
                                 />
 
                                 <Tooltip content={<CustomTooltip />} />
@@ -567,8 +482,8 @@ const submitExpense = (e) => {
                                     type="monotone"
                                     dataKey="revenue"
                                     name="أرباح الحجوزات"
-                                    stroke="#10b981"
-                                    strokeWidth={3}
+                                    stroke="#10B981"
+                                    strokeWidth={2.5}
                                     fillOpacity={1}
                                     fill="url(#colorRevenue)"
                                 />
@@ -577,8 +492,8 @@ const submitExpense = (e) => {
                                     type="monotone"
                                     dataKey="deposits"
                                     name="الإيداعات"
-                                    stroke="#3b82f6"
-                                    strokeWidth={3}
+                                    stroke="#3B82F6"
+                                    strokeWidth={2.5}
                                     fillOpacity={1}
                                     fill="url(#colorDeposits)"
                                 />
@@ -587,28 +502,28 @@ const submitExpense = (e) => {
                                     type="monotone"
                                     dataKey="refunds"
                                     name="الاسترجاعات"
-                                    stroke="#ef4444"
-                                    strokeWidth={3}
+                                    stroke="#EF4444"
+                                    strokeWidth={2.5}
                                     fillOpacity={0}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="expenses"
                                     name="المصروفات"
-                                    stroke="#f43f5e"
-                                    strokeWidth={3}
+                                    stroke="#EF4444"
+                                    strokeWidth={2.5}
                                     fillOpacity={1}
                                     fill="url(#colorExpenses)"
                                 />
                                 <Area
                                     type="monotone"
-                                        dataKey="net"
-                                        name="صافي الربح"
-                                        stroke="#8b5cf6"
-                                        strokeWidth={4}
-                                        fillOpacity={1}
-                                        fill="url(#colorNet)"
-                                    />
+                                    dataKey="net"
+                                    name="صافي الربح"
+                                    stroke="#8B5CF6"
+                                    strokeWidth={2.5}
+                                    fillOpacity={1}
+                                    fill="url(#colorNet)"
+                                />
 
                             </AreaChart>
                         </ResponsiveContainer>
@@ -620,25 +535,25 @@ const submitExpense = (e) => {
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.45 }}
-    className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+    className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.01)] border border-slate-200/60 overflow-hidden"
 >
 
     {/* Header */}
 
-    <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/20">
 
         <div className="flex items-center gap-3">
 
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
-                <Icon icon="mdi:cash-minus" className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100/30 flex items-center justify-center text-[#EF4444]">
+                <Icon icon="mdi:cash-minus" className="w-5 h-5" />
             </div>
 
             <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-lg font-extrabold text-slate-900">
                     إدارة المصروفات
                 </h2>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-0.5">
                     إدارة جميع مصروفات الأكاديمية
                 </p>
             </div>
@@ -646,9 +561,9 @@ const submitExpense = (e) => {
 
         <button
             onClick={() => setExpenseModalOpen(true)}
-            className="px-5 py-3 rounded-2xl bg-primary text-gray-900 font-bold flex items-center gap-2 hover:scale-105 transition"
+            className="px-4 py-2.5 rounded-2xl bg-slate-900 text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
-            <Icon icon="mdi:plus" className="w-5 h-5" />
+            <Icon icon="mdi:plus" className="w-4 h-4" />
             إضافة مصروف
         </button>
     </div>
@@ -659,46 +574,46 @@ const submitExpense = (e) => {
 
         <table className="w-full text-right whitespace-nowrap">
 
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-slate-50/50 border-b border-slate-100/80">
 
                 <tr>
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         العنوان
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         النوع
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         المبلغ
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         البداية
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         النهاية
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         الحالة
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-bold text-gray-400">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">
                         الإجراءات
                     </th>
                 </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-100/80">
 
                 {expenses.map((expense) => (
 
                     <tr
                         key={expense.id}
-                        className="hover:bg-gray-50/70 transition"
+                        className="hover:bg-slate-50/45 transition-colors border-b border-slate-100/50"
                     >
 
                         {/* Title */}
@@ -706,11 +621,11 @@ const submitExpense = (e) => {
                         <td className="px-6 py-5">
 
                             <div>
-                                <p className="font-bold text-gray-900">
+                                <p className="font-extrabold text-slate-900 text-sm">
                                     {expense.title}
                                 </p>
 
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
                                     {expense.description || 'لا يوجد وصف'}
                                 </p>
                             </div>
@@ -720,7 +635,7 @@ const submitExpense = (e) => {
 
                         <td className="px-6 py-5">
 
-                            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 text-gray-700">
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/40">
 
                                 {expense.type === 'one_time'
                                     ? 'مرة واحدة'
@@ -734,14 +649,14 @@ const submitExpense = (e) => {
 
                         <td className="px-6 py-5">
 
-                            <span className="font-black text-rose-600 font-sans">
+                            <span className="font-black text-[#EF4444] font-sans text-sm">
                                 -{Number(expense.amount).toLocaleString('en-US')} ل.س
                             </span>
                         </td>
 
                         {/* Start */}
 
-                        <td className="px-6 py-5 text-sm text-gray-700 font-sans">
+                        <td className="px-6 py-5 text-xs text-slate-600 font-sans font-medium">
                             {expense.starts_at
                                 ? dayjs(expense.starts_at).format('YYYY-MM-DD')
                                 : expense.expense_date
@@ -751,7 +666,7 @@ const submitExpense = (e) => {
 
                         {/* End */}
 
-                        <td className="px-6 py-5 text-sm text-gray-700 font-sans">
+                        <td className="px-6 py-5 text-xs text-slate-600 font-sans font-medium">
                             {expense.ends_at
                                 ? dayjs(expense.ends_at).format('YYYY-MM-DD')
                                 : '-'}
@@ -761,10 +676,10 @@ const submitExpense = (e) => {
 
                         <td className="px-6 py-5">
 
-                            <span className={`px-3 py-1 rounded-xl text-xs font-bold ${
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold border shadow-sm ${
                                 expense.active
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-gray-100 text-gray-600'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100/50'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200/40'
                             }`}>
                                 {expense.active ? 'نشط' : 'منتهي'}
                             </span>
@@ -787,7 +702,7 @@ const submitExpense = (e) => {
                                                 );
                                             }
                                         }}
-                                        className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition"
+                                        className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100/50 flex items-center justify-center hover:bg-amber-100 transition"
                                     >
                                         <Icon icon="mdi:stop-circle-outline" className="w-5 h-5" />
                                     </button>
@@ -802,7 +717,7 @@ const submitExpense = (e) => {
                                             );
                                         }
                                     }}
-                                    className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition"
+                                    className="w-9 h-9 rounded-xl bg-rose-50 text-[#EF4444] border border-rose-100/50 flex items-center justify-center hover:bg-rose-100 transition"
                                 >
                                     <Icon icon="mdi:delete-outline" className="w-5 h-5" />
                                 </button>
@@ -822,25 +737,25 @@ const submitExpense = (e) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+                    className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.01)] border border-slate-200/60 overflow-hidden"
                 >
 
                     {/* Header */}
 
-                    <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50">
+                    <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/20">
 
                         <div className="flex items-center gap-3">
 
-                            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-gray-100">
-                                <Icon icon="mdi:swap-horizontal-bold" className="w-6 h-6 text-gray-700" />
+                            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-200/50 text-slate-700">
+                                <Icon icon="mdi:swap-horizontal-bold" className="w-5 h-5" />
                             </div>
 
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900">
+                                <h2 className="text-lg font-extrabold text-slate-900">
                                     السجل المالي
                                 </h2>
 
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-xs text-slate-500 mt-0.5">
                                     جميع العمليات المالية داخل النظام
                                 </p>
                             </div>
@@ -849,89 +764,88 @@ const submitExpense = (e) => {
                         {/* Filters */}
                         <div className="flex flex-col lg:flex-row gap-3 w-full sm:w-auto">
 
-    {/* Search */}
+                            {/* Search */}
 
-    <div className="relative group">
+                            <div className="relative group">
 
-        <Icon
-            icon="mdi:magnify"
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-        />
+                                <Icon
+                                    icon="mdi:magnify"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                                />
 
-        <input
-            type="text"
-            name="search"
-            value={filters.search || ''}
-            onChange={handleFilterChange}
-            placeholder="بحث..."
-            className="w-full sm:w-72 pl-4 pr-12 py-3 rounded-2xl border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 text-sm"
-        />
-    </div>
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value={filters.search || ''}
+                                    onChange={handleFilterChange}
+                                    placeholder="بحث..."
+                                    className="w-full sm:w-72 pl-4 pr-10 py-2.5 rounded-2xl border border-slate-200 focus:border-slate-400 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none placeholder-slate-400"
+                                />
+                            </div>
 
-    {/* Type Filter */}
+                            {/* Type Filter */}
 
-    <select
-        name="type"
-        value={filters.type || 'all'}
-        onChange={handleFilterChange}
-        className="px-5 py-3 rounded-2xl border border-gray-200 text-sm font-bold"
-    >
-        <option value="all">كل الحركات</option>
-        <option value="deposit">الإيداعات</option>
-        <option value="booking_payment">دفعات الحجوزات</option>
-        <option value="event_payment">رسوم الفعاليات</option>
-        <option value="expense">المصروفات</option>
-        <option value="refund">الاسترجاعات</option>
-        <option value="bonus">المكافآت</option>
-        <option value="manual_adjustment">الخصومات الإدارية</option>
-    </select>
+                            <select
+                                name="type"
+                                value={filters.type || 'all'}
+                                onChange={handleFilterChange}
+                                className="px-4 py-2.5 rounded-2xl border border-slate-200 focus:border-slate-400 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none cursor-pointer"
+                            >
+                                <option value="all">كل الحركات</option>
+                                <option value="deposit">الإيداعات</option>
+                                <option value="booking_payment">دفعات الحجوزات</option>
+                                <option value="event_payment">رسوم الفعاليات</option>
+                                <option value="expense">المصروفات</option>
+                                <option value="refund">الاسترجاعات</option>
+                                <option value="bonus">المكافآت</option>
+                                <option value="manual_adjustment">الخصومات الإدارية</option>
+                            </select>
 
-    {/* Month Filter */}
+                            {/* Month Filter */}
 
-    <select
-        name="month"
-        value={filters.month || 'all'}
-        onChange={handleFilterChange}
-        className="px-5 py-3 rounded-2xl border border-gray-200 text-sm font-bold"
-    >
-        {months.map((month) => {
+                            <select
+                                name="month"
+                                value={filters.month || 'all'}
+                                onChange={handleFilterChange}
+                                className="px-4 py-2.5 rounded-2xl border border-slate-200 focus:border-slate-400 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none cursor-pointer"
+                            >
+                                {months.map((month) => {
 
-        const isFuture =
-            month.value !== 'all' &&
-            Number(filters.year || currentYear) === currentYear &&
-            month.value > currentMonth;
+                                const isFuture =
+                                    month.value !== 'all' &&
+                                    Number(filters.year || currentYear) === currentYear &&
+                                    month.value > currentMonth;
 
-            return (
-                <option
-                    key={month.value}
-                    value={month.value}
-                    disabled={isFuture}
-                >
-                    {month.label}
-                </option>
-            );
-        })}
-    </select>
+                                    return (
+                                        <option
+                                            key={month.value}
+                                            value={month.value}
+                                            disabled={isFuture}
+                                        >
+                                            {month.label}
+                                        </option>
+                                    );
+                                })}
+                            </select>
 
-    {/* Year Filter */}
+                            {/* Year Filter */}
 
-    <select
-        name="year"
-        value={filters.year || currentYear}
-        onChange={handleFilterChange}
-        className="px-5 py-3 rounded-2xl border border-gray-200 text-sm font-bold"
-    >
-        {years.map((year) => (
-            <option
-                key={year}
-                value={year}
-            >
-                {year}
-            </option>
-        ))}
-    </select>
-</div>
-
+                            <select
+                                name="year"
+                                value={filters.year || currentYear}
+                                onChange={handleFilterChange}
+                                className="px-4 py-2.5 rounded-2xl border border-slate-200 focus:border-slate-400 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none cursor-pointer"
+                            >
+                                {years.map((year) => (
+                                    <option
+                                        key={year}
+                                        value={year}
+                                    >
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
                     </div>
 
@@ -941,19 +855,19 @@ const submitExpense = (e) => {
 
                         <table className="w-full text-right whitespace-nowrap">
 
-                            <thead className="bg-white border-b border-gray-100">
+                            <thead className="bg-slate-50/50 border-b border-slate-100">
 
                                 <tr>
-                                    <th className="px-6 py-5 text-sm font-bold text-gray-400">التاريخ</th>
-                                    <th className="px-6 py-5 text-sm font-bold text-gray-400">اللاعب</th>
-                                    <th className="px-6 py-5 text-sm font-bold text-gray-400">النوع</th>
-                                    <th className="px-6 py-5 text-sm font-bold text-gray-400">المبلغ</th>
-                                    <th className="px-6 py-5 text-sm font-bold text-gray-400">الوصف</th>
-                                    <th className="px-6 py-5 text-sm font-bold text-gray-400">بواسطة</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">التاريخ</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">اللاعب</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">النوع</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">المبلغ</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">الوصف</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 tracking-wider">بواسطة</th>
                                 </tr>
                             </thead>
 
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody className="divide-y divide-slate-100/80">
 
                                 {transactions.data.map((transaction, index) => {
 
@@ -968,7 +882,7 @@ const submitExpense = (e) => {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.05 * index }}
-                                            className="hover:bg-gray-50/80 transition-colors"
+                                            className="hover:bg-slate-50/45 transition-colors border-b border-slate-100/50"
                                         >
 
                                             {/* Date */}
@@ -977,11 +891,11 @@ const submitExpense = (e) => {
 
                                                 <div className="flex items-center gap-2">
 
-                                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
-                                                        <Icon icon="mdi:calendar-clock" className="w-4 h-4 text-gray-400" />
+                                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100/60">
+                                                        <Icon icon="mdi:calendar-clock" className="w-4 h-4 text-slate-400" />
                                                     </div>
 
-                                                    <span className="text-gray-900 font-bold text-sm font-sans">
+                                                    <span className="text-slate-700 font-bold text-xs font-sans">
                                                         {dayjs(transaction.created_at)
                                                             .locale('en')
                                                             .format('YYYY-MM-DD')}
@@ -995,16 +909,16 @@ const submitExpense = (e) => {
 
                                                 <div className="flex items-center gap-3">
 
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm">
+                                                    <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-extrabold text-xs border border-slate-200/50">
                                                         {transaction.wallet?.user?.name?.charAt(0) || '?'}
                                                     </div>
 
                                                     <div>
-                                                        <p className="text-sm font-bold text-gray-900">
+                                                        <p className="text-xs font-extrabold text-slate-900">
                                                             {transaction.wallet?.user?.name || 'مصروف إداري'}
                                                         </p>
 
-                                                        <p className="text-xs text-gray-500 font-sans mt-0.5">
+                                                        <p className="text-[10px] text-slate-400 font-sans mt-0.5 font-medium">
                                                             {transaction.wallet?.user?.phone || '—'}
                                                         </p>
                                                     </div>
@@ -1015,7 +929,7 @@ const submitExpense = (e) => {
 
                                             <td className="px-6 py-5">
 
-                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border shadow-sm ${config.bg} ${config.text} ${config.border}`}>
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold border shadow-sm ${config.bg} ${config.text} ${config.border}`}>
                                                     <Icon icon={config.icon} className="w-3.5 h-3.5" />
                                                     {config.label}
                                                 </span>
@@ -1025,13 +939,13 @@ const submitExpense = (e) => {
 
                                             <td className="px-6 py-5">
 
-                                                <span className={`text-base font-black font-sans px-3 py-1.5 rounded-lg ${config.amount}`}>
+                                                <span className={`text-xs font-black font-sans px-2.5 py-1 rounded-lg border shadow-sm ${config.amount} ${config.border}`}>
 
                                                     {config.sign}
 
                                                     {Number(transaction.amount).toLocaleString('en-US')}
 
-                                                    <span className="text-xs font-arabic font-bold opacity-70 mr-1">
+                                                    <span className="text-[10px] font-arabic font-bold opacity-70 mr-1">
                                                         ل.س
                                                     </span>
                                                 </span>
@@ -1042,7 +956,7 @@ const submitExpense = (e) => {
                                             <td className="px-6 py-5">
 
                                                 <p
-                                                    className="text-sm text-gray-600 max-w-[250px] truncate bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100/50"
+                                                    className="text-xs text-slate-600 max-w-[250px] truncate bg-slate-50/60 px-2.5 py-1 rounded-lg border border-slate-100/80 font-medium"
                                                     title={(transaction.description || '')
                                                         .replace('Court booking #', 'حجز ملعب #')
                                                         .replace('Refund for cancelled booking #', 'إرجاع حجز ملغي #')}
@@ -1061,10 +975,10 @@ const submitExpense = (e) => {
 
                                                     <Icon
                                                         icon="mdi:account-tie"
-                                                        className="w-4 h-4 text-gray-400"
+                                                        className="w-4 h-4 text-slate-400"
                                                     />
 
-                                                    <p className="text-sm font-bold text-gray-600">
+                                                    <p className="text-xs font-extrabold text-slate-600">
                                                         {transaction.creator?.name || 'النظام'}
                                                     </p>
                                                 </div>
@@ -1079,17 +993,17 @@ const submitExpense = (e) => {
 
                                         <td colSpan="6" className="px-6 py-16 text-center">
 
-                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                            <div className="flex flex-col items-center justify-center text-slate-400 py-12">
 
-                                                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
-                                                    <Icon icon="mdi:file-document-outline" className="w-8 h-8 text-gray-300" />
+                                                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 border border-slate-100">
+                                                    <Icon icon="mdi:file-document-outline" className="w-6 h-6 text-slate-300" />
                                                 </div>
 
-                                                <p className="font-bold text-lg text-gray-500">
+                                                <p className="font-bold text-sm text-slate-500">
                                                     لا توجد حركات مالية
                                                 </p>
 
-                                                <p className="text-sm mt-1">
+                                                <p className="text-xs mt-1 text-slate-400">
                                                     لم يتم العثور على أي نتائج.
                                                 </p>
                                             </div>
@@ -1104,7 +1018,7 @@ const submitExpense = (e) => {
 
                     {transactions.links && transactions.links.length > 3 && (
 
-                        <div className="p-6 border-t border-gray-100 bg-white flex items-center justify-center">
+                        <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-center">
 
                             <div className="flex items-center gap-2">
 
@@ -1112,31 +1026,32 @@ const submitExpense = (e) => {
 
                                     let label = link.label;
 
-                                    if (label.includes('&laquo;')) {
-                                        label = <Icon icon="mdi:chevron-right" className="w-5 h-5" />;
-                                    }
-
-                                    if (label.includes('&raquo;')) {
-                                        label = <Icon icon="mdi:chevron-left" className="w-5 h-5" />;
+                                    if (typeof label === 'string') {
+                                        if (label.includes('&laquo;')) {
+                                            label = <Icon icon="mdi:chevron-right" className="w-5 h-5" />;
+                                        } else if (label.includes('&raquo;')) {
+                                            label = <Icon icon="mdi:chevron-left" className="w-5 h-5" />;
+                                        }
                                     }
 
                                     return (
 
-                                        <Link
+                                        <button
                                             key={i}
-                                            href={link.url || '#'}
-                                            className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-sans transition-all duration-200 ${
+                                            disabled={!link.url}
+                                            onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
+                                            className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-sans font-bold transition-all duration-200 ${
                                                 link.active
-                                                    ? 'bg-primary text-gray-900 font-black shadow-lg shadow-[#d6e02e]/30 border border-[#d6e02e]'
+                                                    ? 'bg-slate-900 text-white shadow-sm border border-slate-900'
                                                     : link.url
-                                                    ? 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 font-bold'
-                                                    : 'bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100'
+                                                    ? 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                                                    : 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'
                                             }`}
                                         >
                                             {typeof label === 'string'
                                                 ? <span dangerouslySetInnerHTML={{ __html: label }} />
                                                 : label}
-                                        </Link>
+                                        </button>
                                     );
                                 })}
                             </div>
@@ -1148,30 +1063,30 @@ const submitExpense = (e) => {
 
 {expenseModalOpen && (
 
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
 
         <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden"
+            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden"
         >
 
             {/* Header */}
 
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
 
                 <div className="flex items-center gap-3">
 
-                    <div className="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600">
-                        <Icon icon="mdi:cash-minus" className="w-6 h-6" />
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100/30 flex items-center justify-center text-[#EF4444]">
+                        <Icon icon="mdi:cash-minus" className="w-5 h-5" />
                     </div>
 
                     <div>
-                        <h2 className="text-xl font-black text-gray-900">
+                        <h2 className="text-lg font-extrabold text-slate-900">
                             إضافة مصروف
                         </h2>
 
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-0.5">
                             إضافة مصروف جديد للنظام
                         </p>
                     </div>
@@ -1179,9 +1094,9 @@ const submitExpense = (e) => {
 
                 <button
                     onClick={() => setExpenseModalOpen(false)}
-                    className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition"
+                    className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 hover:bg-slate-100 flex items-center justify-center transition"
                 >
-                    <Icon icon="mdi:close" className="w-5 h-5" />
+                    <Icon icon="mdi:close" className="w-4 h-4" />
                 </button>
             </div>
 
@@ -1195,7 +1110,7 @@ const submitExpense = (e) => {
                 {/* Title */}
 
                 <div>
-                    <label className="text-sm font-bold text-gray-700 mb-2 block">
+                    <label className="text-xs font-bold text-slate-700 mb-2 block">
                         عنوان المصروف
                     </label>
 
@@ -1205,12 +1120,12 @@ const submitExpense = (e) => {
                         onChange={(e) =>
                             setData('title', e.target.value)
                         }
-                        className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none placeholder-slate-400"
                         placeholder="مثال: إيجار النادي"
                     />
 
                     {errors.title && (
-                        <p className="text-red-500 text-xs mt-1">
+                        <p className="text-rose-500 text-[10px] mt-1 font-bold">
                             {errors.title}
                         </p>
                     )}
@@ -1219,7 +1134,7 @@ const submitExpense = (e) => {
                 {/* Description */}
 
                 <div>
-                    <label className="text-sm font-bold text-gray-700 mb-2 block">
+                    <label className="text-xs font-bold text-slate-700 mb-2 block">
                         الوصف
                     </label>
 
@@ -1228,8 +1143,9 @@ const submitExpense = (e) => {
                         onChange={(e) =>
                             setData('description', e.target.value)
                         }
-                        className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none placeholder-slate-400"
                         rows="3"
+                        placeholder="وصف إضافي للمصروف..."
                     />
                 </div>
 
@@ -1240,7 +1156,7 @@ const submitExpense = (e) => {
                     {/* Category */}
 
                     <div>
-                        <label className="text-sm font-bold text-gray-700 mb-2 block">
+                        <label className="text-xs font-bold text-slate-700 mb-2 block">
                             التصنيف
                         </label>
 
@@ -1249,7 +1165,7 @@ const submitExpense = (e) => {
                             onChange={(e) =>
                                 setData('category', e.target.value)
                             }
-                            className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                            className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none cursor-pointer"
                         >
                             <option value="rent">إيجار</option>
                             <option value="salary">رواتب</option>
@@ -1267,7 +1183,7 @@ const submitExpense = (e) => {
                     {/* Type */}
 
                     <div>
-                        <label className="text-sm font-bold text-gray-700 mb-2 block">
+                        <label className="text-xs font-bold text-slate-700 mb-2 block">
                             النوع
                         </label>
 
@@ -1276,7 +1192,7 @@ const submitExpense = (e) => {
                             onChange={(e) =>
                                 setData('type', e.target.value)
                             }
-                            className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                            className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none cursor-pointer"
                         >
                             <option value="one_time">
                                 مرة واحدة
@@ -1295,8 +1211,8 @@ const submitExpense = (e) => {
                     {/* Amount */}
 
                     <div>
-                        <label className="text-sm font-bold text-gray-700 mb-2 block">
-                            المبلغ
+                        <label className="text-xs font-bold text-slate-700 mb-2 block">
+                            المبلغ (ل.س)
                         </label>
 
                         <input
@@ -1305,7 +1221,8 @@ const submitExpense = (e) => {
                             onChange={(e) =>
                                 setData('amount', e.target.value)
                             }
-                            className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                            className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none placeholder-slate-400 font-sans"
+                            placeholder="0"
                         />
                     </div>
 
@@ -1314,7 +1231,7 @@ const submitExpense = (e) => {
                     {data.type === 'one_time' ? (
 
                         <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">
+                            <label className="text-xs font-bold text-slate-700 mb-2 block">
                                 تاريخ المصروف
                             </label>
 
@@ -1324,14 +1241,14 @@ const submitExpense = (e) => {
                                 onChange={(e) =>
                                     setData('expense_date', e.target.value)
                                 }
-                                className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                                className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none placeholder-slate-400 font-sans"
                             />
                         </div>
 
                     ) : (
 
                         <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">
+                            <label className="text-xs font-bold text-slate-700 mb-2 block">
                                 تاريخ البداية
                             </label>
 
@@ -1341,7 +1258,7 @@ const submitExpense = (e) => {
                                 onChange={(e) =>
                                     setData('starts_at', e.target.value)
                                 }
-                                className="w-full rounded-2xl border border-gray-200 px-4 py-3"
+                                className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:ring-0 focus:outline-none placeholder-slate-400 font-sans"
                             />
                         </div>
                     )}
@@ -1349,12 +1266,12 @@ const submitExpense = (e) => {
 
                 {/* Footer */}
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
 
                     <button
                         type="button"
                         onClick={() => setExpenseModalOpen(false)}
-                        className="px-5 py-3 rounded-2xl border border-gray-200 font-bold text-gray-600 hover:bg-gray-50"
+                        className="px-5 py-3 rounded-2xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-xs transition-all"
                     >
                         إلغاء
                     </button>
@@ -1362,7 +1279,7 @@ const submitExpense = (e) => {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="px-6 py-3 rounded-2xl bg-primary text-gray-900 font-black hover:scale-105 transition"
+                        className="px-6 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all text-xs"
                     >
                         {processing
                             ? 'جاري الحفظ...'

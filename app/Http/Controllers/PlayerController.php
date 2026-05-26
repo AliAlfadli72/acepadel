@@ -69,14 +69,25 @@ public function index(Request $request)
     */
 
     ->when($search, function ($query) use ($search) {
-
         $query->where(function ($q) use ($search) {
+            // Map Arabic search queries to English rank strings stored in database
+            $rankMap = [
+                'نخبة' => 'Elite',
+                'محترف' => 'Professional',
+                'متقدم' => 'Advanced',
+                'متوسط' => 'Intermediate',
+                'مبتدئ' => 'Beginner',
+            ];
+            $cleanSearch = trim($search);
+            $englishRank = $rankMap[$cleanSearch] ?? null;
 
             $q->where('name', 'like', "%{$search}%")
                 ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhereHas('playerProfile', function ($pq) use ($search) {
-
+                ->orWhereHas('playerProfile', function ($pq) use ($search, $englishRank) {
                     $pq->where('rank_level', 'like', "%{$search}%");
+                    if ($englishRank) {
+                        $pq->orWhere('rank_level', 'like', "%{$englishRank}%");
+                    }
                 });
         });
     })
@@ -94,12 +105,18 @@ public function index(Request $request)
     ->paginate(12)
     ->withQueryString();
 
-
+    $allPlayers = (clone $baseQuery)
+        ->join('player_profiles', 'users.id', '=', 'player_profiles.user_id')
+        ->orderByDesc('player_profiles.points')
+        ->select('users.*')
+        ->distinct()
+        ->get();
 
     return Inertia::render('Players', [
         'players' => $players,
+        'allPlayers' => $allPlayers,
         'topPlayers' => $topPlayers,
-        'showTopPlayers' => $topPlayers->count() >= 5,
+        'showTopPlayers' => $topPlayers->count() >= 1,
         'filters' => [
             'search' => $search,
         ],

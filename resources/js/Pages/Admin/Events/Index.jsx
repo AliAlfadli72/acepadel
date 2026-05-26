@@ -3,14 +3,49 @@ import { useState } from 'react';
 import { Head, useForm, Link, router, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import Swal from 'sweetalert2';
+import dayjs from 'dayjs';
 import usePermissions from "@/hooks/usePermissions";
 import { resolveAsset } from '../../../utils';
 
-export default function Index({ events }) {
+export default function Index({ events, filters = {}, stats = {} }) {
     const { can } = usePermissions();
     const { auth } = usePage().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
+
+    const eventsData = events.data || [];
+
+    const [search, setSearch] = useState(filters?.search || '');
+    const [status, setStatus] = useState(filters?.status || '');
+    const [category, setCategory] = useState(filters?.category || '');
+    const [level, setLevel] = useState(filters?.level || '');
+
+    const applyFilters = (overrides = {}) => {
+        const p = {
+            search: overrides.hasOwnProperty('search') ? overrides.search : search,
+            status: overrides.hasOwnProperty('status') ? overrides.status : status,
+            category: overrides.hasOwnProperty('category') ? overrides.category : category,
+            level: overrides.hasOwnProperty('level') ? overrides.level : level,
+        };
+        Object.keys(p).forEach(k => { if (p[k] === null || p[k] === undefined || p[k] === '') delete p[k]; });
+        router.get(route('admin.events.index'), p, { 
+            preserveState: true, 
+            preserveScroll: true, 
+            replace: true 
+        });
+    };
+
+    const resetFilters = () => {
+        setSearch('');
+        setStatus('');
+        setCategory('');
+        setLevel('');
+        router.get(route('admin.events.index'), {}, { 
+            preserveState: true, 
+            preserveScroll: true, 
+            replace: true 
+        });
+    };
 
     const { data, setData, post, processing, errors, reset } = useForm({
         id: null,
@@ -141,10 +176,10 @@ export default function Index({ events }) {
 
     const getStatusStyle = (status) => {
         switch(status) {
-            case 'upcoming': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'ongoing': return 'bg-amber-100 text-amber-800 border-amber-200';
-            case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'upcoming': return 'bg-blue-50 text-blue-700 border-blue-100 shadow-sm';
+            case 'ongoing': return 'bg-amber-50 text-amber-700 border-amber-100 shadow-sm';
+            case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-sm';
+            default: return 'bg-slate-50 text-slate-700 border-slate-100 shadow-sm';
         }
     };
 
@@ -161,507 +196,558 @@ export default function Index({ events }) {
         <AdminLayout header=" الفعاليات">
             <Head title=" الفعاليات" />
 
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-6 pb-12">
                 
                 {/* Header Section */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <Icon icon="mdi:trophy" className="text-primary w-8 h-8" />
-                            الفعاليات والبطولات
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">إدارة فعاليات الأكاديمية ومتابعة طلبات التسجيل</p>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] border border-slate-200/60">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700">
+                            <Icon icon="mdi:trophy" className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-extrabold text-slate-900">
+                                الفعاليات والبطولات
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-0.5">إدارة فعاليات الأكاديمية ومتابعة طلبات التسجيل</p>
+                        </div>
                     </div>
                     {can('events.create') && (
                         <button 
                             onClick={handleCreate}
-                            className="btn-primary"
+                            className="px-5 py-2.5 rounded-full bg-slate-900 text-white font-extrabold text-xs flex items-center gap-1.5 hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
                         >
-                            <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
+                            <Icon icon="mdi:plus" className="w-4 h-4" />
                             إضافة فعالية جديدة
                         </button>
                     )}
                 </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {events.map((event) => (
-                        <div key={event.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                            <div className={`h-2 ${event.color_class.split(' ')[0]}`}></div>
-                            {event.image_path && (
-                                <img src={resolveAsset(`/storage/${event.image_path}`)} alt={event.title_ar} className="h-40 w-full object-cover" />
+                {/* Filter Bar */}
+                <div className="bg-white p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] border border-slate-200/60">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
+                        {/* Search Input */}
+                        <div className="lg:col-span-4 relative">
+                            <Icon icon="mdi:magnify" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                            <input 
+                                type="text" 
+                                placeholder="بحث باسم الفعالية أو تفاصيلها..." 
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && applyFilters()}
+                                className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400"
+                            />
+                        </div>
+
+                        {/* Category Filter */}
+                        <div className="lg:col-span-2">
+                            <select 
+                                value={category}
+                                onChange={e => {
+                                    setCategory(e.target.value);
+                                    applyFilters({ category: e.target.value });
+                                }}
+                                className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-2.5 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8"
+                            >
+                                <option value="">كل التصنيفات</option>
+                                <option value="Tournament">بطولة (Tournament)</option>
+                                <option value="Cup">كأس (Cup)</option>
+                                <option value="Event">حدث (Event)</option>
+                            </select>
+                        </div>
+
+                        {/* Level Filter */}
+                        <div className="lg:col-span-2">
+                            <select 
+                                value={level}
+                                onChange={e => {
+                                    setLevel(e.target.value);
+                                    applyFilters({ level: e.target.value });
+                                }}
+                                className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-2.5 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8"
+                            >
+                                <option value="">كل المستويات</option>
+                                <option value="Open">مفتوح (Open)</option>
+                                <option value="Advanced">متقدم (Advanced)</option>
+                                <option value="Juniors">ناشئين (Juniors)</option>
+                                <option value="All Levels">جميع المستويات</option>
+                            </select>
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="lg:col-span-2">
+                            <select 
+                                value={status}
+                                onChange={e => {
+                                    setStatus(e.target.value);
+                                    applyFilters({ status: e.target.value });
+                                }}
+                                className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-2.5 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8"
+                            >
+                                <option value="">كل الحالات</option>
+                                <option value="upcoming">قادمة</option>
+                                <option value="ongoing">جارية</option>
+                                <option value="completed">مكتملة</option>
+                            </select>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="lg:col-span-2 flex gap-2 w-full justify-end">
+                            <button 
+                                onClick={() => applyFilters()} 
+                                className="flex-1 lg:flex-initial px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-extrabold hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                            >
+                                <Icon icon="mdi:magnify" className="w-4 h-4" />
+                                بحث
+                            </button>
+                            {(search || category || level || status) && (
+                                <button 
+                                    onClick={resetFilters} 
+                                    className="px-3 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100/50 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all"
+                                    title="إعادة تعيين الفلاتر"
+                                >
+                                    <Icon icon="mdi:close" className="w-4 h-4" />
+                                    مسح
+                                </button>
                             )}
-                            <div className="p-5 flex-1 flex flex-col">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-bold border ${getStatusStyle(event.status)}`}>
-                                        {getStatusText(event.status)}
-                                    </span>
-                                    <div className="flex gap-2">
-                                        <Link href={route('admin.events.show', event.id)} className="text-gray-400 hover:text-green-500 transition-colors">
-                                            <Icon icon="mdi:eye-outline" className="w-5 h-5" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Events list */}
+                <div className="space-y-6 flex flex-col">
+                    {eventsData.map((event) => (
+                        <div key={event.id} className="bg-white rounded-[2rem] border border-slate-200/50 hover:border-slate-350 shadow-[0_8px_30px_rgb(0,0,0,0.01)] overflow-hidden flex flex-col md:flex-row transition-all duration-300 group">
+                            {/* Color coding sidebar indicator strip */}
+                            <div className={`w-1.5 flex-shrink-0 ${event.color_class.split(' ')[0]}`}></div>
+                            
+                            {/* Event Image or Placeholder */}
+                            {event.image_path ? (
+                                <div className="relative md:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0 border-l border-slate-100/80">
+                                    <img src={resolveAsset(`/storage/${event.image_path}`)} alt={event.title_ar} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+                                </div>
+                            ) : (
+                                <div className="relative md:w-64 h-48 md:h-auto bg-slate-50 flex items-center justify-center flex-shrink-0 text-slate-300 border-l border-slate-100/80">
+                                    <Icon icon="solar:gallery-bold-duotone" className="w-10 h-10 opacity-30" />
+                                </div>
+                            )}
+
+                            {/* Event Details Content */}
+                            <div className="p-6 flex-1 flex flex-col md:flex-row justify-between gap-6">
+                                <div className="flex-1 space-y-2.5">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold border ${getStatusStyle(event.status)}`}>
+                                            {getStatusText(event.status)}
+                                        </span>
+                                        <span className="bg-slate-100 text-slate-500 border border-slate-200/50 px-2 py-0.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wider">
+                                            {event.category}
+                                        </span>
+                                        {event.level && (
+                                            <span className="bg-slate-50 text-slate-500 border border-slate-150 px-2 py-0.5 rounded-lg text-[9px] font-extrabold">
+                                                {event.level === 'All Levels' ? 'جميع المستويات' : event.level}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <h3 className="font-black text-base text-[#0F172A] tracking-tight">{event.title_ar}</h3>
+                                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed max-w-2xl">{event.desc_ar}</p>
+
+                                    <div className="flex flex-wrap items-center gap-4 pt-2 text-[10px] font-extrabold text-slate-500">
+                                        <div className="flex items-center gap-1.5">
+                                            <Icon icon="mdi:calendar" className="text-slate-400 w-4 h-4" />
+                                            <span className="font-sans">{dayjs(event.date).format('YYYY-MM-DD')}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Icon icon="mdi:account-group" className="text-slate-400 w-4 h-4" />
+                                            <span className="font-sans">{Number(event.registrations_count).toLocaleString('en-US')} / {event.max_participants ? Number(event.max_participants).toLocaleString('en-US') : '∞'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-150 px-2.5 py-0.5 rounded-lg text-slate-700">
+                                            <Icon icon="mdi:cash" className="text-slate-400 w-4 h-4" />
+                                            <span className="font-sans">{event.fee > 0 ? `${Number(event.fee).toLocaleString('en-US')} ل.س` : 'مجاني'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right actions & requests area */}
+                                <div className="md:w-72 flex-shrink-0 flex flex-col justify-between items-end border-t md:border-t-0 md:border-r border-slate-100 pt-4 md:pt-0 md:pr-6">
+                                    {/* Action button panel with muted action grey bg */}
+                                    <div className="flex items-center bg-[#E2E8F0]/40 p-1 rounded-xl border border-slate-200/50 gap-0.5">
+                                        <Link href={route('admin.events.show', event.id)} title="عرض" className="w-8 h-8 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white flex items-center justify-center transition-all cursor-pointer">
+                                            <Icon icon="mdi:eye-outline" className="w-4.5 h-4.5" />
                                         </Link>
                                         {can('events.edit') && (
-                                            <button onClick={() => handleEdit(event)} className="text-gray-400 hover:text-blue-500 transition-colors">
-                                                <Icon icon="mdi:pencil-outline" className="w-5 h-5" />
+                                            <button onClick={() => handleEdit(event)} title="تعديل" className="w-8 h-8 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white flex items-center justify-center transition-all cursor-pointer">
+                                                <Icon icon="mdi:pencil-outline" className="w-4.5 h-4.5" />
                                             </button>
                                         )}
                                         {can('events.delete') && (
-                                            <button onClick={() => handleDelete(event.id)} className="text-gray-400 hover:text-red-500 transition-colors">
-                                                <Icon icon="mdi:trash-can-outline" className="w-5 h-5" />
+                                            <button onClick={() => handleDelete(event.id)} title="حذف" className="w-8 h-8 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-white flex items-center justify-center transition-all cursor-pointer">
+                                                <Icon icon="mdi:trash-can-outline" className="w-4.5 h-4.5" />
                                             </button>
                                         )}
                                     </div>
+
+                                    {/* Requests logic */}
+                                    <div className="w-full mt-3 pt-3 border-t border-slate-100/50">
+                                        {can('events.edit') ? (
+                                            <>
+                                                {event.pending_registrations_count > 0 && (
+                                                    <div className="mb-2 bg-amber-50/60 border border-amber-100 text-amber-800 px-3 py-1.5 rounded-xl text-[10px] flex items-center justify-between font-bold shadow-sm">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Icon icon="mdi:alert-circle-outline" className="w-3.5 h-3.5" />
+                                                            <span>{event.pending_registrations_count} طلب جديد</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="space-y-1">
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">الطلبات الأخيرة</span>
+                                                    {event.registrations && event.registrations.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            {event.registrations.slice(0, 2).map(reg => (
+                                                                <div key={reg.id} className="flex items-center justify-between bg-slate-50/50 hover:bg-slate-50 border border-slate-100/50 p-1.5 rounded-lg text-[10px] transition-colors duration-150">
+                                                                    <span className="font-bold text-slate-600 truncate max-w-[120px]">{reg.user.name}</span>
+                                                                    <div className="flex items-center gap-1">
+                                                                        {reg.status === 'pending' && (
+                                                                            <>
+                                                                                <button onClick={() => router.post(route('admin.events.registrations.status', [event.id, reg.id]), { status: 'approved' })} className="w-5 h-5 rounded-md bg-emerald-50 text-[#10B981] border border-emerald-100 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer">
+                                                                                    <Icon icon="mdi:check" className="w-3 h-3" />
+                                                                                </button>
+                                                                                <button onClick={() => router.post(route('admin.events.registrations.status', [event.id, reg.id]), { status: 'rejected' })} className="w-5 h-5 rounded-md bg-rose-50 text-[#EF4444] border border-rose-100/50 flex items-center justify-center hover:bg-rose-100 transition-colors shadow-sm cursor-pointer">
+                                                                                    <Icon icon="mdi:close" className="w-3 h-3" />
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+                                                                        {reg.status === 'approved' && <span className="text-[#10B981] text-[8px] font-bold px-1.5 py-0.5 bg-emerald-50 border border-emerald-100/30 rounded">مقبول</span>}
+                                                                        {reg.status === 'rejected' && <span className="text-[#EF4444] text-[8px] font-bold px-1.5 py-0.5 bg-rose-50 border border-rose-100/30 rounded">مرفوض</span>}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-[9px] text-slate-400 py-1">لا توجد طلبات تسجيل.</p>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            /* Player View status */
+                                            (() => {
+                                                const myRegistration = event.registrations?.find(reg => reg.user_id === auth.user.id);
+                                                if (!myRegistration) return null;
+                                                return (
+                                                    <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-2 flex items-center justify-between text-[10px]">
+                                                        <span className="font-extrabold text-slate-500">حالة تسجيلك:</span>
+                                                        {myRegistration.status === 'pending' && <span className="text-amber-700 font-bold bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-lg">قيد المراجعة</span>}
+                                                        {myRegistration.status === 'approved' && <span className="text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg">مقبول</span>}
+                                                        {myRegistration.status === 'rejected' && <span className="text-rose-700 font-bold bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-lg">مرفوض</span>}
+                                                    </div>
+                                                );
+                                            })()
+                                        )}
+                                    </div>
                                 </div>
-                                
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{event.title_ar}</h3>
-                                <p className="text-xs text-gray-500 mb-4 line-clamp-2">{event.desc_ar}</p>
-                                
-                                <div className="grid grid-cols-2 gap-3 mb-4 mt-auto">
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Icon icon="mdi:calendar" className="text-gray-400" />
-                                        <span>{new Date(event.date).toLocaleDateString('ar-SY')}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Icon icon="mdi:account-group" className="text-gray-400" />
-                                        <span>{event.registrations_count} / {event.max_participants || '∞'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Icon icon="mdi:cash" className="text-gray-400" />
-                                        <span>{event.fee > 0 ? `${event.fee} ل.س` : 'مجاني'}</span>
-                                    </div>
-                                </div>
-                                <div className="pt-4 border-t border-gray-100">
-
-    {/* ================= ADMIN VIEW ================= */}
-    {can('events.edit') ? (
-        <>
-
-            {event.pending_registrations_count > 0 && (
-                <div className="mb-3 bg-amber-50 text-amber-700 px-3 py-2 rounded-lg text-sm flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Icon
-                            icon="mdi:alert-circle-outline"
-                            className="w-4 h-4"
-                        />
-                        <span>
-                            {event.pending_registrations_count} طلب جديد
-                        </span>
-                    </div>
-                </div>
-            )}
-
-            <div className="space-y-2">
-
-                <h4 className="text-xs font-bold text-gray-500 uppercase">
-                    الطلبات الأخيرة
-                </h4>
-
-                {event.registrations && event.registrations.length > 0 ? (
-
-                    event.registrations.map(reg => (
-
-                        <div
-                            key={reg.id}
-                            className="flex items-center justify-between bg-gray-50 p-2 rounded-lg text-sm"
-                        >
-
-                            <span className="font-semibold text-gray-700">
-                                {reg.user.name}
-                            </span>
-
-                            <div className="flex items-center gap-2">
-
-                                {reg.status === 'pending' && (
-                                    <>
-                                        <button
-                                            onClick={() =>
-                                                router.post(
-                                                    route(
-                                                        'admin.events.registrations.status',
-                                                        [event.id, reg.id]
-                                                    ),
-                                                    { status: 'approved' }
-                                                )
-                                            }
-                                            className="text-green-600 hover:bg-green-100 p-1 rounded"
-                                        >
-                                            <Icon
-                                                icon="mdi:check"
-                                                className="w-4 h-4"
-                                            />
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                router.post(
-                                                    route(
-                                                        'admin.events.registrations.status',
-                                                        [event.id, reg.id]
-                                                    ),
-                                                    { status: 'rejected' }
-                                                )
-                                            }
-                                            className="text-red-600 hover:bg-red-100 p-1 rounded"
-                                        >
-                                            <Icon
-                                                icon="mdi:close"
-                                                className="w-4 h-4"
-                                            />
-                                        </button>
-                                    </>
-                                )}
-
-                                {reg.status === 'approved' && (
-                                    <span className="text-green-600 text-xs font-bold px-2">
-                                        مقبول
-                                    </span>
-                                )}
-
-                                {reg.status === 'rejected' && (
-                                    <span className="text-red-600 text-xs font-bold px-2">
-                                        مرفوض
-                                    </span>
-                                )}
-
-                            </div>
-
-                        </div>
-
-                    ))
-
-                ) : (
-
-                    <p className="text-xs text-gray-400 text-center py-2">
-                        لا توجد طلبات بعد.
-                    </p>
-
-                )}
-
-            </div>
-
-        </>
-    ) : (
-
-        /* ================= PLAYER VIEW ================= */
-
-        (() => {
-
-            const myRegistration = event.registrations?.find(
-                reg => reg.user_id === auth.user.id
-            );
-
-            if (!myRegistration) return null;
-
-            return (
-                <div className="bg-gray-50 rounded-xl p-3">
-
-                    <div className="flex items-center justify-between">
-
-                        <div className="flex items-center gap-2">
-                            <Icon
-                                icon="mdi:account-check-outline"
-                                className="w-5 h-5 text-primary"
-                            />
-
-                            <span className="text-sm font-bold text-gray-700">
-                                أنت مسجل في هذه الفعالية
-                            </span>
-                        </div>
-
-                        {myRegistration.status === 'pending' && (
-                            <span className="text-amber-600 text-xs font-bold bg-amber-100 px-3 py-1 rounded-full">
-                                قيد المراجعة
-                            </span>
-                        )}
-
-                        {myRegistration.status === 'approved' && (
-                            <span className="text-green-600 text-xs font-bold bg-green-100 px-3 py-1 rounded-full">
-                                مقبول
-                            </span>
-                        )}
-
-                        {myRegistration.status === 'rejected' && (
-                            <span className="text-red-600 text-xs font-bold bg-red-100 px-3 py-1 rounded-full">
-                                مرفوض
-                            </span>
-                        )}
-
-                    </div>
-
-                </div>
-            );
-
-        })()
-
-    )}
-
-</div>
                             </div>
                         </div>
                     ))}
-                    {events.length === 0 && (
-                        <div className="col-span-full bg-white p-12 rounded-2xl text-center border border-gray-100">
-                            <Icon icon="solar:box-minimalistic-bold-duotone" className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                            <p className="text-gray-500 font-medium">لا توجد فعاليات مسجلة حالياً</p>
+                    {eventsData.length === 0 && (
+                        <div className="col-span-full bg-white p-12 rounded-[2rem] border border-slate-200/60 text-center shadow-[0_8px_30px_rgb(0,0,0,0.01)] py-16">
+                            <Icon icon="solar:box-minimalistic-bold-duotone" className="w-14 h-14 mx-auto text-slate-300 mb-3" />
+                            <p className="text-slate-500 font-extrabold text-xs">
+                                {(search || category || level || status) 
+                                    ? 'لا توجد فعاليات مطابقة للبحث أو الفلاتر المحددة' 
+                                    : 'لا توجد فعاليات رياضية مسجلة حالياً'}
+                            </p>
+                            {(search || category || level || status) && (
+                                <button 
+                                    onClick={resetFilters} 
+                                    className="mt-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-750 font-extrabold text-xs rounded-full cursor-pointer transition-all inline-flex items-center gap-1.5"
+                                >
+                                    <Icon icon="mdi:refresh" className="w-4 h-4" />
+                                    إعادة تعيين الفلاتر
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* Create/Edit Modal */}
-                    {isModalOpen && (can('events.create') || can('events.edit')) && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                    {editMode ? 'تعديل الفعالية' : 'إضافة فعالية جديدة'}
-                                </h3>
-                                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-700 bg-white shadow-sm p-2 rounded-full">
-                                    <Icon icon="mdi:close" className="w-5 h-5" />
-                                </button>
-                            </div>
-                            
-                            <div className="p-6 overflow-y-auto">
-                                {Object.keys(errors).length > 0 && (
-                                    <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 border border-red-100">
-                                        <p className="font-bold mb-2">يرجى إصلاح الأخطاء التالية:</p>
-                                        <ul className="list-disc list-inside space-y-1">
-                                            {Object.entries(errors).map(([key, error]) => (
-                                                <li key={key}>{error}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                <form onSubmit={submit} className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
-                                            <h4 className="font-bold text-gray-700 border-b pb-2">التفاصيل بالعربية</h4>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الفعالية</label>
-                                                <input type="text" className="form-input w-full rounded-xl border-gray-200" value={data.title_ar} onChange={e => setData('title_ar', e.target.value)} required />
-                                                {errors.title_ar && <p className="text-red-500 text-xs mt-1">{errors.title_ar}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
-                                                <textarea className="form-input w-full rounded-xl border-gray-200" rows="3" value={data.desc_ar} onChange={e => setData('desc_ar', e.target.value)} required></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">الجوائز</label>
-                                                <input type="text" className="form-input w-full rounded-xl border-gray-200" value={data.prize_ar} onChange={e => setData('prize_ar', e.target.value)} />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4" dir="ltr">
-                                            <h4 className="font-bold text-gray-700 border-b pb-2 text-right" dir="rtl">التفاصيل بالإنجليزية</h4>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1 text-right" dir="rtl">Event Name</label>
-                                                <input type="text" className="form-input w-full rounded-xl border-gray-200" value={data.title_en} onChange={e => setData('title_en', e.target.value)} required />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1 text-right" dir="rtl">Description</label>
-                                                <textarea className="form-input w-full rounded-xl border-gray-200" rows="3" value={data.desc_en} onChange={e => setData('desc_en', e.target.value)} required></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1 text-right" dir="rtl">Prizes</label>
-                                                <input type="text" className="form-input w-full rounded-xl border-gray-200" value={data.prize_en} onChange={e => setData('prize_en', e.target.value)} />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
-                                            <select className="form-input w-full rounded-xl border-gray-200 bg-[position:left_0.5rem_center] pl-8 pr-3" value={data.category} onChange={e => setData('category', e.target.value)}>
-                                                <option value="Tournament">بطولة (Tournament)</option>
-                                                <option value="Cup">كأس (Cup)</option>
-                                                <option value="Event">حدث (Event)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">المستوى</label>
-                                            <select className="form-input w-full rounded-xl border-gray-200 bg-[position:left_0.5rem_center] pl-8 pr-3" value={data.level} onChange={e => setData('level', e.target.value)}>
-                                                <option value="Open">مفتوح (Open)</option>
-                                                <option value="Advanced">متقدم (Advanced)</option>
-                                                <option value="Juniors">ناشئين (Juniors)</option>
-                                                <option value="All Levels">جميع المستويات</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-                                            <input type="date" min={!editMode ? new Date().toISOString().split('T')[0] : undefined} className="form-input w-full rounded-xl border-gray-200" value={data.date} onChange={e => setData('date', e.target.value)} required />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                الوقت
-                                            </label>
-
-                                            <select
-                                                className="form-input w-full rounded-xl border-gray-200 bg-[position:left_0.5rem_center] pl-8 pr-3"
-                                                value={data.time}
-                                                onChange={(e) => setData('time', e.target.value)}
-                                                required
-                                            >
-                                                <option value="">-- اختر الوقت --</option>
-
-                                                {Array.from({ length: 72 }).map((_, index) => {
-
-                                                    // Start from 06:00
-                                                    const totalMinutes = (6 * 60) + (index * 15);
-
-                                                    const hour = String(
-                                                        Math.floor(totalMinutes / 60)
-                                                    ).padStart(2, '0');
-
-                                                    const minute = String(
-                                                        totalMinutes % 60
-                                                    ).padStart(2, '0');
-
-                                                    const time = `${hour}:${minute}`;
-
-                                                    return (
-                                                        <option
-                                                            key={time}
-                                                            value={time}
-                                                        >
-                                                            {time}
-                                                        </option>
-                                                    );
-                                                })}
-                                            </select>
-
-                                            {errors.time && (
-                                                <p className="text-red-500 text-xs mt-1">
-                                                    {errors.time}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">رسوم التسجيل (ل.س)</label>
-                                            <input 
-                                                type="text" 
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
-                                                className="form-input w-full rounded-xl border-gray-200" 
-                                                value={data.fee} 
-                                                onFocus={e => e.target.select()}
-                                                onChange={e => {
-                                                    let val = e.target.value.replace(/\D/g, '');
-                                                    if (val.length > 1 && val.startsWith('0')) {
-                                                        val = val.replace(/^0+/, '');
-                                                    }
-                                                    setData('fee', val);
-                                                }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">أقصى عدد مشتركين</label>
-                                            <input 
-                                                type="text" 
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
-                                                className="form-input w-full rounded-xl border-gray-200" 
-                                                value={data.max_participants} 
-                                                onFocus={e => e.target.select()}
-                                                onChange={e => {
-                                                    let val = e.target.value.replace(/\D/g, '');
-                                                    if (val.length > 1 && val.startsWith('0')) {
-                                                        val = val.replace(/^0+/, '');
-                                                    }
-                                                    setData('max_participants', val);
-                                                }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
-                                            <select className="form-input w-full rounded-xl border-gray-200 bg-[position:left_0.5rem_center] pl-8 pr-3" value={data.status} onChange={e => setData('status', e.target.value)}>
-                                                <option value="upcoming">قادمة</option>
-                                                <option value="ongoing">جارية</option>
-                                                <option value="completed">مكتملة</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">اللون المميز</label>
-                                            <select className="form-input w-full rounded-xl border-gray-200 bg-[position:left_0.5rem_center] pl-8 pr-3" value={data.color_class} onChange={e => setData('color_class', e.target.value)}>
-                                                <option value="bg-primary text-white">الأخضر الأساسي</option>
-                                                <option value="bg-accent text-primary">الأصفر الفوسفوري</option>
-                                                <option value="bg-blue-500 text-white">أزرق</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4 border-t border-gray-100 space-y-3">
-                                        
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            صورة الفعالية
-                                        </label>
-
-                                        {/* Image Preview */}
-                                        {(data.image || (editMode && events.find(e => e.id === data.id)?.image_path)) && (
-                                            <div className="flex justify-center">
-                                                <div className="w-full max-w-md h-52 rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-                                                    <img
-                                                        src={
-                                                            data.image
-                                                                ? URL.createObjectURL(data.image)
-                                                                : resolveAsset(`/storage/${events.find(e => e.id === data.id)?.image_path}`)
-                                                        }
-                                                        alt="Event Preview"
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Upload Area */}
-                                        <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-primary transition-colors bg-gray-50/50">
-                                            
-                                            <Icon
-                                                icon="mdi:image-plus"
-                                                className="w-14 h-14 mx-auto text-gray-300 mb-3"
-                                            />
-
-                                            <label className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/10 text-primary font-bold cursor-pointer hover:bg-primary/20 transition-colors">
-                                                <Icon icon="mdi:upload" className="w-5 h-5" />
-                                                اختيار صورة
-
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={e => setData('image', e.target.files[0])}
-                                                />
-                                            </label>
-
-                                            <p className="text-xs text-gray-500 mt-3">
-                                                اختياري — يفضل استخدام صورة أفقية عالية الجودة
-                                            </p>
-
-                                            {data.image && (
-                                                <p className="text-sm font-bold text-emerald-600 mt-2">
-                                                    {data.image.name}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        {errors.image && (
-                                            <p className="text-red-500 text-xs">
-                                                {errors.image}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-                                        <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50">
-                                            إلغاء
-                                        </button>
-                                        <button type="submit" disabled={processing} className="btn-primary">
-                                            {processing ? 'جاري الحفظ...' : 'حفظ الفعالية'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                {/* Pagination */}
+                {events.last_page > 1 && (
+                    <div className="bg-white px-6 py-4 rounded-[2rem] border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                        <p className="text-xs text-slate-500 font-extrabold">
+                            عرض الفعاليات <b>{events.from}</b> إلى <b>{events.to}</b> من إجمالي <b>{events.total}</b> فعالية
+                        </p>
+                        <div className="flex gap-1.5 flex-wrap justify-center" dir="ltr">
+                            {events.links.map((link, i) => (
+                                <button 
+                                    key={i}
+                                    onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true, replace: true })}
+                                    disabled={!link.url || link.active}
+                                    className={`min-w-[36px] h-9 px-3 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
+                                        link.active 
+                                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                                            : link.url  
+                                                ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                                : 'bg-white text-slate-300 border-slate-100 cursor-not-allowed'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }} 
+                                />
+                            ))}
                         </div>
                     </div>
                 )}
+
+                {/* Create/Edit Modal */}
+                {isModalOpen && (can('events.create') || can('events.edit')) && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md transition-all duration-300">
+                        <div className="bg-white rounded-[2rem] w-full max-w-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] flex flex-col max-h-[90vh] border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/40">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-900/5 text-slate-800 flex items-center justify-center">
+                                            <Icon icon={editMode ? "mdi:pencil-outline" : "mdi:plus-circle-outline"} className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="text-sm font-extrabold text-slate-900">
+                                            {editMode ? 'تعديل بيانات الفعالية' : 'إضافة فعالية رياضية جديدة'}
+                                        </h3>
+                                    </div>
+                                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 bg-white border border-slate-150 shadow-sm p-1.5 rounded-full hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                                        <Icon icon="mdi:close" className="w-4.5 h-4.5" />
+                                    </button>
+                                </div>
+                                
+                                <div className="p-6 overflow-y-auto">
+                                    {Object.keys(errors).length > 0 && (
+                                        <div className="bg-rose-50/60 text-rose-700 p-4 rounded-2xl text-xs mb-6 border border-rose-100 font-bold">
+                                            <p className="font-extrabold mb-1.5 flex items-center gap-1">
+                                                <Icon icon="mdi:alert-circle-outline" className="w-4 h-4" />
+                                                يرجى تصحيح الحقول التالية:
+                                            </p>
+                                            <ul className="list-disc list-inside space-y-1 pr-1">
+                                                {Object.entries(errors).map(([key, error]) => (
+                                                    <li key={key}>{error}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    <form onSubmit={submit} className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-2 block">
+                                                    التفاصيل باللغة العربية
+                                                </span>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-slate-500 mb-1.5">اسم الفعالية</label>
+                                                    <input type="text" className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400 p-3" value={data.title_ar} onChange={e => setData('title_ar', e.target.value)} required />
+                                                    {errors.title_ar && <p className="text-rose-500 text-[10px] mt-1 font-bold">{errors.title_ar}</p>}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-slate-500 mb-1.5">الوصف والتفاصيل</label>
+                                                    <textarea className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400 p-3" rows="3" value={data.desc_ar} onChange={e => setData('desc_ar', e.target.value)} required></textarea>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-slate-500 mb-1.5">الجوائز المقررة</label>
+                                                    <input type="text" className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400 p-3" value={data.prize_ar} onChange={e => setData('prize_ar', e.target.value)} />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4" dir="ltr">
+                                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-2 block text-right" dir="rtl">
+                                                    ENGLISH DETAILS
+                                                </span>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-slate-500 mb-1.5 text-right" dir="rtl">Event Title (EN)</label>
+                                                    <input type="text" className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400 p-3" value={data.title_en} onChange={e => setData('title_en', e.target.value)} required />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-slate-500 mb-1.5 text-right" dir="rtl">Description (EN)</label>
+                                                    <textarea className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400 p-3" rows="3" value={data.desc_en} onChange={e => setData('desc_en', e.target.value)} required></textarea>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-extrabold text-slate-500 mb-1.5 text-right" dir="rtl">Prizes (EN)</label>
+                                                    <input type="text" className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all placeholder-slate-400 p-3" value={data.prize_en} onChange={e => setData('prize_en', e.target.value)} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-100">
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">التصنيف</label>
+                                                <select className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8" value={data.category} onChange={e => setData('category', e.target.value)}>
+                                                    <option value="Tournament">بطولة (Tournament)</option>
+                                                    <option value="Cup">كأس (Cup)</option>
+                                                    <option value="Event">حدث (Event)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">المستوى</label>
+                                                <select className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8" value={data.level} onChange={e => setData('level', e.target.value)}>
+                                                    <option value="Open">مفتوح (Open)</option>
+                                                    <option value="Advanced">متقدم (Advanced)</option>
+                                                    <option value="Juniors">ناشئين (Juniors)</option>
+                                                    <option value="All Levels">جميع المستويات</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">التاريخ</label>
+                                                <input type="date" min={!editMode ? new Date().toISOString().split('T')[0] : undefined} className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3" value={data.date} onChange={e => setData('date', e.target.value)} required />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">
+                                                    الوقت
+                                                </label>
+
+                                                <select
+                                                    className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8"
+                                                    value={data.time}
+                                                    onChange={(e) => setData('time', e.target.value)}
+                                                    required
+                                                >
+                                                    <option value="">-- اختر الوقت --</option>
+
+                                                    {Array.from({ length: 72 }).map((_, index) => {
+                                                        const totalMinutes = (6 * 60) + (index * 15);
+                                                        const hour = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+                                                        const minute = String(totalMinutes % 60).padStart(2, '0');
+                                                        const time = `${hour}:${minute}`;
+
+                                                        return (
+                                                            <option key={time} value={time}>
+                                                                {time}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+
+                                                {errors.time && (
+                                                    <p className="text-rose-500 text-[10px] mt-1 font-bold">
+                                                        {errors.time}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">رسوم التسجيل (ل.س)</label>
+                                                <input 
+                                                    type="text" 
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3" 
+                                                    value={data.fee} 
+                                                    onFocus={e => e.target.select()}
+                                                    onChange={e => {
+                                                        let val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length > 1 && val.startsWith('0')) {
+                                                            val = val.replace(/^0+/, '');
+                                                        }
+                                                        setData('fee', val);
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">أقصى عدد لاعبين</label>
+                                                <input 
+                                                    type="text" 
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3" 
+                                                    value={data.max_participants} 
+                                                    onFocus={e => e.target.select()}
+                                                    onChange={e => {
+                                                        let val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length > 1 && val.startsWith('0')) {
+                                                            val = val.replace(/^0+/, '');
+                                                        }
+                                                        setData('max_participants', val);
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">الحالة الحالية</label>
+                                                <select className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8" value={data.status} onChange={e => setData('status', e.target.value)}>
+                                                    <option value="upcoming">قادمة</option>
+                                                    <option value="ongoing">جارية</option>
+                                                    <option value="completed">مكتملة</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-extrabold text-slate-500 mb-1.5">اللون التعريفي</label>
+                                                <select className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8" value={data.color_class} onChange={e => setData('color_class', e.target.value)}>
+                                                    <option value="bg-primary text-white">الأخضر الأساسي</option>
+                                                    <option value="bg-accent text-primary">الأصفر الفوسفوري</option>
+                                                    <option value="bg-blue-500 text-white">أزرق</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-slate-100 space-y-4">
+                                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                                                صورة الفعالية الرئيسية
+                                            </span>
+
+                                            {/* Image Preview */}
+                                            {(data.image || (editMode && eventsData.find(e => e.id === data.id)?.image_path)) && (
+                                                <div className="flex justify-center">
+                                                    <div className="w-full max-w-md h-52 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
+                                                        <img
+                                                            src={
+                                                                data.image
+                                                                    ? URL.createObjectURL(data.image)
+                                                                    : resolveAsset(`/storage/${eventsData.find(e => e.id === data.id)?.image_path}`)
+                                                            }
+                                                            alt="Event Preview"
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Upload Area */}
+                                            <div className="border-2 border-dashed border-slate-200/80 hover:border-slate-350 rounded-2xl p-6 text-center hover:bg-slate-50/30 transition-all duration-200 relative">
+                                                <Icon
+                                                    icon="solar:camera-add-bold-duotone"
+                                                    className="w-10 h-10 mx-auto text-slate-300 mb-2.5"
+                                                />
+
+                                                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/5 hover:bg-slate-900/10 text-slate-700 font-extrabold text-xs cursor-pointer transition-colors">
+                                                    <Icon icon="mdi:upload" className="w-4 h-4" />
+                                                    اختيار ملف الصورة
+
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={e => setData('image', e.target.files[0])}
+                                                    />
+                                                </label>
+
+                                                <p className="text-[10px] text-slate-400 font-bold mt-2">
+                                                    ينصح برفع صورة أفقية عالية الدقة وبصيغة PNG أو JPG
+                                                </p>
+
+                                                {data.image && (
+                                                    <p className="text-xs font-extrabold text-emerald-600 mt-2 flex items-center justify-center gap-1">
+                                                        <Icon icon="mdi:check-circle" className="w-4 h-4" />
+                                                        {data.image.name}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {errors.image && (
+                                                <p className="text-rose-500 text-[10px] font-bold">
+                                                    {errors.image}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+                                            <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-extrabold text-xs hover:bg-slate-50 cursor-pointer transition-colors">
+                                                إلغاء
+                                            </button>
+                                            <button type="submit" disabled={processing} className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer">
+                                                {processing ? 'جاري حفظ البيانات...' : 'حفظ الفعالية الرياضية'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    )}
             </div>
         </AdminLayout>
     );

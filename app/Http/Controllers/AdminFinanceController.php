@@ -588,7 +588,7 @@ class AdminFinanceController extends Controller
     */
 
     $transactions = $query
-        ->paginate(15)
+        ->paginate(10)
         ->withQueryString()
         ->through(function ($transaction) {
             $logicalType = 'deposit';

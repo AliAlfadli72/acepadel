@@ -287,3 +287,168 @@ body {
   background: var(--primary);
   color: white;
 }
+
+/* ===========================
+   NEO-BRUTALIST & SPORTS AESTHETICS (RE-DESIGN)
+   =========================== */
+:root {
+  --padel-neon: #d6e02e; /* Brand Lime Yellow */
+  --padel-dark: #222831; /* Brand Charcoal */
+  --padel-dark-surface: #FFFFFF;
+  --padel-dark-border: #E0E0E0;
+  --padel-glass: rgba(255, 255, 255, 0.75);
+  --padel-glass-border: rgba(34, 40, 49, 0.08);
+}
+
+/* Neon Pulse Indicator */
+.pulse-neon-yellow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pulse-neon-yellow::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--padel-neon);
+  box-shadow: 0 0 8px var(--padel-neon);
+  animation: pulse-glow-neon 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-glow-neon {
+  0%, 100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 4px var(--padel-neon);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 0 16px var(--padel-neon);
+    opacity: 1;
+  }
+}
+
+/* Liquid Fill Button Hover Effect */
+.btn-sport-liquid {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: color 0.4s cubic-bezier(0.19, 1, 0.22, 1), border-color 0.4s, transform 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 4px; /* Brutalist sharp corners */
+  border: 2px solid var(--padel-neon);
+  background: var(--padel-neon);
+  color: var(--padel-dark);
+}
+
+.btn-sport-liquid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--padel-dark);
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.btn-sport-liquid:hover::before {
+  transform: scaleX(1);
+}
+
+.btn-sport-liquid:hover {
+  color: var(--padel-neon);
+  border-color: var(--padel-dark);
+}
+
+.btn-sport-liquid:active {
+  transform: scale(0.98);
+}
+
+/* Secondary Button with inverse Liquid Hover */
+.btn-sport-liquid-dark {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: color 0.4s cubic-bezier(0.19, 1, 0.22, 1), border-color 0.4s, transform 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 4px;
+  border: 2px solid var(--padel-dark);
+  background: transparent;
+  color: var(--padel-dark);
+}
+
+.btn-sport-liquid-dark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--padel-neon);
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.btn-sport-liquid-dark:hover::before {
+  transform: scaleX(1);
+}
+
+.btn-sport-liquid-dark:hover {
+  color: var(--padel-dark);
+  border-color: var(--padel-neon);
+}
+
+.btn-sport-liquid-dark:active {
+  transform: scale(0.98);
+}
+
+/* Brutalist Text Stroke (very modern athletic aesthetic) */
+.text-stroke-sport {
+  -webkit-text-stroke: 1px rgba(34, 40, 49, 0.08);
+  color: transparent;
+}
+.text-stroke-sport-active {
+  -webkit-text-stroke: 1px var(--padel-neon);
+  color: transparent;
+}
+
+/* Neo Brutalist Glassmorphic Border Glow Card */
+.brutalist-glow-card {
+  background: var(--padel-dark-surface);
+  border: 2px solid var(--padel-dark-border);
+  box-shadow: 4px 4px 0px rgba(34, 40, 49, 0.08);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.brutalist-glow-card:hover {
+  border-color: var(--padel-dark);
+  box-shadow: 6px 6px 0px var(--padel-neon);
+}
+
+/* Custom Sports Glass */
+.sports-glass {
+  background: var(--padel-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--padel-glass-border);
+}
+

@@ -13,17 +13,25 @@ export default function EventDetails({ event, is_registered, user_registration }
     const { auth, flash } = usePage().props;
     const isArabic = lang === "ar";
 
+    // Brutalist styling helper for SweetAlert in Light Mode
+    const swalCustomClass = {
+        popup: 'rounded-none bg-white border-2 border-[#222831] text-[#222831] shadow-[6px_6px_0px_rgba(34,40,49,0.15)]',
+        title: 'text-[#222831] font-display font-black uppercase tracking-wider',
+        htmlContainer: 'text-gray-600 font-medium font-arabic',
+        confirmButton: 'bg-[#d6e02e] text-[#222831] rounded-none border-2 border-[#d6e02e] px-8 py-3 font-black font-arabic uppercase hover:bg-[#222831] hover:text-white transition-colors duration-300 mx-2',
+        cancelButton: 'bg-transparent text-gray-600 rounded-none border-2 border-gray-200 px-8 py-3 font-black font-arabic uppercase hover:bg-gray-50 transition-colors duration-300 mx-2'
+    };
+
     useEffect(() => {
         if (flash.success) {
             Swal.fire({
-                title: isArabic ? 'نجاح' : 'Success',
+                title: isArabic ? 'تم بنجاح' : 'Success',
                 text: flash.success,
                 icon: 'success',
-                confirmButtonText: isArabic ? 'حسناً' : 'OK',
-                customClass: {
-                    popup: 'rounded-3xl',
-                    confirmButton: 'bg-primary text-gray-900 px-8 py-3 rounded-xl font-bold font-arabic'
-                }
+                iconColor: '#d6e02e',
+                buttonsStyling: false,
+                confirmButtonText: isArabic ? 'موافق' : 'OK',
+                customClass: swalCustomClass
             });
         }
         if (flash.error) {
@@ -31,11 +39,10 @@ export default function EventDetails({ event, is_registered, user_registration }
                 title: isArabic ? 'خطأ' : 'Error',
                 text: flash.error,
                 icon: 'error',
-                confirmButtonText: isArabic ? 'حسناً' : 'OK',
-                customClass: {
-                    popup: 'rounded-3xl',
-                    confirmButton: 'bg-rose-500 text-white px-8 py-3 rounded-xl font-bold font-arabic'
-                }
+                iconColor: '#f43f5e',
+                buttonsStyling: false,
+                confirmButtonText: isArabic ? 'موافق' : 'OK',
+                customClass: swalCustomClass
             });
         }
     }, [flash]);
@@ -43,7 +50,7 @@ export default function EventDetails({ event, is_registered, user_registration }
     const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
     const dateObj = dayjs(event.date);
     const month = isArabic ? arabicMonths[dateObj.month()] : dateObj.locale('en').format('MMM');
-    const day = dateObj.format('DD'); // Will convert to arabic later
+    const day = dateObj.format('DD');
     const year = dateObj.format('YYYY');
 
     const getCategoryName = (cat) => {
@@ -51,25 +58,16 @@ export default function EventDetails({ event, is_registered, user_registration }
         const map = {
             'tournament': { ar: 'بطولة', en: 'Tournament' },
             'cup': { ar: 'كأس', en: 'Cup' },
-            'event': { ar: 'حدث', en: 'Event' }
+            'event': { ar: 'فعالية اجتماعية', en: 'Social Event' }
         };
         const c = map[cat.toLowerCase()];
         return c ? (isArabic ? c.ar : c.en) : cat;
     };
 
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'upcoming': return 'bg-blue-600 text-white border-blue-500';
-            case 'ongoing': return 'bg-emerald-600 text-white border-emerald-500';
-            case 'completed': return 'bg-[#d6e02e] text-gray-900 border-[#b8c21a]';
-            default: return 'bg-gray-600 text-white border-gray-500';
-        }
-    };
-
     const getStatusText = (status) => {
         switch (status) {
-            case 'upcoming': return isArabic ? 'قادمة' : 'Upcoming';
-            case 'ongoing': return isArabic ? 'جارية' : 'Ongoing';
+            case 'upcoming': return isArabic ? 'قريباً' : 'Soon';
+            case 'ongoing': return isArabic ? 'مفتوح الآن' : 'Open Now';
             case 'completed': return isArabic ? 'مكتملة' : 'Completed';
             default: return status;
         }
@@ -80,14 +78,12 @@ export default function EventDetails({ event, is_registered, user_registration }
             title: isArabic ? 'تأكيد التسجيل' : 'Confirm Registration',
             text: isArabic ? 'هل أنت متأكد أنك تريد التسجيل في هذه الفعالية؟' : 'Are you sure you want to register for this event?',
             icon: 'question',
+            iconColor: '#d6e02e',
             showCancelButton: true,
-            confirmButtonText: isArabic ? 'نعم، تسجيل' : 'Yes, Register',
+            buttonsStyling: false,
+            confirmButtonText: isArabic ? 'تأكيد التسجيل' : 'Register Now',
             cancelButtonText: isArabic ? 'إلغاء' : 'Cancel',
-            customClass: {
-                popup: 'rounded-3xl',
-                confirmButton: 'bg-primary text-gray-900 px-8 py-3 rounded-xl font-bold font-arabic',
-                cancelButton: 'bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold font-arabic mx-2'
-            }
+            customClass: swalCustomClass
         }).then((result) => {
             if (result.isConfirmed) {
                 router.post(route('events.register', event.id));
@@ -100,15 +96,12 @@ export default function EventDetails({ event, is_registered, user_registration }
             title: isArabic ? 'إلغاء التسجيل' : 'Cancel Registration',
             text: isArabic ? 'هل أنت متأكد أنك تريد إلغاء تسجيلك في هذه الفعالية؟' : 'Are you sure you want to cancel your registration?',
             icon: 'warning',
+            iconColor: '#f43f5e',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444',
+            buttonsStyling: false,
             confirmButtonText: isArabic ? 'نعم، إلغاء' : 'Yes, Cancel',
             cancelButtonText: isArabic ? 'تراجع' : 'Back',
-            customClass: {
-                popup: 'rounded-3xl',
-                confirmButton: 'bg-rose-500 text-white px-8 py-3 rounded-xl font-bold font-arabic',
-                cancelButton: 'bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold font-arabic mx-2'
-            }
+            customClass: swalCustomClass
         }).then((result) => {
             if (result.isConfirmed) {
                 router.post(route('events.cancel_registration', event.id));
@@ -116,224 +109,111 @@ export default function EventDetails({ event, is_registered, user_registration }
         });
     };
 
+    const defaultHeroImage = "https://images.unsplash.com/photo-1592919505780-303950717480?q=80&w=1200";
+
     return (
-        <div className="min-h-screen bg-white pb-24" dir={isArabic ? "rtl" : "ltr"}>
+        <div className="min-h-screen bg-[#F8FAF8] text-[#222831] pb-24 relative overflow-hidden" dir={isArabic ? "rtl" : "ltr"}>
+            {/* Background Grid & Accent Lighting */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0" />
+            <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[60%] rounded-full bg-[#d6e02e]/6 blur-[130px] pointer-events-none" />
             
-            {/* Full-Bleed Hero Banner */}
-            <div className="relative w-full h-[60vh] min-h-[500px] flex items-end">
-                {event.image_path ? (
-                    <img src={resolveAsset(`/storage/${event.image_path}`)} className="absolute inset-0 w-full h-full object-cover" alt={isArabic ? event.title_ar : event.title_en} />
-                ) : (
-                    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-                        <Icon icon="mdi:trophy-outline" className="w-32 h-32 text-gray-800" />
-                    </div>
-                )}
-                {/* Advanced Gradients */}
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent mix-blend-multiply"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10"></div>
-                
-                {/* Back Button (Floating on Hero) */}
-                <div className="absolute top-8 left-8 right-8 max-w-7xl mx-auto px-4 z-20">
-                    <Link href={route('events')} className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-all text-sm font-bold bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 hover:bg-white/20">
-                        <Icon icon={isArabic ? "mdi:arrow-right" : "mdi:arrow-left"} className="w-5 h-5" />
-                        <span className={isArabic ? "font-arabic" : ""}>{isArabic ? "العودة لجميع الفعاليات" : "Back to Events"}</span>
-                    </Link>
-                </div>
-
-                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-                    <div className="flex flex-col md:flex-row gap-6 md:items-end justify-between">
-                        <div className="max-w-3xl">
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className={`px-5 py-2 rounded-full text-xs font-black shadow-lg uppercase tracking-wider ${isArabic ? "font-arabic" : ""} bg-white text-gray-900`}>
-                                    {getCategoryName(event.category)}
-                                </span>
-                                <span className={`px-5 py-2 rounded-full text-xs font-black border shadow-lg uppercase tracking-wider ${getStatusStyle(event.status)} ${isArabic ? "font-arabic" : ""}`}>
-                                    {getStatusText(event.status)}
-                                </span>
-                            </div>
-                            <h1 className={`text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight mb-4 drop-shadow-lg ${isArabic ? "font-arabic" : ""}`}>
-                                {isArabic ? event.title_ar : event.title_en}
-                            </h1>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content Layout */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            {/* main container */}
+            <div className="max-w-7xl mx-auto px-6 pt-32 relative z-10">
+                {/* 60/40 Asymmetric Split Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
                     
-                    {/* Floating Sidebar Registration Card (Desktop: Right, RTL: Right / LTR: Left) */}
-                    <div className="lg:col-span-4 lg:order-last">
-                        <div className="sticky top-28 bg-white rounded-[2.5rem] p-8 shadow-2xl border border-gray-100 transform lg:-translate-y-24">
-                            <h4 className={`text-2xl font-black text-gray-900 mb-8 border-b border-gray-100 pb-6 flex items-center gap-3 ${isArabic ? "font-arabic" : ""}`}>
-                                <Icon icon="mdi:card-account-details-outline" className="text-primary w-8 h-8" />
-                                {isArabic ? "تفاصيل التسجيل" : "Registration Details"}
-                            </h4>
-
-                            <div className="space-y-6 mb-10">
-                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                    <div className="w-12 h-12 rounded-xl bg-white text-blue-600 flex items-center justify-center shadow-sm shrink-0">
-                                        <Icon icon="mdi:calendar-month-outline" className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className={`text-xs text-gray-500 font-bold mb-1 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "التاريخ" : "Date"}</p>
-                                        <p className="font-black text-gray-900 text-lg font-arabic">
-                                            {isArabic ? `${Number(day).toLocaleString('ar-EG')} ${month} ${Number(year).toLocaleString('ar-EG')}` : `${day} ${month} ${year}`}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                    <div className="w-12 h-12 rounded-xl bg-white text-emerald-600 flex items-center justify-center shadow-sm shrink-0">
-                                        <Icon icon="mdi:clock-outline" className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className={`text-xs text-gray-500 font-bold mb-1 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "الوقت" : "Time"}</p>
-                                        <p className="font-black text-gray-900 text-lg font-arabic">
-                                            {dayjs(event.time).locale('en').format('hh:mm A')} {/* Needs custom arabic AM/PM if fully localized, but keeping standard for now */}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                    <div className="w-12 h-12 rounded-xl bg-white text-amber-500 flex items-center justify-center shadow-sm shrink-0">
-                                        <Icon icon="mdi:ticket-percent-outline" className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className={`text-xs text-gray-500 font-bold mb-1 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "رسوم التسجيل" : "Registration Fee"}</p>
-                                        <p className="font-black text-gray-900 text-lg font-arabic">
-                                            {event.fee > 0 ? (
-                                                <>{Number(event.fee).toLocaleString(isArabic ? 'ar-EG' : 'en-US')} <span className="text-xs font-bold opacity-70">{isArabic ? 'ل.س' : 'SYP'}</span></>
-                                            ) : (
-                                                <span>{isArabic ? 'مجاني' : 'Free'}</span>
-                                            )}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                    <div className="w-12 h-12 rounded-xl bg-white text-rose-500 flex items-center justify-center shadow-sm shrink-0">
-                                        <Icon icon="mdi:account-group-outline" className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <p className={`text-xs text-gray-500 font-bold mb-1 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "المشاركون المقبولون" : "Approved Participants"}</p>
-                                        <p className="font-black text-gray-900 text-lg font-arabic">
-                                            {Number(event.registrations?.length || 0).toLocaleString(isArabic ? 'ar-EG' : 'en-US')} / {event.max_participants ? Number(event.max_participants).toLocaleString(isArabic ? 'ar-EG' : 'en-US') : '∞'}
-                                        </p>
-                                    </div>
+                    {/* Left 60% Presentation (7 cols on lg) */}
+                    <div className="lg:col-span-7 space-y-12">
+                        {/* Cinematic Dark Hero Frame */}
+                        <div className="relative w-full h-[400px] md:h-[500px] border-2 border-gray-200 overflow-hidden group">
+                            <img 
+                                src={event.image_path ? resolveAsset(`/storage/${event.image_path}`) : defaultHeroImage} 
+                                className="absolute inset-0 w-full h-full object-cover scale-100 group-hover:scale-102 transition-transform duration-700 ease-out" 
+                                alt={isArabic ? event.title_ar : event.title_en} 
+                            />
+                            {/* Deep Dark Sports Texture Overlays */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent z-10" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent z-10" />
+                            
+                            {/* Top Controls Overlay */}
+                            <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
+                                <Link 
+                                    href={route('events')} 
+                                    className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-all text-xs font-black bg-black/60 backdrop-blur-md px-5 py-2.5 border border-white/10 hover:border-[#d6e02e]"
+                                >
+                                    <Icon icon={isArabic ? "solar:arrow-right-linear" : "solar:arrow-left-linear"} className="w-4 h-4" />
+                                    <span className={isArabic ? "font-arabic" : ""}>{isArabic ? "العودة" : "Back"}</span>
+                                </Link>
+                                <div className="flex gap-2">
+                                    <span className="px-4 py-2 bg-black border border-[#d6e02e] text-[#d6e02e] text-xs font-black uppercase tracking-wider">
+                                        {getCategoryName(event.category)}
+                                    </span>
+                                    <span className={`px-4 py-2 bg-black border text-white text-xs font-black uppercase tracking-wider ${
+                                        event.status === 'completed' ? 'border-gray-600 text-gray-400' : 'border-emerald-500 text-emerald-400 pulse-neon-yellow'
+                                    }`}>
+                                        {getStatusText(event.status)}
+                                    </span>
                                 </div>
                             </div>
-                            
-                            <div className="mt-8">
-                                {event.status !== 'completed' && auth.user ? (
-                                    user_registration ? (
-                                        <div className="space-y-4">
-                                            {user_registration.status === 'pending' ? (
-                                                <div className="bg-amber-50 text-amber-800 font-black py-4 px-4 rounded-2xl text-center border border-amber-200 flex items-center justify-center gap-3">
-                                                    <Icon icon="mdi:clock-outline" className="w-6 h-6 text-amber-600 animate-pulse" />
-                                                    <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
-                                                        {isArabic ? "تم إرسال طلبك وبانتظار موافقة الإدارة ⏳" : "Request sent, pending admin approval ⏳"}
-                                                    </span>
-                                                </div>
-                                            ) : user_registration.status === 'approved' ? (
-                                                <div className="bg-emerald-50 text-emerald-700 font-black py-4 px-4 rounded-2xl text-center border border-emerald-200 flex items-center justify-center gap-3">
-                                                    <Icon icon="mdi:check-decagram" className="w-6 h-6 text-emerald-600" />
-                                                    <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
-                                                        {isArabic ? "لقد تم تسجيلك بنجاح ✅" : "Successfully registered ✅"}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="bg-rose-50 text-rose-700 font-black py-4 px-4 rounded-2xl text-center border border-rose-200 flex items-center justify-center gap-3">
-                                                    <Icon icon="mdi:close-circle" className="w-6 h-6 text-rose-600" />
-                                                    <span className={isArabic ? "font-arabic text-sm" : "text-sm"}>
-                                                        {isArabic ? "تم رفض طلب تسجيلك من الإدارة" : "Your registration request was rejected"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <button onClick={handleCancelRegistration} className="w-full text-center text-sm font-bold text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors py-3 rounded-xl border border-transparent">
-                                                {isArabic ? "إلغاء التسجيل" : "Cancel Registration"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button onClick={handleRegistration} className="btn-primary w-full justify-center py-5 text-xl rounded-2xl shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all">
-                                            <Icon icon="mdi:account-plus" className="w-6 h-6" />
-                                            {isArabic ? "التسجيل في الفعالية" : "Register for Event"}
-                                        </button>
-                                    )
-                                ) : event.status !== 'completed' && !auth.user ? (
-                                    <Link href={route('login')} className="bg-gray-900 hover:bg-black text-white font-bold py-5 px-4 rounded-2xl text-center flex items-center justify-center gap-3 transition-colors shadow-xl shadow-gray-900/20 hover:-translate-y-1">
-                                        <Icon icon="mdi:login" className="w-6 h-6 text-[#d6e02e]" />
-                                        <span className={isArabic ? "font-arabic text-lg" : "text-lg"}>
-                                            {isArabic ? "تسجيل الدخول للمشاركة" : "Login to Register"}
-                                        </span>
-                                    </Link>
-                                ) : (
-                                    <div className="bg-gray-50 text-gray-400 font-black py-5 px-4 rounded-2xl text-center border border-gray-100 flex items-center justify-center gap-3">
-                                        <Icon icon="mdi:lock-outline" className="w-6 h-6" />
-                                        <span className={isArabic ? "font-arabic text-lg" : "text-lg"}>
-                                            {isArabic ? "التسجيل مغلق - الفعالية مكتملة" : "Registration Closed"}
-                                        </span>
-                                    </div>
-                                )}
+
+                            {/* Massive Cinematic Event Title Overlay */}
+                            <div className="absolute bottom-8 left-8 right-8 z-20 text-right rtl:text-right ltr:text-left">
+                                <h1 className={`text-4xl md:text-5xl lg:text-6xl font-display font-black text-white uppercase tracking-tighter leading-tight drop-shadow-2xl ${isArabic ? "font-arabic" : ""}`}>
+                                    {isArabic ? event.title_ar : event.title_en}
+                                </h1>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Main Content Area */}
-                    <div className="lg:col-span-8 lg:order-first mt-12 lg:mt-4 space-y-12">
-                        
-                        {/* Description */}
-                        <div className="prose prose-lg max-w-none">
-                            <h3 className={`text-2xl font-black text-gray-900 mb-6 flex items-center gap-4 ${isArabic ? "font-arabic" : ""}`}>
-                                <Icon icon="mdi:text-box-multiple-outline" className="w-8 h-8 text-gray-300" />
-                                {isArabic ? "عن الفعالية" : "About Event"}
+                        {/* Description Panel */}
+                        <div className="space-y-6">
+                            <h3 className={`text-2xl font-display font-black text-[#222831] uppercase tracking-wider flex items-center gap-3 border-b border-gray-200 pb-4 ${isArabic ? "font-arabic" : ""}`}>
+                                <Icon icon="solar:document-text-linear" className="w-6 h-6 text-[#d6e02e]" />
+                                {isArabic ? "تفاصيل الفعالية" : "Event Description"}
                             </h3>
-                            <div className={`text-gray-600 leading-relaxed text-lg bg-gray-50 p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-sm ${isArabic ? "font-arabic" : ""}`}>
+                            <div className={`text-gray-600 leading-relaxed text-lg bg-white border-2 border-gray-200 p-8 md:p-10 shadow-[4px_4px_0px_rgba(34,40,49,0.08)] ${isArabic ? "font-arabic font-medium" : "font-medium"}`}>
                                 {isArabic ? event.desc_ar : event.desc_en}
                             </div>
                         </div>
 
-                        {/* Winners Section */}
+                        {/* Redesigned Winners Section for Completed Events */}
                         {event.status === 'completed' && event.registrations?.length > 0 && (
-                            <div className="relative rounded-[2.5rem] p-8 md:p-12 overflow-hidden border border-gray-800 bg-gray-900">
-                                {/* Glassmorphism Backgrounds */}
-                                <div className="absolute top-0 right-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50"></div>
-                                <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#d6e02e]/20 rounded-full blur-[100px]"></div>
+                            <div className="bg-white border-2 border-gray-200 p-8 md:p-10 shadow-[4px_4px_0px_rgba(34,40,49,0.08)] relative overflow-hidden">
+                                <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#d6e02e]/5 rounded-full blur-[80px]" />
                                 
-                                <h3 className={`text-3xl font-black text-white mb-10 flex items-center gap-4 relative z-10 ${isArabic ? "font-arabic" : ""}`}>
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
-                                        <Icon icon="mdi:trophy-variant" className="w-8 h-8" />
-                                    </div>
+                                <h3 className={`text-2xl font-display font-black text-[#222831] uppercase tracking-wider flex items-center gap-3 border-b border-gray-200 pb-4 relative z-10 ${isArabic ? "font-arabic" : ""}`}>
+                                    <Icon icon="solar:cup-first-linear" className="w-6 h-6 text-[#d6e02e]" />
                                     {isArabic ? "أبطال الفعالية" : "Event Champions"}
                                 </h3>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 relative z-10">
                                     {event.registrations.map((reg) => (
-                                        <div key={reg.id} className="group flex items-center justify-between bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                                        <div key={reg.id} className="flex items-center justify-between bg-gray-50 border border-gray-200 p-4 hover:border-[#222831] transition-colors duration-300">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 shadow-lg relative">
+                                                <div className="w-12 h-12 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 relative bg-white">
                                                     {reg.user?.image_path ? (
-                                                        <img src={resolveAsset(`/storage/${reg.user.image_path}`)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                        <img src={resolveAsset(`/storage/${reg.user.image_path}`)} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <Icon icon="mdi:account" className="w-6 h-6 text-gray-500" />
+                                                        <Icon icon="solar:user-linear" className="w-5 h-5 text-gray-400" />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className={`font-black text-white text-lg ${isArabic ? "font-arabic" : ""}`}>{reg.user?.name}</p>
-                                                    <p className="text-xs text-gray-400 font-bold">{reg.user?.category || 'لاعب'}</p>
+                                                    <p className={`font-black text-[#222831] text-base ${isArabic ? "font-arabic" : ""}`}>{reg.user?.name}</p>
+                                                    <p className={`text-[10px] text-[#222831] font-black uppercase tracking-wider ${isArabic ? "font-arabic" : ""}`}>{reg.user?.category || (isArabic ? 'لاعب' : 'Player')}</p>
                                                 </div>
                                             </div>
-                                            <div className="shrink-0 pl-2">
+                                            <div className="shrink-0">
                                                 {reg.placement ? (
-                                                    <div className={`w-12 h-12 flex flex-col items-center justify-center rounded-2xl font-black shadow-inner font-arabic ${
-                                                        reg.placement == 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-600 text-yellow-950 border border-yellow-300 shadow-yellow-500/20' :
-                                                        reg.placement == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-gray-900 border border-gray-300 shadow-gray-500/20' :
-                                                        reg.placement == 3 ? 'bg-gradient-to-br from-orange-400 to-rose-500 text-white border border-orange-400 shadow-orange-500/20' :
-                                                        'bg-white/10 text-white border border-white/20'
+                                                    <div className={`w-10 h-10 flex items-center justify-center border font-black text-lg ${
+                                                        reg.placement == 1 ? 'bg-[#d6e02e] text-[#222831] border-[#d6e02e] shadow-[0_0_10px_rgba(214,224,46,0.3)]' :
+                                                        reg.placement == 2 ? 'bg-gray-200 text-gray-700 border-gray-300' :
+                                                        reg.placement == 3 ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
+                                                        'bg-white text-gray-500 border-gray-200'
                                                     }`}>
-                                                        <span className="text-xl leading-none">{Number(reg.placement).toLocaleString(isArabic ? 'ar-EG' : 'en-US')}</span>
+                                                        {reg.placement}
                                                     </div>
                                                 ) : (
-                                                    <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10">
-                                                        <Icon icon="mdi:medal-outline" className="w-6 h-6 text-gray-600" />
+                                                    <div className="w-10 h-10 flex items-center justify-center bg-gray-100 border border-gray-200 text-gray-300">
+                                                        <Icon icon="solar:medal-star-linear" className="w-5 h-5" />
                                                     </div>
                                                 )}
                                             </div>
@@ -344,11 +224,182 @@ export default function EventDetails({ event, is_registered, user_registration }
                         )}
                     </div>
 
+                    {/* Right Sticky 40% Card (5 cols on lg) */}
+                    <div className="lg:col-span-5 lg:sticky lg:top-28 z-20">
+                        <div className="bg-white border-2 border-gray-200 p-8 shadow-xl relative overflow-hidden rounded-none">
+                            <h4 className={`text-xl font-display font-black text-[#222831] uppercase tracking-wider mb-8 border-b border-gray-200 pb-4 flex items-center gap-3 ${isArabic ? "font-arabic" : ""}`}>
+                                <Icon icon="solar:ticket-linear" className="text-[#d6e02e] w-6 h-6" />
+                                {isArabic ? "تفاصيل التسجيل" : "Registration Details"}
+                            </h4>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-300">
+                                    <div className="w-12 h-12 bg-white border border-gray-200 text-gray-700 flex items-center justify-center shadow-sm shrink-0">
+                                        <Icon icon="solar:calendar-date-linear" className="w-6 h-6 text-[#d6e02e]" />
+                                    </div>
+                                    <div>
+                                        <p className={`text-[10px] text-gray-400 font-black uppercase tracking-wider mb-0.5 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "التاريخ" : "Date"}</p>
+                                        <p className="font-black text-[#222831] text-base font-arabic">
+                                            {day} {month} {year}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-300">
+                                    <div className="w-12 h-12 bg-white border border-gray-200 text-gray-700 flex items-center justify-center shadow-sm shrink-0">
+                                        <Icon icon="solar:clock-circle-linear" className="w-6 h-6 text-[#d6e02e]" />
+                                    </div>
+                                    <div>
+                                        <p className={`text-[10px] text-gray-400 font-black uppercase tracking-wider mb-0.5 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "الوقت" : "Time"}</p>
+                                        <p className="font-black text-[#222831] text-base font-arabic">
+                                            {dayjs(event.time).locale('en').format('hh:mm A')}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-300">
+                                    <div className="w-12 h-12 bg-white border border-gray-200 text-gray-700 flex items-center justify-center shadow-sm shrink-0">
+                                        <Icon icon="solar:ticket-linear" className="w-6 h-6 text-[#d6e02e]" />
+                                    </div>
+                                    <div>
+                                        <p className={`text-[10px] text-gray-400 font-black uppercase tracking-wider mb-0.5 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "رسوم التسجيل" : "Registration Fee"}</p>
+                                        <p className="font-black text-[#222831] text-base font-arabic">
+                                            {event.fee > 0 ? (
+                                                <>{Number(event.fee).toLocaleString('en-US')} <span className="text-xs font-bold text-gray-400">{isArabic ? 'ل.س' : 'SYP'}</span></>
+                                            ) : (
+                                                <span className="text-[#222831] font-black">{isArabic ? 'مجاني' : 'Free'}</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-300">
+                                    <div className="w-12 h-12 bg-white border border-gray-200 text-gray-700 flex items-center justify-center shadow-sm shrink-0">
+                                        <Icon icon="solar:users-group-two-rounded-linear" className="w-6 h-6 text-[#d6e02e]" />
+                                    </div>
+                                    <div>
+                                        <p className={`text-[10px] text-gray-400 font-black uppercase tracking-wider mb-0.5 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "المشاركون المقبولون" : "Approved Participants"}</p>
+                                        <p className="font-black text-[#222831] text-base font-arabic">
+                                            {Number(event.registrations?.length || 0).toLocaleString('en-US')} / {event.max_participants ? Number(event.max_participants).toLocaleString('en-US') : '∞'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Registration actions for Desktop */}
+                            <div className="relative z-10 hidden lg:block">
+                                {event.status !== 'completed' && auth.user ? (
+                                    user_registration ? (
+                                        <div className="space-y-4">
+                                            {user_registration.status === 'pending' ? (
+                                                <div className="bg-amber-50 border border-amber-250 text-amber-700 font-black py-4 px-4 text-center flex items-center justify-center gap-3">
+                                                    <Icon icon="solar:clock-circle-linear" className="w-6 h-6 text-amber-500 animate-pulse" />
+                                                    <span className={isArabic ? "font-arabic text-xs" : "text-xs"}>
+                                                        {isArabic ? "تم إرسال طلبك وبانتظار موافقة الإدارة ⏳" : "Request sent, pending admin approval ⏳"}
+                                                    </span>
+                                                </div>
+                                            ) : user_registration.status === 'approved' ? (
+                                                <div className="bg-emerald-50 border border-emerald-250 text-emerald-700 font-black py-4 px-4 text-center flex items-center justify-center gap-3">
+                                                    <Icon icon="solar:check-circle-linear" className="w-6 h-6 text-emerald-600" />
+                                                    <span className={isArabic ? "font-arabic text-xs" : "text-xs"}>
+                                                        {isArabic ? "لقد تم تسجيلك بنجاح ✅" : "Successfully registered ✅"}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-rose-50 border border-rose-250 text-rose-700 font-black py-4 px-4 text-center flex items-center justify-center gap-3">
+                                                    <Icon icon="solar:close-circle-linear" className="w-6 h-6 text-rose-500" />
+                                                    <span className={isArabic ? "font-arabic text-xs" : "text-xs"}>
+                                                        {isArabic ? "تم رفض طلب تسجيلك من الإدارة" : "Your registration request was rejected"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <button 
+                                                onClick={handleCancelRegistration} 
+                                                className="w-full text-center text-xs font-black uppercase text-gray-500 hover:text-rose-600 py-3.5 transition-colors border border-transparent"
+                                            >
+                                                {isArabic ? "إلغاء التسجيل" : "Cancel Registration"}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={handleRegistration} 
+                                            className="btn-sport-liquid w-full justify-center py-4 text-base font-black tracking-wider shadow-[0_4px_20px_rgba(214,224,46,0.25)] hover:shadow-[0_4px_30px_rgba(214,224,46,0.4)]"
+                                        >
+                                            <Icon icon="solar:user-plus-linear" className="w-6 h-6" />
+                                            {isArabic ? "التسجيل في الفعالية" : "Register for Event"}
+                                        </button>
+                                    )
+                                ) : event.status !== 'completed' && !auth.user ? (
+                                    <Link 
+                                        href={route('login')} 
+                                        className="btn-sport-liquid w-full justify-center py-4 text-base font-black tracking-wider shadow-[0_4px_20px_rgba(214,224,46,0.25)]"
+                                    >
+                                        <Icon icon="solar:login-2-linear" className="w-6 h-6" />
+                                        <span className={isArabic ? "font-arabic" : ""}>
+                                            {isArabic ? "تسجيل الدخول للمشاركة" : "Login to Register"}
+                                        </span>
+                                    </Link>
+                                ) : (
+                                    <div className="bg-gray-100 text-gray-400 font-black py-4 px-4 border border-gray-200 text-center flex items-center justify-center gap-3">
+                                        <Icon icon="solar:lock-keyhole-linear" className="w-6 h-6" />
+                                        <span className={isArabic ? "font-arabic text-base" : "text-base"}>
+                                            {isArabic ? "التسجيل مغلق - الفعالية مكتملة" : "Registration Closed"}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
+            {/* Ergonomic Floating Bottom Sheet/Action Bar for Mobile devices */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t-2 border-gray-200 p-4 backdrop-blur-lg shadow-2xl flex items-center justify-between gap-4">
+                <div className="flex flex-col text-left rtl:text-right">
+                    <span className="text-[9px] text-gray-400 font-black uppercase tracking-wider">{isArabic ? "الرسوم" : "Registration Fee"}</span>
+                    <span className="font-black text-[#222831] text-sm font-arabic mt-0.5">
+                        {event.fee > 0 ? (
+                            <>{Number(event.fee).toLocaleString('en-US')} <span className="text-[10px] text-gray-400">{isArabic ? 'ل.س' : 'SYP'}</span></>
+                        ) : (
+                            <span className="text-[#222831] font-black">{isArabic ? 'مجاني' : 'Free'}</span>
+                        )}
+                    </span>
+                </div>
+                <div className="flex-1 max-w-[240px]">
+                    {event.status !== 'completed' && auth.user ? (
+                        user_registration ? (
+                            <button 
+                                onClick={handleCancelRegistration}
+                                className="w-full bg-rose-50 border border-rose-200 text-rose-600 py-3.5 text-xs font-black uppercase"
+                            >
+                                {isArabic ? "إلغاء التسجيل" : "Cancel"}
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={handleRegistration} 
+                                className="btn-sport-liquid w-full justify-center py-3.5 text-xs font-black tracking-wider"
+                            >
+                                {isArabic ? "تسجيل" : "Register"}
+                            </button>
+                        )
+                    ) : event.status !== 'completed' && !auth.user ? (
+                        <Link 
+                            href={route('login')} 
+                            className="btn-sport-liquid w-full justify-center py-3.5 text-xs font-black tracking-wider"
+                        >
+                            {isArabic ? "تسجيل الدخول" : "Login"}
+                        </Link>
+                    ) : (
+                        <span className="w-full block text-center text-xs font-black text-gray-450 border border-gray-200 py-3.5 bg-gray-50">
+                            {isArabic ? "مغلق" : "Closed"}
+                        </span>
+                    )}
+                </div>
+            </div>
+
         </div>
     );
 }
 
 EventDetails.layout = page => <AppLayout children={page} />;
-

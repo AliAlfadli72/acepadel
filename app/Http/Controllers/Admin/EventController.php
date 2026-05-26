@@ -10,24 +10,66 @@ class EventController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $events = \App\Models\Event::with(['registrations.user'])->withCount(['registrations', 'registrations as approved_registrations_count' => function ($query) {
+        $search   = $request->input('search');
+        $status   = $request->input('status');
+        $category = $request->input('category');
+        $level    = $request->input('level');
+
+        // Stats should reflect global (unfiltered) events
+        $allEvents = \App\Models\Event::withCount(['registrations as approved_registrations_count' => function ($query) {
             $query->where('status', 'approved');
-        }])->latest()->get();
+        }])->get();
 
         $stats = [
-            'total_events' => $events->count(),
-            'upcoming_events' => $events->where('status', 'upcoming')->count(),
-            'total_participants' => $events->sum('approved_registrations_count'),
-            'total_revenue' => $events->sum(function ($event) {
+            'total_events' => $allEvents->count(),
+            'upcoming_events' => $allEvents->where('status', 'upcoming')->count(),
+            'total_participants' => $allEvents->sum('approved_registrations_count'),
+            'total_revenue' => $allEvents->sum(function ($event) {
                 return $event->fee * $event->approved_registrations_count;
             }),
         ];
 
+        // Filtered events query
+        $eventsQuery = \App\Models\Event::with(['registrations.user'])
+            ->withCount([
+                'registrations',
+                'registrations as approved_registrations_count' => function ($query) {
+                    $query->where('status', 'approved');
+                },
+                'registrations as pending_registrations_count' => function ($query) {
+                    $query->where('status', 'pending');
+                }
+            ]);
+
+        $eventsQuery->when($search, function ($q) use ($search) {
+            $q->where(function ($q2) use ($search) {
+                $q2->where('title_ar', 'like', "%{$search}%")
+                   ->orWhere('title_en', 'like', "%{$search}%")
+                   ->orWhere('desc_ar', 'like', "%{$search}%")
+                   ->orWhere('desc_en', 'like', "%{$search}%");
+            });
+        });
+
+        $eventsQuery->when($status, function ($q) use ($status) {
+            $q->where('status', $status);
+        });
+
+        $eventsQuery->when($category, function ($q) use ($category) {
+            $q->where('category', $category);
+        });
+
+        $eventsQuery->when($level, function ($q) use ($level) {
+            $q->where('level', $level);
+        });
+
+        $events = $eventsQuery->latest()->paginate(5)->withQueryString();
+
         return inertia('Admin/Events/Index', [
             'events' => $events,
-            'stats' => $stats
+            'stats' => $stats,
+            'filters' => $request->only(['search', 'status', 'category', 'level'])
         ]);
     }
 
