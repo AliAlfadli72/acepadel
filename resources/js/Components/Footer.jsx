@@ -11,7 +11,7 @@ export default function Footer({ lang }) {
     { routeName: "services",    label: { ar: "الخدمات",    en: "Services"} },
     { routeName: "booking.guest", label: { ar: "حجز الملاعب",en: "Booking" } },
     { routeName: "events",      label: { ar: "الفعاليات",  en: "Events"  } },
-    { routeName: "about",       label: { ar: "من نحن",    en: "About Us"  } },
+    { routeName: "pilates.booking.page", label: { ar: "بيلاتس",    en: "Pilates"  } },
     { routeName: "contact",     label: { ar: "تواصل",     en: "Contact" } },
   ];
 

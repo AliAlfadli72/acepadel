@@ -13,7 +13,8 @@ class PilatesSession extends Model
     protected $fillable = [
         'title',
         'description',
-        'coach_name',
+        'coach_id',
+        'session_type',
         'capacity',
         'price_per_session',
         'session_date',
@@ -25,8 +26,27 @@ class PilatesSession extends Model
     protected $casts = [
         'capacity' => 'integer',
         'price_per_session' => 'decimal:2',
-        'session_date' => 'date',
+        'session_date' => 'date:Y-m-d',
+        'coach_id' => 'integer',
     ];
+
+    protected $appends = ['coach_name'];
+
+    /**
+     * Get the coach's name as a virtual attribute for mobile app backward compatibility.
+     */
+    public function getCoachNameAttribute(): string
+    {
+        return $this->coach ? $this->coach->name : '';
+    }
+
+    /**
+     * Get the coach associated with the session.
+     */
+    public function coach(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'coach_id');
+    }
 
     /**
      * Get bookings associated with the session.

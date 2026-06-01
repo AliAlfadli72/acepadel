@@ -21,7 +21,7 @@ class BookSessionRequest extends FormRequest
     {
         return [
             'pilates_session_id' => ['required', 'exists:pilates_sessions,id'],
-            'payment_method' => ['required', 'in:wallet,cash'],
+            'payment_method' => ['required', 'in:wallet,cash,package'],
         ];
     }
 
@@ -34,7 +34,7 @@ class BookSessionRequest extends FormRequest
             'pilates_session_id.required' => 'حقل الجلسة مطلوب.',
             'pilates_session_id.exists' => 'الجلسة المحددة غير موجودة.',
             'payment_method.required' => 'طريقة الدفع مطلوبة.',
-            'payment_method.in' => 'طريقة الدفع يجب أن تكون المحفظة (wallet) أو نقداً (cash).',
+            'payment_method.in' => 'طريقة الدفع يجب أن تكون المحفظة (wallet) أو نقداً (cash) أو باقة (package).',
         ];
     }
 }

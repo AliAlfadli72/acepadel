@@ -2,7 +2,7 @@ import AdminLayout from "@/Layouts/AdminLayout";
 import { Head, usePage } from "@inertiajs/react";
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     AreaChart,
     Area,
@@ -16,7 +16,7 @@ import {
 } from "recharts";
 
 // Real-Time Countdown Timer Component for Next Padel Tournament (Light Theme)
-function CountdownTimer() {
+function CountdownTimer({ target, isPilates }) {
     const getNextFriday = () => {
         const now = new Date();
         const nextFriday = new Date();
@@ -29,15 +29,15 @@ function CountdownTimer() {
         return nextFriday;
     };
 
-    const [targetDate] = useState(getNextFriday());
-    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const targetDate = useMemo(() => target ? new Date(target) : getNextFriday(), [target]);
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
 
     useEffect(() => {
         const updateTimer = () => {
             const now = new Date();
             const difference = targetDate - now;
             if (difference <= 0) {
-                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
                 return;
             }
 
@@ -46,13 +46,21 @@ function CountdownTimer() {
             const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-            setTimeLeft({ days, hours, minutes, seconds });
+            setTimeLeft({ days, hours, minutes, seconds, expired: false });
         };
 
         updateTimer();
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
     }, [targetDate]);
+
+    if (isPilates && (!target || timeLeft.expired)) {
+        return (
+            <div className="text-center py-2 text-xs font-bold text-[#84CC16]">
+                لا توجد جلسات بيلاتس قادمة مجدولة لليوم
+            </div>
+        );
+    }
 
     return (
         <div className="flex gap-1.5 justify-center font-mono font-black" dir="ltr">
@@ -139,14 +147,14 @@ function MiniSparkline({ trend = 'up' }) {
     );
 }
 
-export default function Dashboard({ stats = {} }) {
+export default function Dashboard({ stats = {}, isPilates = false }) {
     const { auth } = usePage().props;
     const roles = auth.user?.roles || [];
 
     const isAdmin = roles.includes("Admin");
     const isManager = roles.includes("Manager");
 
-    const canViewFinance = isAdmin;
+    const canViewFinance = isAdmin || (isPilates && roles.includes("Pilates Admin"));
     const isArabic = true;
 
     // Staggered Container Animation
@@ -193,7 +201,7 @@ export default function Dashboard({ stats = {} }) {
                 </h2>
             }
         >
-            <Head title="لوحة القيادة | آيس بادل" />
+            <Head title={isPilates ? "لوحة القيادة بيلاتس | The Reformer Room" : "لوحة القيادة | آيس بادل"} />
 
             <div className="py-6 font-arabic text-slate-800 bg-[#F8FAFC] min-h-screen">
                 <motion.div
@@ -213,7 +221,9 @@ export default function Dashboard({ stats = {} }) {
                                 أهلاً بك، {auth.user.name} 👋
                             </h3>
                             <p className="text-[#64748B] text-xs font-medium">
-                                مرحباً بك في مركز عمليات آيس بادل. إليك نظرة شاملة على الأداء والمؤشرات.
+                                {isPilates 
+                                    ? "مرحباً بك في مركز عمليات استوديو بيلاتس (The Reformer Room). إليك نظرة شاملة على أداء الجلسات والمؤشرات."
+                                    : "مرحباً بك في مركز عمليات آيس بادل. إليك نظرة شاملة على الأداء والمؤشرات."}
                             </p>
                         </div>
                         <div className="relative z-10 flex items-center gap-3">
@@ -353,7 +363,7 @@ export default function Dashboard({ stats = {} }) {
                             </div>
                         </motion.div>
 
-                        {/* Court Occupancy Graphic Cell (40% Width / lg:col-span-2) */}
+                        {/* Session / Court Occupancy Cell (40% Width / lg:col-span-2) */}
                         <motion.div
                             variants={cellVariants}
                             whileHover={{ borderColor: "#CBD5E1", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
@@ -363,40 +373,50 @@ export default function Dashboard({ stats = {} }) {
                                 <div>
                                     <div className="flex justify-between items-start mb-1">
                                         <h4 className="text-[#0F172A] font-extrabold text-sm flex items-center gap-1.5">
-                                            <Icon icon="solar:chart-2-bold-duotone" className="w-5 h-5 text-[#84CC16]" />
-                                            إشغال الملاعب
+                                            <Icon icon={isPilates ? "mdi:yoga" : "solar:chart-2-bold-duotone"} className="w-5 h-5 text-[#84CC16]" />
+                                            {isPilates ? "إشغال جلسات البيلاتس" : "إشغال الملاعب"}
                                         </h4>
-                                        <span className="text-[10px] bg-slate-50 border border-slate-200/60 text-[#64748B] px-2 py-0.5 rounded-full font-bold">
-                                            معدل اليوم: 68%
-                                        </span>
+                                        {!isPilates && (
+                                            <span className="text-[10px] bg-slate-50 border border-slate-200/60 text-[#64748B] px-2 py-0.5 rounded-full font-bold">
+                                                معدل اليوم: 68%
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-[#64748B] text-[10px] font-bold tracking-widest uppercase mb-4">
-                                        COURT UTILIZATION STATISTICS
+                                        {isPilates ? "SESSIONS OCCUPANCY STATISTICS" : "COURT UTILIZATION STATISTICS"}
                                     </p>
 
-                                    {/* Court progress meters */}
-                                    <div className="space-y-4 my-2">
-                                        {[
-                                            { name: 'الملعب الأول (أزرق)', percentage: 85, bookings: '12 حجز' },
-                                            { name: 'الملعب الثاني (أحمر)', percentage: 60, bookings: '8 حجوزات' },
-                                            { name: 'الملعب الثالث (عشب)', percentage: 40, bookings: '5 حجوزات' },
-                                            { name: 'الملعب الرابع (داخلي)', percentage: 90, bookings: '14 حجز' },
-                                        ].map((court, idx) => (
+                                    {/* Occupancy progress meters */}
+                                    <div className="space-y-4 my-2 max-h-[220px] overflow-y-auto custom-scrollbar">
+                                        {(isPilates 
+                                            ? (stats.session_occupancy || [])
+                                            : [
+                                                { name: 'الملعب الأول (أزرق)', percentage: 85, bookings: '12 حجز' },
+                                                { name: 'الملعب الثاني (أحمر)', percentage: 60, bookings: '8 حجوزات' },
+                                                { name: 'الملعب الثالث (عشب)', percentage: 40, bookings: '5 حجوزات' },
+                                                { name: 'الملعب الرابع (داخلي)', percentage: 90, bookings: '14 حجز' },
+                                            ]
+                                        ).map((item, idx) => (
                                             <div key={idx} className="space-y-1.5">
                                                 <div className="flex justify-between text-xs font-bold">
-                                                    <span className="text-slate-800">{court.name}</span>
-                                                    <span className="text-[#84CC16] font-mono">{court.percentage}% ({court.bookings})</span>
+                                                    <span className="text-slate-800 truncate max-w-[70%]">{item.name}</span>
+                                                    <span className="text-[#84CC16] font-mono shrink-0">{item.percentage}% ({item.bookings})</span>
                                                 </div>
                                                 <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/20">
                                                     <motion.div
                                                         initial={{ width: 0 }}
-                                                        animate={{ width: `${court.percentage}%` }}
+                                                        animate={{ width: `${item.percentage}%` }}
                                                         transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1], delay: idx * 0.08 }}
                                                         className="h-full bg-[#84CC16] rounded-full"
                                                     />
                                                 </div>
                                             </div>
                                         ))}
+                                        {isPilates && (stats.session_occupancy || []).length === 0 && (
+                                            <div className="py-8 text-center text-xs font-bold text-slate-400">
+                                                لا توجد جلسات بيلاتس نشطة حالياً لعرض إشغالها
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -415,7 +435,7 @@ export default function Dashboard({ stats = {} }) {
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <h4 className="text-xs font-black text-[#64748B] uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-3 mb-2">
                                     <Icon icon="solar:cup-first-bold-duotone" className="w-4.5 h-4.5 text-[#84CC16]" />
-                                    {isArabic ? "أبطال الأكاديمية" : "ACADEMY CHAMPIONS"}
+                                    {isPilates ? "أبطال استوديو البيلاتس" : (isArabic ? "أبطال الأكاديمية" : "ACADEMY CHAMPIONS")}
                                 </h4>
 
                                 <div className="grid grid-cols-2 gap-4 flex-1 items-center">
@@ -424,7 +444,7 @@ export default function Dashboard({ stats = {} }) {
                                         <div className="relative w-11 h-11 shrink-0">
                                             <div className="w-full h-full rounded-full overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center relative">
                                                 <Icon icon="solar:user-linear" className="w-6 h-6 text-slate-500" />
-                                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-gradient-to-tr from-[#84CC16] to-lime-300 text-slate-900 text-[8px] font-black rounded-full flex items-center justify-center shadow-md">1</div>
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-gradient-to-tr from-[#84CC16] to-lime-300 text-slate-950 text-[8px] font-black rounded-full flex items-center justify-center shadow-md">1</div>
                                             </div>
                                             <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse" />
                                         </div>
@@ -444,17 +464,17 @@ export default function Dashboard({ stats = {} }) {
                                         <div className="relative w-11 h-11 shrink-0">
                                             <div className="w-full h-full rounded-full overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center relative">
                                                 <Icon icon="solar:user-linear" className="w-6 h-6 text-slate-500" />
-                                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-gradient-to-tr from-[#84CC16] to-lime-300 text-slate-900 text-[8px] font-black rounded-full flex items-center justify-center shadow-md">1</div>
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-gradient-to-tr from-[#84CC16] to-lime-300 text-slate-950 text-[8px] font-black rounded-full flex items-center justify-center shadow-md">1</div>
                                             </div>
                                             <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[10px] text-slate-400 font-bold truncate">أفضل لاعب</p>
+                                            <p className="text-[10px] text-slate-400 font-bold truncate">{isPilates ? "المشترك الأكثر حجزاً" : "أفضل لاعب"}</p>
                                             <h5 className="font-extrabold text-xs text-slate-800 truncate mt-0.5">
                                                 {stats.top_players?.[0]?.name || "لاعب محترف"}
                                             </h5>
                                             <p className="text-[9px] text-[#84CC16] font-bold mt-0.5">
-                                                {stats.top_players?.[0]?.matches || 0} مباراة
+                                                {stats.top_players?.[0]?.matches || 0} {isPilates ? "حجز" : "مباراة"}
                                             </p>
                                         </div>
                                     </div>
@@ -472,20 +492,24 @@ export default function Dashboard({ stats = {} }) {
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <h4 className="text-xs font-black text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
-                                            <Icon icon="solar:stopwatch-bold-duotone" className="w-4.5 h-4.5 text-[#84CC16]" />
-                                            فعاليات قادمة
+                                            <Icon icon={isPilates ? "solar:calendar-bold-duotone" : "solar:stopwatch-bold-duotone"} className="w-4.5 h-4.5 text-[#84CC16]" />
+                                            {isPilates ? "الجلسة القادمة اليوم" : "فعاليات قادمة"}
                                         </h4>
                                         <span className="text-[9px] font-bold bg-[#84CC16]/10 text-[#84CC16] border border-[#84CC16]/20 px-2 py-0.5 rounded-full">
-                                            قريباً
+                                            {isPilates ? "تحديث مباشر" : "قريباً"}
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-600 leading-relaxed font-semibold">
-                                        بطولة آيس بادل المفتوحة تبدأ قريباً. تأكد من جاهزية الملاعب والمدربين لتلبية الطلب العالي للبطولة.
+                                        {isPilates 
+                                            ? (stats.next_session_title 
+                                                ? `الجلسة القادمة المجدولة لليوم هي: "${stats.next_session_title}". يرجى التأكد من جاهزية الصالة واستعداد المدرب.`
+                                                : "لا توجد جلسات أخرى مجدولة لليوم. تابع جدول الحصص القادمة.")
+                                            : "بطولة آيس بادل المفتوحة تبدأ قريباً. تأكد من جاهزية الملاعب والمدربين لتلبية الطلب العالي للبطولة."}
                                     </p>
                                 </div>
 
                                 <div className="pt-2 border-t border-slate-100">
-                                    <CountdownTimer />
+                                    <CountdownTimer target={stats.next_session_time} isPilates={isPilates} />
                                 </div>
                             </div>
                         </motion.div>
@@ -502,7 +526,7 @@ export default function Dashboard({ stats = {} }) {
                                         <Icon icon="solar:history-bold-duotone" className="w-4.5 h-4.5 text-[#64748B]" />
                                         أحدث النشاطات
                                     </h4>
-                                    <a href={route(canViewFinance ? "admin.bookings" : "booking.index")} className="text-[9px] font-bold text-[#84CC16] hover:underline">
+                                    <a href={route(isPilates ? "admin.pilates.bookings.index" : (canViewFinance ? "admin.bookings" : "booking.index"))} className="text-[9px] font-bold text-[#84CC16] hover:underline">
                                         عرض الكل
                                     </a>
                                 </div>
@@ -566,7 +590,7 @@ export default function Dashboard({ stats = {} }) {
                             <div>
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
-                                        <Icon icon="mdi:account-group-outline" className="w-5.5 h-5.5" />
+                                        <Icon icon={isPilates ? "solar:users-group-rounded-bold-duotone" : "mdi:account-group-outline"} className="w-5.5 h-5.5" />
                                     </div>
                                     <span className="text-[10px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5" dir="ltr">
                                         +8%
@@ -574,7 +598,7 @@ export default function Dashboard({ stats = {} }) {
                                     </span>
                                 </div>
                                 <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
-                                    إجمالي اللاعبين
+                                    {isPilates ? "مشتركي البيلاتس" : "إجمالي اللاعبين"}
                                 </p>
                                 <p className="text-3xl font-black text-slate-900 mt-1">
                                     <span dir="ltr" className="font-sans">
@@ -596,7 +620,7 @@ export default function Dashboard({ stats = {} }) {
                             <div>
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100/50 flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
-                                        <Icon icon="mdi:whistle" className="w-5.5 h-5.5" />
+                                        <Icon icon={isPilates ? "mdi:yoga" : "mdi:whistle"} className="w-5.5 h-5.5" />
                                     </div>
                                     <span className="text-[10px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5" dir="ltr">
                                         +4%
@@ -604,7 +628,7 @@ export default function Dashboard({ stats = {} }) {
                                     </span>
                                 </div>
                                 <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
-                                    المدربين الفعالين
+                                    {isPilates ? "مدربي البيلاتس" : "المدربين الفعالين"}
                                 </p>
                                 <p className="text-3xl font-black text-slate-900 mt-1">
                                     <span dir="ltr" className="font-sans">
@@ -626,7 +650,7 @@ export default function Dashboard({ stats = {} }) {
                             <div>
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/50 flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
-                                        <Icon icon="mdi:calendar-check-outline" className="w-5.5 h-5.5" />
+                                        <Icon icon={isPilates ? "solar:calendar-date-bold-duotone" : "mdi:calendar-check-outline"} className="w-5.5 h-5.5" />
                                     </div>
                                     <span className="text-[10px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5" dir="ltr">
                                         +15%
@@ -634,7 +658,7 @@ export default function Dashboard({ stats = {} }) {
                                     </span>
                                 </div>
                                 <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
-                                    إجمالي الحجوزات
+                                    {isPilates ? "حجوزات البيلاتس" : "إجمالي الحجوزات"}
                                 </p>
                                 <p className="text-3xl font-black text-slate-900 mt-1">
                                     <span dir="ltr" className="font-sans">
@@ -647,7 +671,7 @@ export default function Dashboard({ stats = {} }) {
                             </div>
                         </motion.div>
 
-                        {/* Metric 4: Active Courts */}
+                        {/* Metric 4: Active Courts / Active Sessions */}
                         <motion.div
                             variants={cellVariants}
                             whileHover={{ borderColor: "#CBD5E1", translateY: -2, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
@@ -656,14 +680,14 @@ export default function Dashboard({ stats = {} }) {
                             <div>
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100/50 flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
-                                        <Icon icon="mdi:tennis" className="w-5.5 h-5.5" />
+                                        <Icon icon={isPilates ? "solar:bell-bold-duotone" : "mdi:tennis"} className="w-5.5 h-5.5" />
                                     </div>
                                     <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5" dir="ltr">
-                                        نشط
+                                        {isPilates ? "نشطة" : "نشط"}
                                     </span>
                                 </div>
                                 <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
-                                    الملاعب المتاحة
+                                    {isPilates ? "جلسات اليوم" : "الملاعب المتاحة"}
                                 </p>
                                 <p className="text-3xl font-black text-slate-900 mt-1">
                                     <span dir="ltr" className="font-sans">

@@ -148,9 +148,7 @@ class BookingService
 
                 'end_time' => $endTime,
 
-                'status' => $isAdmin
-                    ? 'approved'
-                    : 'pending',
+                'status' => 'pending',
 
                 'total_price' => $totalPrice,
 

@@ -9,6 +9,7 @@ class Wallet extends Model
     protected $fillable = [
         'user_id',
         'balance',
+        'pilates_balance',
     ];
 
     public function user()

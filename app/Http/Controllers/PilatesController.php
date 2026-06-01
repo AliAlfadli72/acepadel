@@ -1,18 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\PilatesSession;
 use App\Models\PilatesBooking;
 use App\Services\WalletService;
+use App\Services\PushNotificationService;
 use App\Http\Requests\Pilates\BookSessionRequest;
 use App\Notifications\PilatesBookingConfirmedNotification;
-use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
-class PilatesApiController extends Controller
+class PilatesController extends Controller
 {
     protected WalletService $walletService;
     protected PushNotificationService $pushService;
@@ -24,9 +25,9 @@ class PilatesApiController extends Controller
     }
 
     /**
-     * Fetch all upcoming active Pilates sessions with remaining available slots.
+     * Display a listing of upcoming active Pilates sessions for booking.
      */
-    public function sessions()
+    public function index()
     {
         $today = now()->toDateString();
         $currentTime = now()->toTimeString();
@@ -43,7 +44,7 @@ class PilatesApiController extends Controller
             ->orderBy('start_time', 'asc')
             ->get();
 
-        $user = auth('sanctum')->user();
+        $user = Auth::user();
         $sessions->each(function ($session) use ($user) {
             $session->append('available_slots');
             $session->has_booked = $user ? $session->bookings()
@@ -51,6 +52,14 @@ class PilatesApiController extends Controller
                 ->whereIn('status', ['confirmed', 'pending'])
                 ->exists() : false;
         });
+
+        $userWalletBalance = $user && $user->wallet ? (float) $user->wallet->balance : 0.0;
+        
+        $userActivePackages = $user ? $user->userPilatesPackages()
+            ->where('remaining_classes', '>', 0)
+            ->where('expires_at', '>=', now())
+            ->with('pilatesPackage')
+            ->get() : collect([]);
 
         // Create default Pilates Packages if none exist in the database
         if (\App\Models\PilatesPackage::count() === 0) {
@@ -69,26 +78,78 @@ class PilatesApiController extends Controller
         }
         $packages = \App\Models\PilatesPackage::orderBy('total_classes', 'asc')->get();
 
-        $userActivePackages = $user ? $user->userPilatesPackages()
-            ->active()
-            ->with('pilatesPackage')
-            ->get() : [];
-
-        return response()->json([
-            'success' => true,
-            'data' => $sessions,
-            'active_packages' => $userActivePackages,
-            'packages' => $packages
+        return Inertia::render('Pilates/Book', [
+            'sessions' => $sessions,
+            'walletBalance' => $userWalletBalance,
+            'activePackages' => $userActivePackages,
+            'packages' => $packages,
         ]);
     }
 
     /**
-     * Handle booking action.
-     * Prevents overbooking using DB row locking and atomic operations.
+     * Subscribe/Buy a Pilates package.
+     */
+    public function buyPackage(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'pilates_package_id' => 'required|exists:pilates_packages,id'
+        ]);
+
+        $package = \App\Models\PilatesPackage::findOrFail($request->pilates_package_id);
+        $wallet = $user->wallet;
+
+        if (!$wallet || $wallet->balance < $package->price) {
+            return redirect()->back()->withErrors([
+                'error' => 'رصيدك في المحفظة غير كافٍ لشراء هذه الباقة. يرجى شحن محفظتك أولاً.'
+            ]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Deduct package price from player's wallet using manual adjustment
+            $this->walletService->manualAdjustment(
+                $wallet,
+                $package->price,
+                "شراء باقة بيلاتس: {$package->name}"
+            );
+
+            // Assign package to user
+            \App\Models\UserPilatesPackage::create([
+                'user_id' => $user->id,
+                'pilates_package_id' => $package->id,
+                'remaining_classes' => $package->total_classes,
+                'expires_at' => now()->addDays($package->valid_days)
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'تم الاشتراك في الباقة بنجاح!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->back()->withErrors([
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Book a Pilates session for the authenticated user.
      */
     public function book(BookSessionRequest $request)
     {
-        $user = $request->user();
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         $pilatesSessionId = $request->pilates_session_id;
         $paymentMethod = $request->payment_method;
 
@@ -126,7 +187,7 @@ class PilatesApiController extends Controller
             if ($paymentMethod === 'wallet') {
                 $wallet = $user->wallet;
 
-                if (!$wallet || $wallet->pilates_balance < $session->price_per_session) {
+                if (!$wallet || $wallet->balance < $session->price_per_session) {
                     throw new \Exception('رصيدك في المحفظة غير كافٍ لإتمام الحجز. / Insufficient wallet balance.');
                 }
 
@@ -199,93 +260,18 @@ class PilatesApiController extends Controller
                 );
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => $booking->status === 'confirmed' ? 'تم الحجز بنجاح وتم خصم الرصيد.' : 'تم تسجيل طلب الحجز بنجاح وبانتظار التأكيد.',
-                'data' => $booking->load('pilatesSession')
-            ], 201);
+            $message = $booking->status === 'confirmed' 
+                ? 'تم الحجز بنجاح وتم خصم الرصيد.' 
+                : 'تم تسجيل طلب الحجز بنجاح وبانتظار التأكيد.';
+
+            return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
-        }
-    }
-
-    /**
-     * Fetch authenticated player's Pilates history.
-     */
-    public function myBookings(Request $request)
-    {
-        $user = $request->user();
-
-        $bookings = PilatesBooking::with('pilatesSession')
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $bookings
-        ]);
-    }
-
-    /**
-     * Subscribe/Buy a Pilates package via API.
-     */
-    public function buyPackage(Request $request)
-    {
-        $user = $request->user();
-        $request->validate([
-            'pilates_package_id' => 'required|exists:pilates_packages,id'
-        ]);
-
-        $package = \App\Models\PilatesPackage::findOrFail($request->pilates_package_id);
-        $wallet = $user->wallet;
-
-        if (!$wallet || $wallet->pilates_balance < $package->price) {
-            return response()->json([
-                'success' => false,
-                'message' => 'رصيدك في المحفظة غير كافٍ لشراء هذه الباقة. يرجى شحن محفظتك أولاً.'
-            ], 400);
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Deduct package price from player's wallet using Pilates manual adjustment
-            $this->walletService->pilatesManualAdjustment(
-                $wallet,
-                $package->price,
-                "شراء باقة بيلاتس: {$package->name}"
-            );
-
-            // Assign package to user
-            $userPackage = \App\Models\UserPilatesPackage::create([
-                'user_id' => $user->id,
-                'pilates_package_id' => $package->id,
-                'remaining_classes' => $package->total_classes,
-                'expires_at' => now()->addDays($package->valid_days)
+            return redirect()->back()->withErrors([
+                'error' => $e->getMessage()
             ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'تم الاشتراك في الباقة بنجاح!',
-                'data' => $userPackage
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
         }
     }
 }

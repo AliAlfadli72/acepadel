@@ -63,8 +63,10 @@ class AuthController extends Controller
             ],
             'wallet' => $wallet ? [
                 'balance' => $wallet->balance ?? 0,
+                'pilates_balance' => $wallet->pilates_balance ?? 0,
             ] : [
                 'balance' => 0,
+                'pilates_balance' => 0,
             ],
             'notif_bookings' => (bool) ($user->notif_bookings ?? true),
             'notif_events'   => (bool) ($user->notif_events ?? true),

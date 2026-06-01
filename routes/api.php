@@ -50,6 +50,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
     Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
     Route::post('/notifications/test', [\App\Http\Controllers\Api\NotificationController::class, 'test']);
+
+    // Dev route to assign package for testing
+    Route::post('/pilates/assign-package', function (Request $request) {
+        $user = $request->user();
+        $package = \App\Models\PilatesPackage::firstOrCreate(
+            ['name' => '6-Class Monthly Pack'],
+            [
+                'total_classes' => 6,
+                'price' => 120000.00,
+                'valid_days' => 30
+            ]
+        );
+
+        $userPackage = \App\Models\UserPilatesPackage::create([
+            'user_id' => $user->id,
+            'pilates_package_id' => $package->id,
+            'remaining_classes' => 6,
+            'expires_at' => now()->addDays(30)
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully assigned package!',
+            'data' => $userPackage
+        ]);
+    });
+
+    Route::post('/pilates/packages/buy', [\App\Http\Controllers\Api\PilatesApiController::class, 'buyPackage']);
 });
 
 // هذا الرابط (API) سيزود تطبيق الموبايل بمعلومات الأكاديمية

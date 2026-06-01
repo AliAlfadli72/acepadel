@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->hasMany(PilatesBooking::class);
     }
 
+    public function userPilatesPackages()
+    {
+        return $this->hasMany(UserPilatesPackage::class);
+    }
+
     public function staffProfile()
     {
         return $this->hasOne(StaffProfile::class);

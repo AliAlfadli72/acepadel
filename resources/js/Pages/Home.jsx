@@ -170,7 +170,7 @@ export default function Home() {
       desc: isArabic
         ? "تمارين مكملة تركز على القوة الذهنية والثبات العضلي وتقليل الإصابات بأسلوب متطور."
         : "Complementary training focused on mental strength, muscle stability, and injury prevention.",
-      link: "services",
+      link: "pilates.booking.page",
       accentClass: "bg-green-100 text-primary",
     },
     {
@@ -530,7 +530,7 @@ export default function Home() {
                 ))}
               </div>
 
-              <Link href={route('services')} className="btn-primary">
+              <Link href={route('pilates.booking.page')} className="btn-primary">
                 <Icon icon="mdi:arrow-right" className="w-5 h-5" />
                 {isArabic ? "احجز جلسة بيلاتس" : "Book Pilates Session"}
               </Link>

@@ -15,6 +15,15 @@ export default function Contact() {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    const messageText = isArabic
+      ? `مرحباً الدعم الفني،\n\nأود إرسال رسالة تواصل:\n• الاسم: ${formData.name}\n• البريد: ${formData.email}\n• الهاتف: ${formData.phone || 'N/A'}\n• الموضوع: ${formData.subject}\n• الرسالة: ${formData.message}`
+      : `Hello Support,\n\nI want to send a contact message:\n• Name: ${formData.name}\n• Email: ${formData.email}\n• Phone: ${formData.phone || 'N/A'}\n• Subject: ${formData.subject}\n• Message: ${formData.message}`;
+
+    const encodedMessage = encodeURIComponent(messageText);
+    const whatsappUrl = `https://wa.me/963945000365?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
     setSent(true);
   };
 

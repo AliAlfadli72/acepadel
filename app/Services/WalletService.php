@@ -46,6 +46,7 @@ class WalletService
 
             $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
+                'studio' => 'padel',
 
                 'type' => 'credit',
                 'status' => 'completed',
@@ -110,6 +111,7 @@ class WalletService
 
             $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
+                'studio' => 'padel',
 
                 'type' => 'debit',
                 'status' => 'completed',
@@ -170,6 +172,7 @@ class WalletService
 
         $transaction = $wallet->transactions()->create([
             'amount' => $amount,
+            'studio' => 'padel',
 
             'type' => 'debit',
 
@@ -221,6 +224,7 @@ class WalletService
 
             $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
+                'studio' => 'padel',
 
                 'type' => 'credit',
 
@@ -246,6 +250,7 @@ class WalletService
             return $transaction;
         });
     }
+
 public function eventPayment(
     Wallet $wallet,
     $event,
@@ -282,6 +287,7 @@ public function eventPayment(
         $transaction = $wallet->transactions()->create([
 
             'amount' => $amount,
+            'studio' => 'padel',
 
             'type' => 'debit',
             
@@ -328,7 +334,7 @@ public function eventPayment(
             throw new \Exception('Payment amount must be greater than zero.');
         }
 
-        if ($wallet->balance < $amount) {
+        if ($wallet->pilates_balance < $amount) {
             throw new \Exception('رصيد اللاعب غير كافٍ لإكمال الحجز.');
         }
 
@@ -340,21 +346,22 @@ public function eventPayment(
             $createdBy
         ) {
 
-            $before = $wallet->balance;
+            $before = $wallet->pilates_balance;
 
             // Deduct balance
-            $wallet->decrement('balance', $amount);
+            $wallet->decrement('pilates_balance', $amount);
 
             $wallet->refresh();
 
             $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
+                'studio' => 'pilates',
 
                 'type' => 'debit',
                 'status' => 'completed',
 
                 'balance_before' => $before,
-                'balance_after' => $wallet->balance,
+                'balance_after' => $wallet->pilates_balance,
 
                 'description' => $description,
 
@@ -400,26 +407,141 @@ public function eventPayment(
             $createdBy
         ) {
 
-            $before = $wallet->balance;
+            $before = $wallet->pilates_balance;
 
             // Refund balance
-            $wallet->increment('balance', $amount);
+            $wallet->increment('pilates_balance', $amount);
 
             $wallet->refresh();
 
             $transaction = $wallet->transactions()->create([
                 'amount' => $amount,
+                'studio' => 'pilates',
 
                 'type' => 'credit',
                 'status' => 'completed',
 
                 'balance_before' => $before,
-                'balance_after' => $wallet->balance,
+                'balance_after' => $wallet->pilates_balance,
 
                 'description' => $description,
 
                 'reference_type' => \App\Models\PilatesBooking::class,
                 'reference_id' => $booking->id,
+
+                'processed_at' => now(),
+
+                'created_by' => $createdBy,
+            ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pilates Deposit & Manual Adjustment
+    |--------------------------------------------------------------------------
+    */
+
+    public function pilatesDeposit(
+        Wallet $wallet,
+        float $amount,
+        string $description,
+        ?int $createdBy = null,
+        $reference = null
+    ): Transaction {
+
+        if ($amount <= 0) {
+            throw new \Exception('Deposit amount must be greater than zero.');
+        }
+
+        return DB::transaction(function () use (
+            $wallet,
+            $amount,
+            $description,
+            $createdBy,
+            $reference
+        ) {
+
+            $before = $wallet->pilates_balance;
+
+            // Update balance first
+            $wallet->increment('pilates_balance', $amount);
+
+            $wallet->refresh();
+
+            $transaction = $wallet->transactions()->create([
+                'amount' => $amount,
+                'studio' => 'pilates',
+
+                'type' => 'credit',
+                'status' => 'completed',
+
+                'balance_before' => $before,
+                'balance_after' => $wallet->pilates_balance,
+
+                'description' => $description,
+
+                'reference_type' => $reference ? get_class($reference) : null,
+                'reference_id' => $reference?->id,
+
+                'processed_at' => now(),
+
+                'created_by' => $createdBy,
+            ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
+        });
+    }
+
+    public function pilatesManualAdjustment(
+        Wallet $wallet,
+        float $amount,
+        string $description,
+        ?int $createdBy = null
+    ): Transaction {
+
+        if ($amount <= 0) {
+            throw new \Exception('Adjustment amount must be greater than zero.');
+        }
+
+        if ($wallet->pilates_balance < $amount) {
+            throw new \Exception('رصيد المحفظة غير كافٍ.');
+        }
+
+        return DB::transaction(function () use (
+            $wallet,
+            $amount,
+            $description,
+            $createdBy
+        ) {
+
+            $before = $wallet->pilates_balance;
+
+            $wallet->decrement('pilates_balance', $amount);
+
+            $wallet->refresh();
+
+            $transaction = $wallet->transactions()->create([
+                'amount' => $amount,
+                'studio' => 'pilates',
+
+                'type' => 'debit',
+                'status' => 'completed',
+
+                'balance_before' => $before,
+                'balance_after' => $wallet->pilates_balance,
+
+                'description' => $description,
 
                 'processed_at' => now(),
 

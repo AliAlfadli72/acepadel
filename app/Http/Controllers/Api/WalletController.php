@@ -27,7 +27,8 @@ class WalletController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'balance' => $wallet->balance
+                'balance' => $wallet->balance,
+                'pilates_balance' => $wallet->pilates_balance ?? 0.00
             ],
             'transactions' => $transactions
         ]);

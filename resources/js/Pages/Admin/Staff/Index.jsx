@@ -284,9 +284,19 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                             <span className={`text-[10px] font-bold px-2 py-1 rounded-md border ${
                                                 staffMember.roles?.[0]?.name === 'Staff' 
                                                 ? 'bg-[#d6e02e]/20 text-[#858e0a] border-[#d6e02e]/50'
+                                                : staffMember.roles?.[0]?.name === 'Pilates Admin'
+                                                ? 'bg-purple-100 text-purple-700 border-purple-200'
+                                                : staffMember.roles?.[0]?.name === 'Pilates Coach'
+                                                ? 'bg-teal-100 text-teal-700 border-teal-200'
                                                 : 'bg-blue-100 text-blue-700 border-blue-200'
                                             }`}>
-                                                {staffMember.roles?.[0]?.name === 'Staff' ? 'موظف' : 'مستقبل'}
+                                                {staffMember.roles?.[0]?.name === 'Staff' ? 'موظف' 
+                                                 : staffMember.roles?.[0]?.name === 'Receptionist' ? 'مستقبل'
+                                                 : staffMember.roles?.[0]?.name === 'Manager' ? 'مدير'
+                                                 : staffMember.roles?.[0]?.name === 'Coach' ? 'مدرب بادل'
+                                                 : staffMember.roles?.[0]?.name === 'Pilates Admin' ? 'مسؤول بيلاتس'
+                                                 : staffMember.roles?.[0]?.name === 'Pilates Coach' ? 'مدرب بيلاتس'
+                                                 : staffMember.roles?.[0]?.name}
                                             </span>
                                         </div>
                                         <div className="absolute -bottom-8 inset-x-0 flex justify-center">
@@ -476,7 +486,9 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                         <option value="Receptionist">مستقبل (Receptionist)</option>
                                         <option value="Staff">موظف (Staff)</option>
                                         <option value="Manager">مدير (Manager)</option>
-                                        <option value="Coach">مدرب (Coach)</option>
+                                        <option value="Coach">مدرب بادل (Coach)</option>
+                                        <option value="Pilates Admin">مسؤول بيلاتس (Pilates Admin)</option>
+                                        <option value="Pilates Coach">مدرب بيلاتس (Pilates Coach)</option>
                                     </select>
                                     {errors.role && <p className="text-red-500 text-xs">{errors.role}</p>}
                                 </div>
@@ -603,7 +615,9 @@ export default function StaffIndex({ staff, eligiblePlayers, filters }) {
                                                 <option value="Receptionist">مستقبل (Receptionist)</option>
                                                 <option value="Staff">موظف (Staff)</option>
                                                 <option value="Manager">مدير (Manager)</option>
-                                                <option value="Coach">مدرب (Coach)</option>
+                                                <option value="Coach">مدرب بادل (Coach)</option>
+                                                <option value="Pilates Admin">مسؤول بيلاتس (Pilates Admin)</option>
+                                                <option value="Pilates Coach">مدرب بيلاتس (Pilates Coach)</option>
                                             </select>
                                             {errors.role && <p className="text-red-500 text-xs">{errors.role}</p>}
                                         </div>

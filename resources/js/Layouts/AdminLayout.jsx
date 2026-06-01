@@ -2,15 +2,22 @@ import { Link, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import usePermissions from "@/hooks/usePermissions";
+import { resolveAsset } from '../utils';
+
 
 export default function AdminLayout({ header, children }) {
-    const { auth, logo_url } = usePage().props;
+    const { auth, logo_url, pending_bookings } = usePage().props;
     const user = auth.user;
     const { can } = usePermissions();
     console.log('User Permissions:', usePage().props.permissions);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const roles = usePage().props.roles || [];
+    const isPilatesCoachOnly = roles.includes('Pilates Coach') && !roles.includes('Admin') && !roles.includes('Manager') && !roles.includes('Receptionist') && !roles.includes('Pilates Admin');
+    const isPilatesContext = (typeof window !== 'undefined' && window.location.pathname.includes('pilates')) || 
+        ((roles.includes('Pilates Admin') || roles.includes('Pilates Coach')) && !roles.includes('Admin') && !roles.includes('Manager') && !roles.includes('Receptionist'));
+
+    const pendingCount = (pending_bookings?.padel || 0) + (pending_bookings?.pilates || 0);
 
     const menuItems = [
 
@@ -20,48 +27,66 @@ export default function AdminLayout({ header, children }) {
         routeName: 'dashboard',
     },
 
-    can('bookings.view') && {
+    !isPilatesCoachOnly && can('bookings.view') && {
         name: roles.includes('Coach') && !roles.includes('Admin') ? 'حجوزاتي كمدرب' : 'الحجوزات',
         icon: 'mdi:calendar-check-outline',
         routeName: 'admin.bookings',
     },
 
-    can('events.view') && {
+    !isPilatesCoachOnly && can('events.view') && {
         name: 'الفعاليات',
         icon: 'mdi:trophy-outline',
         routeName: 'admin.events.index',
     },
 
-    can('courts.view') && {
+    !isPilatesCoachOnly && can('courts.view') && {
         name: 'الملاعب',
         icon: 'mdi:tennis',
         routeName: 'admin.courts.index',
     },
 
-    can('coaches.view') && {
+    !isPilatesCoachOnly && can('coaches.view') && {
         name: 'المدربين',
         icon: 'mdi:whistle',
         routeName: 'admin.coaches.index',
     },
 
-    can('players.view') && {
+    (roles.includes('Admin') || roles.includes('admin') || roles.includes('Pilates Admin') || roles.includes('Pilates Coach')) && {
+        name: 'جلسات البيلاتس',
+        icon: 'mdi:yoga',
+        routeName: 'admin.pilates.index',
+    },
+
+    (roles.includes('Admin') || roles.includes('admin') || roles.includes('Pilates Admin') || roles.includes('Pilates Coach')) && {
+        name: 'حجوزات البيلاتس',
+        icon: 'mdi:calendar-multiselect',
+        routeName: 'admin.pilates.bookings.index',
+    },
+
+    (roles.includes('Admin') || roles.includes('admin') || roles.includes('Pilates Admin')) && {
+        name: 'باقات البيلاتس',
+        icon: 'mdi:ticket-percent-outline',
+        routeName: 'admin.pilates.packages.index',
+    },
+
+    !isPilatesCoachOnly && can('players.view') && {
         name: 'اللاعبين',
         icon: 'mdi:account-group-outline',
         routeName: 'admin.players.index',
     },
 
-    can('staff.view') && {
+    !isPilatesCoachOnly && can('staff.view') && {
         name: 'الموظفين',
         icon: 'mdi:badge-account-horizontal-outline',
         routeName: 'admin.staff.index',
     },
 
-    can('finance.view') && {
+    !isPilatesCoachOnly && can('finance.view') && {
         name: 'المالية',
         icon: 'mdi:cash-multiple',
         routeName: 'admin.finances.index',
     },
-    {
+    !isPilatesCoachOnly && {
 
         name: 'المحفظة',
         icon: 'mdi:wallet-outline',
@@ -78,8 +103,12 @@ export default function AdminLayout({ header, children }) {
                 <div className="h-full flex flex-col">
                     {/* الشعار */}
                     <div className="h-20 flex items-center px-6 border-b border-slate-100">
-                        <Link href={route('home')} className="flex items-center group">
-                            <img src={logo_url || "/logo.png"} alt="Ace Padel Logo" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
+                        <Link href={route('home')} className="flex items-center gap-2 group">
+                            {isPilatesContext ? (
+                                <img src={resolveAsset('/pilates-logo.png')} alt="The Reformer Room" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
+                            ) : (
+                                <img src={logo_url || resolveAsset('/logo.png')} alt="Ace Padel Logo" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
+                            )}
                         </Link>
                     </div>
 
@@ -153,9 +182,18 @@ export default function AdminLayout({ header, children }) {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        <button className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors">
+                        <Link 
+                            href={route('admin.notifications.index')}
+                            className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors relative"
+                            title="الإشعارات"
+                        >
                             <Icon icon="mdi:bell-outline" className="w-5 h-5" />
-                        </button>
+                            {pendingCount > 0 && (
+                                <span className="absolute -top-1 -left-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-bounce shadow-sm">
+                                    {pendingCount}
+                                </span>
+                            )}
+                        </Link>
                     </div>
                 </header>
 

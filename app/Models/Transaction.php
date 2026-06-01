@@ -13,6 +13,7 @@ class Transaction extends Model
 
         // Financial
         'amount',
+        'studio',
         'type',
         'payment_method',
         'status',

@@ -55,6 +55,7 @@ export default function PlayersIndex({ players, filters, stats }) {
         rank_level: 'مبتدئ',
         points: 0,
         wallet_balance: 0,
+        pilates_wallet_balance: 0,
         matches_played: 0,
         matches_won: 0,
     });
@@ -78,6 +79,7 @@ export default function PlayersIndex({ players, filters, stats }) {
             rank_level: p.player_profile?.rank_level || 'مبتدئ',
             points:         p.player_profile?.points         || 0,
             wallet_balance: p.wallet?.balance                || 0,
+            pilates_wallet_balance: p.wallet?.pilates_balance || 0,
             matches_played: p.player_profile?.matches_played || 0,
             matches_won:    p.player_profile?.matches_won    || 0,
         });
@@ -91,7 +93,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                 _method:'PUT', name:data.name, email:data.email, phone:data.phone,
                 password:data.password, password_confirmation:data.password_confirmation,
                 image:data.image, rank_level:data.rank_level, points:data.points,
-                wallet_balance:data.wallet_balance, matches_played:data.matches_played, matches_won:data.matches_won,
+                wallet_balance:data.wallet_balance, pilates_wallet_balance:data.pilates_wallet_balance, matches_played:data.matches_played, matches_won:data.matches_won,
             }, { 
                 forceFormData:true, 
                 onSuccess:() => { setIsModalOpen(false); reset(); },
@@ -214,8 +216,10 @@ export default function PlayersIndex({ players, filters, stats }) {
                                         <th className="px-5 py-3.5">النقاط</th>
                                         <th className="px-5 py-3.5">المباريات</th>
                                         {can('players.create') && (
-
-                                        <th className="px-5 py-3.5">المحفظة</th>
+                                        <>
+                                            <th className="px-5 py-3.5">رصيد بادل</th>
+                                            <th className="px-5 py-3.5">رصيد بيلاتس</th>
+                                        </>
                                         )}
                                        {can('players.create') && (
 
@@ -261,12 +265,18 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                     <div className="text-xs text-green-600 font-bold">{winRate}% فوز</div>
                                                 </td>
                                                    {can('players.edit') && (
-
-                                                    <td className="px-5 py-3.5">
-                                                        <span className={`font-bold text-sm ${(p.wallet?.balance||0) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                            {parseInt(p.wallet?.balance||0).toLocaleString('en-US')} <span className="text-xs font-normal text-gray-400">ل.س</span>
-                                                        </span>
-                                                    </td>
+                                                    <>
+                                                        <td className="px-5 py-3.5">
+                                                            <span className={`font-bold text-sm ${(p.wallet?.balance||0) > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                                {parseInt(p.wallet?.balance||0).toLocaleString('en-US')} <span className="text-xs font-normal text-gray-400">ل.س</span>
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-5 py-3.5">
+                                                            <span className={`font-bold text-sm ${(p.wallet?.pilates_balance||0) > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
+                                                                {parseInt(p.wallet?.pilates_balance||0).toLocaleString('en-US')} <span className="text-xs font-normal text-gray-400">ل.س</span>
+                                                            </span>
+                                                        </td>
+                                                    </>
                                                     )}
                                                     {(can('players.edit') || can('players.delete')) && (
                                                     <td className="px-5 py-3.5">
@@ -404,10 +414,11 @@ export default function PlayersIndex({ players, filters, stats }) {
                                 </Field>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                 {[
                                     { label:'النقاط',         field:'points' },
-                                    { label:'رصيد المحفظة (ل.س)', field:'wallet_balance' },
+                                    { label:'رصيد بادل (ل.س)', field:'wallet_balance' },
+                                    { label:'رصيد بيلاتس (ل.س)', field:'pilates_wallet_balance' },
                                     { label:'عدد المباريات',  field:'matches_played' },
                                     { label:'عدد الانتصارات', field:'matches_won' },
                                 ].map(f => (

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { resolveAsset } from "../utils";
 
 export default function Navbar({ lang, setLang }) {
   const { url, logo_url, icon_url } = usePage().props;
@@ -22,7 +23,7 @@ export default function Navbar({ lang, setLang }) {
     { routeName: "services",    label: { ar: "الخدمات",   en: "Services"} },
     { routeName: "events",      label: { ar: "الفعاليات", en: "Events"  } },
     { routeName: "players.index", label: { ar: "اللاعبين",  en: "Players" } },
-    { routeName: "about",       label: { ar: "من نحن",   en: "About Us"  } },
+    { routeName: "pilates.booking.page", label: { ar: "بيلاتس",   en: "Pilates"  } },
     { routeName: "contact",     label: { ar: "تواصل",    en: "Contact" } },
   ];
 
@@ -38,7 +39,11 @@ export default function Navbar({ lang, setLang }) {
         <div className="max-w-7xl mx-auto px-6 md:px-8 h-[72px] flex items-center justify-between">
 
           <Link href={route('home')} className="flex items-center gap-3 group shrink-0">
-            <img src={logo_url || "/logo.png"} alt="Ace Padel" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
+            {route().current('pilates.booking.page') ? (
+              <img src={resolveAsset('/pilates-logo.png')} alt="The Reformer Room" className="h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
+            ) : (
+              <img src={logo_url || resolveAsset('/logo.png')} alt="Ace Padel" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
+            )}
           </Link>
 
           {/* DESKTOP NAV */}
@@ -49,15 +54,19 @@ export default function Navbar({ lang, setLang }) {
                 <Link
                   key={link.routeName}
                   href={route(link.routeName)}
-                  className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover-underline ${
-                    isActive ? "text-primary" : "text-gray-500 hover:text-primary"
+                  className={`relative text-xs font-semibold uppercase tracking-[0.12em] transition-colors ${
+                    isActive 
+                      ? (route().current('pilates.booking.page') ? "text-[#393D40]" : "text-primary") 
+                      : (route().current('pilates.booking.page') ? "text-gray-400 hover:text-[#393D40]" : "text-gray-500 hover:text-primary")
                   } ${isArabic ? "font-arabic text-sm tracking-normal" : ""}`}
                 >
                   {isArabic ? link.label.ar : link.label.en}
                   {isActive && (
                     <motion.div
                       layoutId="activeNav"
-                      className="absolute -bottom-[2px] left-0 right-0 h-[2px] bg-accent rounded-full"
+                      className={`absolute -bottom-[2px] left-0 right-0 h-[2px] rounded-full ${
+                        route().current('pilates.booking.page') ? "bg-[#393D40]" : "bg-accent"
+                      }`}
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}

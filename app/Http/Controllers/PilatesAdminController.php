@@ -28,16 +28,25 @@ class PilatesAdminController extends Controller
      */
     public function index(Request $request)
     {
-        $query = PilatesSession::withCount(['bookings' => function ($q) {
+        $user = auth()->user();
+        $isCoachOnly = $user->hasRole('Pilates Coach') && !$user->hasAnyRole(['Admin', 'Pilates Admin']);
+
+        $query = PilatesSession::with(['coach'])->withCount(['bookings' => function ($q) {
             $q->whereIn('status', ['confirmed', 'pending']);
         }]);
+
+        if ($isCoachOnly) {
+            $query->where('coach_id', $user->id);
+        }
 
         // Optional search or filters
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('coach_name', 'like', "%{$search}%");
+                  ->orWhereHas('coach', function ($cQuery) use ($search) {
+                      $cQuery->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -51,14 +60,31 @@ class PilatesAdminController extends Controller
             ->withQueryString();
 
         // Calculate Stats
-        $totalSessions = PilatesSession::count();
-        $totalBookings = PilatesBooking::whereIn('status', ['confirmed', 'pending'])->count();
-        
-        // Revenue calculations
-        $totalRevenue = PilatesBooking::where('status', 'confirmed')->sum('paid_amount');
+        if ($isCoachOnly) {
+            $totalSessions = PilatesSession::where('coach_id', $user->id)->count();
+            $totalBookings = PilatesBooking::whereIn('status', ['confirmed', 'pending'])
+                ->whereHas('pilatesSession', function ($q) use ($user) {
+                    $q->where('coach_id', $user->id);
+                })->count();
+            $totalRevenue = PilatesBooking::where('status', 'confirmed')
+                ->whereHas('pilatesSession', function ($q) use ($user) {
+                    $q->where('coach_id', $user->id);
+                })->sum('paid_amount');
+        } else {
+            $totalSessions = PilatesSession::count();
+            $totalBookings = PilatesBooking::whereIn('status', ['confirmed', 'pending'])->count();
+            $totalRevenue = PilatesBooking::where('status', 'confirmed')->sum('paid_amount');
+        }
+
+        // Get list of eligible coaches for dropdown (only Pilates Coaches and Pilates Admins)
+        $coaches = \App\Models\User::role(['Pilates Coach', 'Pilates Admin'])
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Admin/Pilates/Index', [
             'sessions' => $sessions,
+            'coaches' => $coaches,
             'filters' => $request->only(['search', 'date']),
             'stats' => [
                 'total_sessions' => $totalSessions,
@@ -114,12 +140,19 @@ class PilatesAdminController extends Controller
                         "إرجاع مبلغ إلغاء جلسة البيلاتس #{$session->id} من قبل الإدارة",
                         auth()->id()
                     );
+                } elseif ($booking->payment_method === 'package' && $booking->user_pilates_package_id) {
+                    $userPackage = \App\Models\UserPilatesPackage::find($booking->user_pilates_package_id);
+                    if ($userPackage) {
+                        $userPackage->increment('remaining_classes');
+                    }
                 }
 
                 // Send push notification to player about the session cancellation
                 if ($user) {
                     $user->notify(new PilatesSessionCancelledNotification($session));
                 }
+
+                event(new \App\Events\PilatesBookingStatusUpdated($booking->id, 'canceled'));
             }
         });
 
@@ -131,7 +164,16 @@ class PilatesAdminController extends Controller
      */
     public function manageBookings(Request $request)
     {
-        $query = PilatesBooking::with(['user', 'pilatesSession']);
+        $user = auth()->user();
+        $isCoachOnly = $user->hasRole('Pilates Coach') && !$user->hasAnyRole(['Admin', 'Pilates Admin']);
+
+        $query = PilatesBooking::with(['user', 'pilatesSession.coach']);
+
+        if ($isCoachOnly) {
+            $query->whereHas('pilatesSession', function ($q) use ($user) {
+                $q->where('coach_id', $user->id);
+            });
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -145,7 +187,13 @@ class PilatesAdminController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $sessions = PilatesSession::orderBy('session_date', 'desc')->get(['id', 'title', 'session_date']);
+        if ($isCoachOnly) {
+            $sessions = PilatesSession::where('coach_id', $user->id)
+                ->orderBy('session_date', 'desc')
+                ->get(['id', 'title', 'session_date']);
+        } else {
+            $sessions = PilatesSession::orderBy('session_date', 'desc')->get(['id', 'title', 'session_date']);
+        }
 
         return Inertia::render('Admin/Pilates/Bookings', [
             'bookings' => $bookings,
@@ -182,6 +230,7 @@ class PilatesAdminController extends Controller
             if ($booking->user) {
                 $booking->user->notify(new PilatesBookingConfirmedNotification($booking));
             }
+            event(new \App\Events\PilatesBookingStatusUpdated($booking->id, 'confirmed'));
         });
 
         return redirect()->back()->with('success', 'تم تأكيد الحجز بنجاح.');
@@ -212,12 +261,18 @@ class PilatesAdminController extends Controller
                     "إرجاع حجز بيلاتس ملغي رقم #{$booking->id}",
                     auth()->id()
                 );
+            } elseif ($booking->payment_method === 'package' && $booking->user_pilates_package_id) {
+                $userPackage = \App\Models\UserPilatesPackage::find($booking->user_pilates_package_id);
+                if ($userPackage) {
+                    $userPackage->increment('remaining_classes');
+                }
             }
 
             // Notify user
             if ($user) {
                 $user->notify(new PilatesBookingCancelledNotification($booking));
             }
+            event(new \App\Events\PilatesBookingStatusUpdated($booking->id, 'canceled'));
         });
 
         return redirect()->back()->with('success', 'تم إلغاء الحجز وإعادة الرصيد للمحفظة إن وجد.');

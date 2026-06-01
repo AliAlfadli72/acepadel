@@ -180,7 +180,7 @@ export default function Services() {
                 </ul>
 
                 <div className="flex items-center gap-4 flex-wrap">
-                  <Link href={route('booking.guest')} className="btn-primary">
+                  <Link href={svc.id === 'pilates' ? route('pilates.booking.page') : route('booking.guest')} className="btn-primary">
                     <Icon icon="mdi:calendar-check" className="w-5 h-5" />
                     {isArabic ? "احجز الآن" : "Book Now"}
                   </Link>

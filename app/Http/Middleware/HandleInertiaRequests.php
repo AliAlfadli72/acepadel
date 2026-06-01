@@ -50,6 +50,14 @@ class HandleInertiaRequests extends Middleware
             'roles' => fn () => auth()->check()
                     ? auth()->user()->getRoleNames()
                     : [],
+            'pending_bookings' => fn () => auth()->check() ? [
+                'padel' => auth()->user()->hasAnyRole(['Admin', 'Receptionist', 'Manager']) 
+                    ? \App\Models\Booking::where('status', 'pending')->count() 
+                    : 0,
+                'pilates' => auth()->user()->hasAnyRole(['Admin', 'Pilates Admin']) 
+                    ? \App\Models\PilatesBooking::where('status', 'pending')->count() 
+                    : 0,
+            ] : null,
         ];
     }
 }

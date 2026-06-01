@@ -18,6 +18,10 @@ public function index()
 {
     $user = Auth::user();
 
+    if ($user && $user->hasRole('Pilates Coach') && !$user->hasAnyRole(['Admin', 'Pilates Admin', 'Manager', 'Receptionist'])) {
+        return redirect()->route('admin.pilates.index');
+    }
+
     $stats = [
 
         'total_bookings' => 0,
@@ -41,6 +45,195 @@ public function index()
                 ->subDays($day)
                 ->format('Y-m-d')
         );
+
+    $isPilates = $user && ($user->hasRole('Pilates Admin') || $user->hasRole('Pilates Coach')) && !$user->hasAnyRole(['Admin', 'Receptionist', 'Manager']);
+
+    if ($isPilates) {
+        $isCoachOnly = $user->hasRole('Pilates Coach') && !$user->hasRole('Pilates Admin');
+
+        // Total Bookings
+        $bookingsQuery = \App\Models\PilatesBooking::query();
+        if ($isCoachOnly) {
+            $bookingsQuery->whereHas('pilatesSession', function ($q) use ($user) {
+                $q->where('coach_id', $user->id);
+            });
+        }
+        $stats['total_bookings'] = $bookingsQuery->count();
+
+        // Upcoming Sessions
+        $sessionsQuery = \App\Models\PilatesSession::where('status', 'active')
+            ->where('session_date', '>=', now()->toDateString());
+        if ($isCoachOnly) {
+            $sessionsQuery->where('coach_id', $user->id);
+        }
+        $stats['upcoming_matches'] = $sessionsQuery->count();
+
+        // Total Pilates Players
+        $playersQuery = \App\Models\User::role('Player')
+            ->whereHas('pilatesBookings', function ($q) use ($isCoachOnly, $user) {
+                if ($isCoachOnly) {
+                    $q->whereHas('pilatesSession', function ($sq) use ($user) {
+                        $sq->where('coach_id', $user->id);
+                    });
+                }
+            });
+        $stats['total_players'] = $playersQuery->count();
+
+        // Total Pilates Coaches
+        $stats['total_coaches'] = \App\Models\User::role('Pilates Coach')->count();
+
+        // Active Sessions Today
+        $stats['active_courts'] = \App\Models\PilatesSession::where('status', 'active')
+            ->whereDate('session_date', now()->toDateString())
+            ->count();
+
+        // Revenue
+        $revenueQuery = \App\Models\PilatesBooking::where('status', 'confirmed');
+        if ($isCoachOnly) {
+            $revenueQuery->whereHas('pilatesSession', function ($q) use ($user) {
+                $q->where('coach_id', $user->id);
+            });
+        }
+        $stats['total_revenue'] = (float)$revenueQuery->sum('paid_amount');
+
+        // Charts data (Last 7 Days)
+        $revenueData = [];
+        $bookingsData = [];
+        foreach ($last7Days as $date) {
+            $dailyBookingsQuery = \App\Models\PilatesBooking::whereDate('created_at', $date);
+            if ($isCoachOnly) {
+                $dailyBookingsQuery->whereHas('pilatesSession', function ($q) use ($user) {
+                    $q->where('coach_id', $user->id);
+                });
+            }
+            $dailyBookingsCount = $dailyBookingsQuery->count();
+
+            $dailyRevenueQuery = \App\Models\PilatesBooking::where('status', 'confirmed')->whereDate('created_at', $date);
+            if ($isCoachOnly) {
+                $dailyRevenueQuery->whereHas('pilatesSession', function ($q) use ($user) {
+                    $q->where('coach_id', $user->id);
+                });
+            }
+            $dailyRevenue = $dailyRevenueQuery->sum('paid_amount');
+
+            $dayName = \Carbon\Carbon::parse($date)
+                ->locale('ar')
+                ->translatedFormat('D');
+
+            $revenueData[] = [
+                'date' => $dayName,
+                'amount' => (float)$dailyRevenue,
+                'revenue' => (float)$dailyRevenue,
+                'expenses' => 0.0,
+            ];
+
+            $bookingsData[] = [
+                'date' => $dayName,
+                'count' => $dailyBookingsCount,
+            ];
+        }
+        $stats['revenue_data'] = $revenueData;
+        $stats['bookings_data'] = $bookingsData;
+
+        // Recent Activity
+        $activityQuery = \App\Models\PilatesBooking::with(['user', 'pilatesSession']);
+        if ($isCoachOnly) {
+            $activityQuery->whereHas('pilatesSession', function ($q) use ($user) {
+                $q->where('coach_id', $user->id);
+            });
+        }
+        $stats['recent_activity'] = $activityQuery->latest()
+            ->take(5)
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'title' => 'حجز بيلاتس جديد: ' . ($b->user ? $b->user->name : 'زائر') . ' (' . ($b->pilatesSession ? $b->pilatesSession->title : '') . ')',
+                    'time' => $b->created_at->locale('ar')->diffForHumans(),
+                    'status' => $b->status,
+                ];
+            });
+
+        // Top Coaches
+        $stats['top_coaches'] = \App\Models\User::role(['Pilates Coach', 'Coach'])
+            ->whereHas('pilatesBookings')
+            ->get()
+            ->map(function ($coach) {
+                $sessionsCount = \App\Models\PilatesSession::where('coach_id', $coach->id)->count();
+                $revenue = \App\Models\PilatesBooking::where('status', 'confirmed')
+                    ->whereHas('pilatesSession', function ($q) use ($coach) {
+                        $q->where('coach_id', $coach->id);
+                    })->sum('paid_amount');
+
+                return [
+                    'id' => $coach->id,
+                    'name' => $coach->name,
+                    'revenue' => (float)$revenue,
+                    'sessions' => $sessionsCount,
+                ];
+            })
+            ->sortByDesc('revenue')
+            ->take(4)
+            ->values();
+
+        // Top Players
+        $stats['top_players'] = \App\Models\User::role('Player')
+            ->whereHas('pilatesBookings')
+            ->withCount(['pilatesBookings' => function ($q) {
+                $q->where('status', 'confirmed');
+            }])
+            ->orderByDesc('pilates_bookings_count')
+            ->take(4)
+            ->get()
+            ->map(function ($player) {
+                return [
+                    'id' => $player->id,
+                    'name' => $player->name,
+                    'matches' => $player->pilates_bookings_count,
+                ];
+            });
+
+        // Session Occupancy
+        $stats['session_occupancy'] = \App\Models\PilatesSession::withCount(['bookings' => function ($q) {
+                $q->whereIn('status', ['confirmed', 'pending']);
+            }])
+            ->where('status', 'active')
+            ->orderBy('session_date', 'desc')
+            ->orderBy('start_time', 'desc')
+            ->take(4)
+            ->get()
+            ->map(function ($s) {
+                $percentage = $s->capacity > 0 ? (int)round(($s->bookings_count / $s->capacity) * 100) : 0;
+                return [
+                    'name' => $s->title . ' (' . $s->session_date . ')',
+                    'percentage' => $percentage,
+                    'bookings' => $s->bookings_count . ' / ' . $s->capacity . ' مشترك',
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        // Next Upcoming Session Countdown
+        $nextSession = \App\Models\PilatesSession::where('status', 'active')
+            ->where('session_date', '>=', now()->toDateString())
+            ->where(function ($q) {
+                $q->where('session_date', '>', now()->toDateString())
+                  ->orWhere('start_time', '>=', now()->toTimeString());
+            })
+            ->orderBy('session_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->first();
+
+        $stats['next_session_time'] = $nextSession 
+            ? \Carbon\Carbon::parse(substr((string)$nextSession->session_date, 0, 10) . ' ' . $nextSession->start_time)->toDateTimeString()
+            : null;
+        $stats['next_session_title'] = $nextSession ? $nextSession->title : null;
+
+        return Inertia::render('Dashboard', [
+            'stats' => $stats,
+            'isPilates' => true,
+        ]);
+    }
 
     /*
     |--------------------------------------------------------------------------

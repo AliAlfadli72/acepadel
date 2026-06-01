@@ -62,6 +62,7 @@ class PlayerController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
             'points'         => 'required|integer|min:0',
             'wallet_balance' => 'required|numeric|min:0',
+            'pilates_wallet_balance' => 'required|numeric|min:0',
             'matches_played' => 'required|integer|min:0',
             'matches_won'    => 'required|integer|min:0',
         ], [
@@ -76,9 +77,12 @@ class PlayerController extends Controller
             'points.required'         => 'حقل النقاط مطلوب.',
             'points.integer'          => 'النقاط يجب أن تكون رقماً صحيحاً.',
             'points.min'              => 'النقاط يجب أن تكون 0 أو أكثر.',
-            'wallet_balance.required' => 'رصيد المحفظة مطلوب.',
-            'wallet_balance.numeric'  => 'رصيد المحفظة يجب أن يكون رقماً.',
-            'wallet_balance.min'      => 'رصيد المحفظة يجب أن يكون 0 أو أكثر.',
+            'wallet_balance.required' => 'رصيد المحفظة (بادل) مطلوب.',
+            'wallet_balance.numeric'  => 'رصيد المحفظة (بادل) يجب أن يكون رقماً.',
+            'wallet_balance.min'      => 'رصيد المحفظة (بادل) يجب أن يكون 0 أو أكثر.',
+            'pilates_wallet_balance.required' => 'رصيد محفظة البيلاتس مطلوب.',
+            'pilates_wallet_balance.numeric'  => 'رصيد محفظة البيلاتس يجب أن يكون رقماً.',
+            'pilates_wallet_balance.min'      => 'رصيد محفظة البيلاتس يجب أن يكون 0 أو أكثر.',
             'matches_played.required' => 'عدد المباريات مطلوب.',
             'matches_played.integer'  => 'عدد المباريات يجب أن يكون رقماً صحيحاً.',
             'matches_won.required'    => 'عدد الانتصارات مطلوب.',
@@ -118,10 +122,13 @@ class PlayerController extends Controller
         ]);
 
         // Update auto-created wallet
+        $walletService = app(\App\Services\WalletService::class);
+        $wallet = $user->wallet ?: $user->wallet()->firstOrCreate([], ['balance' => 0, 'pilates_balance' => 0]);
         if ($request->wallet_balance > 0) {
-            $walletService = app(\App\Services\WalletService::class);
-            $wallet = $user->wallet ?: $user->wallet()->firstOrCreate([], ['balance' => 0]);
             $walletService->deposit($wallet, $request->wallet_balance, 'رصيد ابتدائي عند تسجيل اللاعب (أدمن)', auth()->id());
+        }
+        if ($request->pilates_wallet_balance > 0) {
+            $walletService->pilatesDeposit($wallet, $request->pilates_wallet_balance, 'رصيد بيلاتس ابتدائي عند تسجيل اللاعب (أدمن)', auth()->id());
         }
 
         return redirect()->back()->with('success', 'تم إضافة اللاعب بنجاح');
@@ -142,6 +149,7 @@ class PlayerController extends Controller
             'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
             'points'         => 'required|integer|min:0',
             'wallet_balance' => 'required|numeric|min:0',
+            'pilates_wallet_balance' => 'required|numeric|min:0',
             'matches_played' => 'required|integer|min:0',
             'matches_won'    => 'required|integer|min:0',
         ], [
@@ -155,9 +163,12 @@ class PlayerController extends Controller
             'points.required'          => 'حقل النقاط مطلوب.',
             'points.integer'           => 'النقاط يجب أن تكون رقماً صحيحاً.',
             'points.min'               => 'النقاط يجب أن تكون 0 أو أكثر.',
-            'wallet_balance.required'  => 'رصيد المحفظة مطلوب.',
-            'wallet_balance.numeric'   => 'رصيد المحفظة يجب أن يكون رقماً.',
-            'wallet_balance.min'       => 'رصيد المحفظة يجب أن يكون 0 أو أكثر.',
+            'wallet_balance.required'  => 'رصيد المحفظة (بادل) مطلوب.',
+            'wallet_balance.numeric'   => 'رصيد المحفظة (بادل) يجب أن يكون رقماً.',
+            'wallet_balance.min'       => 'رصيد المحفظة (بادل) يجب أن يكون 0 أو أكثر.',
+            'pilates_wallet_balance.required' => 'رصيد محفظة البيلاتس مطلوب.',
+            'pilates_wallet_balance.numeric'  => 'رصيد محفظة البيلاتس يجب أن يكون رقماً.',
+            'pilates_wallet_balance.min'      => 'رصيد محفظة البيلاتس يجب أن يكون 0 أو أكثر.',
             'matches_played.required'  => 'عدد المباريات مطلوب.',
             'matches_played.integer'   => 'عدد المباريات يجب أن يكون رقماً صحيحاً.',
             'matches_won.required'     => 'عدد الانتصارات مطلوب.',
@@ -202,7 +213,7 @@ class PlayerController extends Controller
         if ($request->has('wallet_balance') && $request->wallet_balance !== null) {
             $wallet = Wallet::firstOrCreate(
                 ['user_id' => $user->id],
-                ['balance' => 0]
+                ['balance' => 0, 'pilates_balance' => 0]
             );
 
             $oldBalance = (float) $wallet->balance;
@@ -216,6 +227,27 @@ class PlayerController extends Controller
                 } else {
                     $diff = $oldBalance - $newBalance;
                     $walletService->manualAdjustment($wallet, $diff, 'تعديل رصيد يدوي (خصم) من قبل الإدارة', auth()->id());
+                }
+            }
+        }
+
+        if ($request->has('pilates_wallet_balance') && $request->pilates_wallet_balance !== null) {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0, 'pilates_balance' => 0]
+            );
+
+            $oldPilatesBalance = (float) $wallet->pilates_balance;
+            $newPilatesBalance = (float) $request->pilates_wallet_balance;
+
+            if ($newPilatesBalance !== $oldPilatesBalance) {
+                $walletService = app(\App\Services\WalletService::class);
+                if ($newPilatesBalance > $oldPilatesBalance) {
+                    $diff = $newPilatesBalance - $oldPilatesBalance;
+                    $walletService->pilatesDeposit($wallet, $diff, 'شحن رصيد بيلاتس من قبل الإدارة', auth()->id());
+                } else {
+                    $diff = $oldPilatesBalance - $newPilatesBalance;
+                    $walletService->pilatesManualAdjustment($wallet, $diff, 'تعديل رصيد بيلاتس يدوي (خصم) من قبل الإدارة', auth()->id());
                 }
             }
         }
