@@ -79,3 +79,13 @@ Route::get('/leaderboard', [LeaderboardController::class, 'index']);
 Route::get('/events', [EventController::class, 'index']);
 
 // Notifications are now inside auth:sanctum group above
+
+// Pilates Studio Module API Routes
+Route::prefix('pilates')->group(function () {
+    Route::get('/sessions', [\App\Http\Controllers\Api\PilatesApiController::class, 'sessions']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/book', [\App\Http\Controllers\Api\PilatesApiController::class, 'book']);
+        Route::get('/my-bookings', [\App\Http\Controllers\Api\PilatesApiController::class, 'myBookings']);
+    });
+});

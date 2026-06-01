@@ -295,6 +295,21 @@ Route::middleware(['auth'])->group(function () {
             ->parameters(['staff' => 'staff']);
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | PILATES STUDIO (ADMIN)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:Admin|admin')->prefix('admin/pilates')->name('admin.pilates.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PilatesAdminController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\PilatesAdminController::class, 'store'])->name('store');
+        Route::put('/{session}', [\App\Http\Controllers\PilatesAdminController::class, 'update'])->name('update');
+        Route::delete('/{session}', [\App\Http\Controllers\PilatesAdminController::class, 'destroy'])->name('destroy');
+        Route::get('/bookings', [\App\Http\Controllers\PilatesAdminController::class, 'manageBookings'])->name('bookings.index');
+        Route::post('/bookings/{booking}/confirm', [\App\Http\Controllers\PilatesAdminController::class, 'confirmBooking'])->name('bookings.confirm');
+        Route::post('/bookings/{booking}/cancel', [\App\Http\Controllers\PilatesAdminController::class, 'cancelBooking'])->name('bookings.cancel');
+    });
+
 });
 
 require __DIR__.'/auth.php';

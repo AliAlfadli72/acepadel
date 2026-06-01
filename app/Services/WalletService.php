@@ -309,4 +309,128 @@ public function eventPayment(
         return $transaction;
     });
 }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pilates Booking Payment
+    |--------------------------------------------------------------------------
+    */
+
+    public function pilatesBookingPayment(
+        Wallet $wallet,
+        \App\Models\PilatesBooking $booking,
+        float $amount,
+        string $description,
+        ?int $createdBy = null
+    ): Transaction {
+
+        if ($amount <= 0) {
+            throw new \Exception('Payment amount must be greater than zero.');
+        }
+
+        if ($wallet->balance < $amount) {
+            throw new \Exception('رصيد اللاعب غير كافٍ لإكمال الحجز.');
+        }
+
+        return DB::transaction(function () use (
+            $wallet,
+            $booking,
+            $amount,
+            $description,
+            $createdBy
+        ) {
+
+            $before = $wallet->balance;
+
+            // Deduct balance
+            $wallet->decrement('balance', $amount);
+
+            $wallet->refresh();
+
+            $transaction = $wallet->transactions()->create([
+                'amount' => $amount,
+
+                'type' => 'debit',
+                'status' => 'completed',
+
+                'balance_before' => $before,
+                'balance_after' => $wallet->balance,
+
+                'description' => $description,
+
+                'reference_type' => \App\Models\PilatesBooking::class,
+                'reference_id' => $booking->id,
+
+                'processed_at' => now(),
+
+                'created_by' => $createdBy,
+            ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pilates Booking Refund
+    |--------------------------------------------------------------------------
+    */
+
+    public function pilatesBookingRefund(
+        Wallet $wallet,
+        \App\Models\PilatesBooking $booking,
+        float $amount,
+        string $description,
+        ?int $createdBy = null
+    ): Transaction {
+
+        if ($amount <= 0) {
+            throw new \Exception('Refund amount must be greater than zero.');
+        }
+
+        return DB::transaction(function () use (
+            $wallet,
+            $booking,
+            $amount,
+            $description,
+            $createdBy
+        ) {
+
+            $before = $wallet->balance;
+
+            // Refund balance
+            $wallet->increment('balance', $amount);
+
+            $wallet->refresh();
+
+            $transaction = $wallet->transactions()->create([
+                'amount' => $amount,
+
+                'type' => 'credit',
+                'status' => 'completed',
+
+                'balance_before' => $before,
+                'balance_after' => $wallet->balance,
+
+                'description' => $description,
+
+                'reference_type' => \App\Models\PilatesBooking::class,
+                'reference_id' => $booking->id,
+
+                'processed_at' => now(),
+
+                'created_by' => $createdBy,
+            ]);
+
+            if ($wallet->user) {
+                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
+            }
+
+            return $transaction;
+        });
+    }
 }
