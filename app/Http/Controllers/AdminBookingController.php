@@ -345,6 +345,8 @@ $coaches = CoachProfile::whereHas('user', function ($query) {
                 'status' => 'completed',
             ]);
 
+            event(new \App\Events\BookingStatusUpdated($booking->id, 'completed'));
+
             return back()->with(
                 'success',
                 'تم إكمال حجز الزائر بنجاح.'
@@ -366,6 +368,8 @@ $coaches = CoachProfile::whereHas('user', function ($query) {
             if ($booking->user && $booking->user->playerProfile) {
                 $booking->user->playerProfile->increment('matches_played');
             }
+
+            event(new \App\Events\BookingStatusUpdated($booking->id, 'completed'));
 
             return back()->with(
                 'success',
@@ -413,6 +417,8 @@ $coaches = CoachProfile::whereHas('user', function ($query) {
         if ($booking->user && $booking->user->playerProfile) {
             $booking->user->playerProfile->increment('matches_played');
         }
+
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'completed'));
 
         return back()->with(
             'success',

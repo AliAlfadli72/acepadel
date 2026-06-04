@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Http\Requests\Api;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+
+class RegisterRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     */
+    public function rules(): array
+    {
+        $isEmail = filter_var($this->input('identifier'), FILTER_VALIDATE_EMAIL);
+        return [
+            'name'       => ['required', 'string', 'max:255'],
+            'identifier' => ['required', 'string', $isEmail ? 'unique:users,email' : 'unique:users,phone'],
+            'password'   => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'حقل الاسم الكامل مطلوب.',
+            'name.string' => 'الاسم يجب أن يكون نصاً.',
+            'name.max' => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
+            'identifier.required' => 'حقل البريد الإلكتروني أو رقم الهاتف مطلوب.',
+            'identifier.unique' => 'رقم الهاتف أو البريد الإلكتروني مستخدم بالفعل.',
+            'password.required' => 'حقل كلمة المرور مطلوب.',
+            'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
+            'password.confirmed' => 'تأكيد كلمة المرور غير متطابق.',
+        ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'status'  => 'error',
+            'message' => 'بيانات التحقق غير صالحة.',
+            'errors'  => $validator->errors(),
+        ], 422));
+    }
+}

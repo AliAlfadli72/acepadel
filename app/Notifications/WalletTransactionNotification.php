@@ -13,12 +13,14 @@ class WalletTransactionNotification extends Notification
     protected string $action;
     protected float $amount;
     protected float $newBalance;
+    protected string $studio;
 
     public function __construct(\App\Models\Transaction $transaction)
     {
         $this->action = $transaction->type === 'credit' ? 'add' : 'deduct';
         $this->amount = (float) $transaction->amount;
         $this->newBalance = (float) $transaction->balance_after;
+        $this->studio = strtolower($transaction->studio ?? 'padel');
     }
 
     public function via($notifiable)
@@ -28,15 +30,18 @@ class WalletTransactionNotification extends Notification
 
     public function toDatabase($notifiable)
     {
-        $titleAr = $this->action === 'add' ? 'شحن المحفظة 💰' : 'خصم من المحفظة 💳';
-        $msgAr = $this->action === 'add' 
-            ? 'تم شحن محفظتك بمبلغ ' . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
-            : 'تم خصم مبلغ ' . $this->amount . ' ل.س من محفظتك. رصيدك الحالي: ' . $this->newBalance . ' ل.س.';
+        $studioAr = $this->studio === 'pilates' ? 'البيلاتس' : 'البادل';
+        $studioEn = $this->studio === 'pilates' ? 'Pilates' : 'Padel';
 
-        $titleEn = $this->action === 'add' ? 'Wallet Top-up 💰' : 'Wallet Deduction 💳';
+        $titleAr = $this->action === 'add' ? "شحن محفظة {$studioAr} 💰" : "خصم من محفظة {$studioAr} 💳";
+        $msgAr = $this->action === 'add' 
+            ? "تم شحن محفظة {$studioAr} بمبلغ " . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
+            : "تم خصم مبلغ " . $this->amount . " ل.س من محفظة {$studioAr}. رصيدك الحالي: " . $this->newBalance . ' ل.س.';
+
+        $titleEn = $this->action === 'add' ? "{$studioEn} Wallet Top-up 💰" : "{$studioEn} Wallet Deduction 💳";
         $msgEn = $this->action === 'add'
-            ? 'Your wallet has been topped up with ' . $this->amount . ' SYP. Current balance: ' . $this->newBalance . ' SYP.'
-            : 'An amount of ' . $this->amount . ' SYP has been deducted from your wallet. Current balance: ' . $this->newBalance . ' SYP.';
+            ? "Your {$studioEn} wallet has been topped up with " . $this->amount . ' SYP. Current balance: ' . $this->newBalance . ' SYP.'
+            : "An amount of " . $this->amount . " SYP has been deducted from your {$studioEn} wallet. Current balance: " . $this->newBalance . ' SYP.';
 
         return [
             'title_ar' => $titleAr,
@@ -55,17 +60,19 @@ class WalletTransactionNotification extends Notification
     public function toFcm($notifiable)
     {
         $locale = $notifiable->locale ?? 'ar';
+        $studioAr = $this->studio === 'pilates' ? 'البيلاتس' : 'البادل';
+        $studioEn = $this->studio === 'pilates' ? 'Pilates' : 'Padel';
 
         if ($locale === 'en') {
-            $title = $this->action === 'add' ? 'Wallet Top-up 💰' : 'Wallet Deduction 💳';
+            $title = $this->action === 'add' ? "{$studioEn} Wallet Top-up 💰" : "{$studioEn} Wallet Deduction 💳";
             $body = $this->action === 'add' 
-                ? 'Your wallet has been topped up with ' . $this->amount . ' SYP. Current balance: ' . $this->newBalance . ' SYP.'
-                : 'An amount of ' . $this->amount . ' SYP has been deducted from your wallet. Current balance: ' . $this->newBalance . ' SYP.';
+                ? "Your {$studioEn} wallet has been topped up with " . $this->amount . ' SYP. Current balance: ' . $this->newBalance . ' SYP.'
+                : "An amount of " . $this->amount . " SYP has been deducted from your {$studioEn} wallet. Current balance: " . $this->newBalance . ' SYP.';
         } else {
-            $title = $this->action === 'add' ? 'شحن المحفظة 💰' : 'خصم من المحفظة 💳';
+            $title = $this->action === 'add' ? "شحن محفظة {$studioAr} 💰" : "خصم من محفظة {$studioAr} 💳";
             $body = $this->action === 'add' 
-                ? 'تم شحن محفظتك بمبلغ ' . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
-                : 'تم خصم مبلغ ' . $this->amount . ' ل.س من محفظتك. رصيدك الحالي: ' . $this->newBalance . ' ل.س.';
+                ? "تم شحن محفظة {$studioAr} بمبلغ " . $this->amount . ' ل.س. رصيدك الحالي: ' . $this->newBalance . ' ل.س.'
+                : "تم خصم مبلغ " . $this->amount . " ل.س من محفظة {$studioAr}. رصيدك الحالي: " . $this->newBalance . ' ل.س.';
         }
 
         return [

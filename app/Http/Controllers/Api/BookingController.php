@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Court;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
+use App\Http\Requests\Api\StoreBookingRequest;
 
 class BookingController extends Controller
 {
@@ -29,14 +30,9 @@ class BookingController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreBookingRequest $request)
     {
-        $validated = $request->validate([
-            'court_id'   => 'required|exists:courts,id',
-            'start_time' => 'required|date',
-            'end_time'   => 'required|date|after:start_time',
-            'coach_id'   => 'nullable|exists:coach_profiles,id',
-        ]);
+        $validated = $request->validated();
 
         try {
             $court = Court::findOrFail($validated['court_id']);
@@ -55,13 +51,18 @@ class BookingController extends Controller
 
             event(new \App\Events\BookingStatusUpdated($booking->id, 'created'));
             
-            if ($booking->status === 'approved') {
-                $user->notify(new \App\Notifications\BookingConfirmedNotification($booking));
-                if ($booking->coachProfile && $booking->coachProfile->user) {
-                    $booking->coachProfile->user->notify(new \App\Notifications\CoachSessionConfirmedNotification($booking));
+            // Send notification to user safely (do not block the user if notification service fails)
+            try {
+                if ($booking->status === 'approved') {
+                    $user->notify(new \App\Notifications\BookingConfirmedNotification($booking));
+                    if ($booking->coachProfile && $booking->coachProfile->user) {
+                        $booking->coachProfile->user->notify(new \App\Notifications\CoachSessionConfirmedNotification($booking));
+                    }
+                } else {
+                    $user->notify(new \App\Notifications\BookingPendingNotification($booking));
                 }
-            } else {
-                $user->notify(new \App\Notifications\BookingPendingNotification($booking));
+            } catch (\Exception $notificationException) {
+                \Log::error('Padel booking notification failed: ' . $notificationException->getMessage());
             }
 
             return response()->json([

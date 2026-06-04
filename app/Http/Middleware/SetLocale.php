@@ -29,6 +29,15 @@ class SetLocale
 
             // Sync user preference if authenticated
             $user = $request->user('sanctum') ?? auth('sanctum')->user();
+
+            // Resolve user from Bearer token if running before Sanctum's route middleware
+            if (!$user && $request->bearerToken()) {
+                $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+                if ($token) {
+                    $user = $token->tokenable;
+                }
+            }
+
             if ($user && (!isset($user->locale) || $user->locale !== $locale)) {
                 $user->locale = $locale;
                 $user->save();

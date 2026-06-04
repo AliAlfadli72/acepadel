@@ -652,7 +652,6 @@ export default function Home() {
                 <div className="space-y-4">
                   {[
                     { icon: "mdi:phone",      val: "0945 000 365", href: "tel:0945000365", isPhone: true },
-                    { icon: "mdi:phone",      val: "0943 030 362", href: "tel:0943030362", isPhone: true },
                     { icon: "mdi:map-marker", val: isArabic ? "دمشق - أوتوستراد الفيحاء - الاتحاد الرياضي العسكري" : "Damascus, AlFayha Highway, Military Sports Union", href: "#" },
                     { icon: "mdi:clock",      val: isArabic ? "يومياً من 7:00 صباحاً حتى 2:00 فجراً" : "Daily: 7:00 AM — 2:00 AM", href: null },
                   ].map(({ icon, val, href, isPhone }, idx) => (

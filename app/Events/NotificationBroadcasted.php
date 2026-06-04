@@ -8,21 +8,9 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class PilatesBookingStatusUpdated implements ShouldBroadcastNow
+class NotificationBroadcasted implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public $bookingId;
-    public $status;
-
-    /**
-     * Create a new event instance.
-     */
-    public function __construct($bookingId, $status)
-    {
-        $this->bookingId = $bookingId;
-        $this->status = $status;
-    }
 
     /**
      * Get the channels the event should broadcast on.
@@ -32,7 +20,7 @@ class PilatesBookingStatusUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('pilates-bookings'),
+            new Channel('notifications'),
         ];
     }
 }

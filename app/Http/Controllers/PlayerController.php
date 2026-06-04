@@ -101,6 +101,7 @@ public function index(Request $request)
     ->join('player_profiles', 'users.id', '=', 'player_profiles.user_id')
     ->orderByDesc('player_profiles.points')
     ->select('users.*')
+    ->distinct()
 
     ->paginate(12)
     ->withQueryString();

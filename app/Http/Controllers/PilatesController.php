@@ -106,9 +106,21 @@ class PilatesController extends Controller
         ]);
 
         $package = \App\Models\PilatesPackage::findOrFail($request->pilates_package_id);
+
+        // Check if user already has an active package (has remaining classes and is not expired)
+        $hasActivePackage = $user->userPilatesPackages()
+            ->active()
+            ->exists();
+
+        if ($hasActivePackage) {
+            return redirect()->back()->withErrors([
+                'error' => 'عذراً، لديك باقة نشطة بالفعل ولم تنتهي بعد. لا يمكنك شراء باقة أخرى حتى تستهلك الباقة الحالية بالكامل أو تنتهي صلاحيتها.'
+            ]);
+        }
+
         $wallet = $user->wallet;
 
-        if (!$wallet || $wallet->balance < $package->price) {
+        if (!$wallet || $wallet->pilates_balance < $package->price) {
             return redirect()->back()->withErrors([
                 'error' => 'رصيدك في المحفظة غير كافٍ لشراء هذه الباقة. يرجى شحن محفظتك أولاً.'
             ]);
@@ -117,8 +129,8 @@ class PilatesController extends Controller
         DB::beginTransaction();
 
         try {
-            // Deduct package price from player's wallet using manual adjustment
-            $this->walletService->manualAdjustment(
+            // Deduct package price from player's wallet using Pilates manual adjustment
+            $this->walletService->pilatesManualAdjustment(
                 $wallet,
                 $package->price,
                 "شراء باقة بيلاتس: {$package->name}"
@@ -259,19 +271,23 @@ class PilatesController extends Controller
 
             event(new \App\Events\PilatesBookingStatusUpdated($booking->id, $booking->status));
 
-            // Send notification to user
-            if ($booking->status === 'confirmed') {
-                $user->notify(new PilatesBookingConfirmedNotification($booking));
-            } else {
-                $this->pushService->sendToUser(
-                    $user,
-                    'طلب حجز بيلاتس 🧘‍♀️',
-                    'تم استلام طلب حجزك لجلسة "' . $session->title . '" بانتظار تأكيد الدفع النقدي من الإدارة.',
-                    [
-                        'type' => 'booking',
-                        'pilates_booking_id' => (string) $booking->id
-                    ]
-                );
+            // Send notification to user safely (do not block the user if notification service fails)
+            try {
+                if ($booking->status === 'confirmed') {
+                    $user->notify(new PilatesBookingConfirmedNotification($booking));
+                } else {
+                    $this->pushService->sendToUser(
+                        $user,
+                        'طلب حجز بيلاتس 🧘‍♀️',
+                        'تم استلام طلب حجزك لجلسة "' . $session->title . '" بانتظار تأكيد الدفع النقدي من الإدارة.',
+                        [
+                            'type' => 'booking',
+                            'pilates_booking_id' => (string) $booking->id
+                        ]
+                    );
+                }
+            } catch (\Exception $notificationException) {
+                \Log::error('Pilates booking notification failed: ' . $notificationException->getMessage());
             }
 
             $message = $booking->status === 'confirmed' 

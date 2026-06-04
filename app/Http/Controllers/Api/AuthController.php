@@ -6,7 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Services\ImageUploadService;
+use App\Http\Requests\Api\RegisterRequest;
+use App\Http\Requests\Api\LoginRequest;
+use App\Http\Requests\Api\UpdateProfileRequest;
+use App\Http\Requests\Api\UpdateNotificationSettingsRequest;
+use App\Http\Requests\Api\UpdateFcmTokenRequest;
 
 class AuthController extends Controller
 {
@@ -74,110 +79,68 @@ class AuthController extends Controller
         ];
     }
 
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        try {
-            $request->validate([
-                'name'     => 'required|string|max:255',
-                'identifier' => 'required|string',
-                'password' => 'required|string|min:8|confirmed',
-            ]);
+        $isEmail = filter_var($request->identifier, FILTER_VALIDATE_EMAIL);
 
-            $isEmail = filter_var($request->identifier, FILTER_VALIDATE_EMAIL);
-
-            if ($isEmail) {
-                $request->validate(['identifier' => 'unique:users,email']);
-                $email = $request->identifier;
-                $phone = 'DUMMY_' . time() . rand(100, 999);
-            } else {
-                $request->validate(['identifier' => 'unique:users,phone']);
-                $phone = $request->identifier;
-                $email = 'dummy_' . time() . rand(100, 999) . '@acepadel.local';
-            }
-
-            $user = User::create([
-                'name'     => $request->name,
-                'email'    => $email,
-                'phone'    => $phone,
-                'password' => Hash::make($request->password),
-                'fcm_token'=> $request->fcm_token,
-            ]);
-
-            // إنشاء ملف شخصي للاعب تلقائياً
-            $user->playerProfile()->create([
-                'rank_level'     => 'D',
-                'points'         => 0,
-                'matches_played' => 0,
-                'matches_won'    => 0,
-            ]);
-
-            // إنشاء محفظة فارغة تلقائياً
-            $user->wallet()->create(['balance' => 0]);
-
-            // تعيين دور Player تلقائياً لكل مستخدم جديد
-            $user->assignRole('Player');
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'data'   => [
-                    'access_token' => $token,
-                    'token_type'   => 'Bearer',
-                    'user'         => $this->buildUserData($user),
-                ],
-            ], 201);
-
-        } catch (ValidationException $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'بيانات التحقق غير صالحة.',
-                'errors'  => $e->errors(),
-            ], 422);
+        if ($isEmail) {
+            $email = $request->identifier;
+            $phone = 'DUMMY_' . time() . rand(100, 999);
+        } else {
+            $phone = $request->identifier;
+            $email = 'dummy_' . time() . rand(100, 999) . '@acepadel.local';
         }
+
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $email,
+            'phone'    => $phone,
+            'password' => Hash::make($request->password),
+            'fcm_token'=> $request->fcm_token,
+        ]);
+
+        // تعيين دور Player تلقائياً لكل مستخدم جديد
+        $user->assignRole('Player');
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'access_token' => $token,
+                'token_type'   => 'Bearer',
+                'user'         => $this->buildUserData($user),
+            ],
+        ], 201);
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        try {
-            $request->validate([
-                'identifier' => 'required|string',
-                'password'   => 'required|string',
-            ]);
+        $loginType = filter_var($request->identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $user = User::where($loginType, $request->identifier)->first();
 
-            $loginType = filter_var($request->identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-            $user = User::where($loginType, $request->identifier)->first();
-
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'البيانات المدخلة غير صحيحة.',
-                ], 401);
-            }
-
-            if ($request->filled('fcm_token')) {
-                $user->fcm_token = $request->fcm_token;
-                $user->save();
-            }
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'data'   => [
-                    'access_token' => $token,
-                    'token_type'   => 'Bearer',
-                    'user'         => $this->buildUserData($user),
-                ],
-            ]);
-
-        } catch (ValidationException $e) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'بيانات التحقق غير صالحة.',
-                'errors'  => $e->errors(),
-            ], 422);
+                'message' => 'البيانات المدخلة غير صحيحة.',
+            ], 401);
         }
+
+        if ($request->filled('fcm_token')) {
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'access_token' => $token,
+                'token_type'   => 'Bearer',
+                'user'         => $this->buildUserData($user),
+            ],
+        ]);
     }
 
     public function logout(Request $request)
@@ -209,46 +172,36 @@ class AuthController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(UpdateProfileRequest $request)
     {
-        try {
-            $user = $request->user();
-            
-            $request->validate([
-                'name'  => 'required|string|max:255',
-                'phone' => 'required|string|max:20',
-            ]);
+        $user = $request->user();
+        
+        $user->name = $request->name;
+        $user->phone = $request->phone;
 
-            $user->name = $request->name;
-            $user->phone = $request->phone;
-            $user->save();
-
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'تم تحديث الملف الشخصي بنجاح',
-                'data'    => $this->buildUserData($user),
-            ]);
-
-        } catch (ValidationException $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'بيانات التحقق غير صالحة.',
-                'errors'  => $e->errors(),
-            ], 422);
+        if ($request->hasFile('image')) {
+            $path = ImageUploadService::upload(
+                $request->file('image'),
+                'profiles',
+                $user->image_path
+            );
+            $user->image_path = $path;
         }
+
+        $user->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم تحديث الملف الشخصي بنجاح',
+            'data'    => $this->buildUserData($user),
+        ]);
     }
 
-    public function updateNotificationSettings(Request $request)
+    public function updateNotificationSettings(UpdateNotificationSettingsRequest $request)
     {
         try {
             $user = $request->user();
             
-            $request->validate([
-                'notif_bookings' => 'required|boolean',
-                'notif_events'   => 'required|boolean',
-                'notif_offers'   => 'required|boolean',
-            ]);
-
             $user->notif_bookings = $request->notif_bookings;
             $user->notif_events = $request->notif_events;
             $user->notif_offers = $request->notif_offers;
@@ -260,12 +213,6 @@ class AuthController extends Controller
                 'data'    => $this->buildUserData($user),
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'بيانات التحقق غير صالحة.',
-                'errors'  => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => 'error',
@@ -274,13 +221,9 @@ class AuthController extends Controller
         }
     }
 
-    public function updateFcmToken(Request $request)
+    public function updateFcmToken(UpdateFcmTokenRequest $request)
     {
         try {
-            $request->validate([
-                'fcm_token' => 'required|string',
-            ]);
-
             $user = $request->user();
             $user->fcm_token = $request->fcm_token;
             $user->save();
@@ -289,12 +232,6 @@ class AuthController extends Controller
                 'status' => 'success',
                 'message' => 'FCM Token updated successfully',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'بيانات التحقق غير صالحة.',
-                'errors'  => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => 'error',

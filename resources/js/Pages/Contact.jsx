@@ -32,9 +32,7 @@ export default function Contact() {
       icon: "mdi:phone",
       title: { ar: "الهاتف", en: "Phone" },
       lines: [
-        { label: { ar: "الخط الساخن", en: "Hotline" }, val: "0945 000 365", href: "tel:0945000365" },
-        { label: { ar: "دعم فني", en: "Support" },      val: "0943 030 362", href: "tel:0943030362" },
-        { label: { ar: "دعم فني", en: "Support" },      val: "0959 776 423", href: "tel:0959776423" },
+        { label: { ar: "تواصل معنا", en: "Contact Us" }, val: "0945 000 365", href: "tel:0945000365" },
       ],
       color: "bg-primary/10 text-primary",
     },

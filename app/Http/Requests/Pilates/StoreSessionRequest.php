@@ -27,8 +27,27 @@ class StoreSessionRequest extends FormRequest
             'capacity' => ['required', 'integer', 'min:1'],
             'price_per_session' => ['required', 'numeric', 'min:0'],
             'session_date' => ['required', 'date', 'after_or_equal:today'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'start_time' => [
+                'required', 
+                'date_format:H:i',
+                function ($attribute, $value, $fail) {
+                    $parts = explode(':', $value);
+                    if (count($parts) < 2 || ($parts[1] !== '00' && $parts[1] !== '30')) {
+                        $fail('يجب أن يكون وقت البدء على رأس الساعة أو نصفها (مثال: 14:00 أو 14:30).');
+                    }
+                }
+            ],
+            'end_time' => [
+                'required', 
+                'date_format:H:i', 
+                'after:start_time',
+                function ($attribute, $value, $fail) {
+                    $parts = explode(':', $value);
+                    if (count($parts) < 2 || ($parts[1] !== '00' && $parts[1] !== '30')) {
+                        $fail('يجب أن يكون وقت الانتهاء على رأس الساعة أو نصفها (مثال: 15:00 أو 15:30).');
+                    }
+                }
+            ],
         ];
     }
 

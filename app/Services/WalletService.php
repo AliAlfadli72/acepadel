@@ -90,10 +90,7 @@ public function deposit(
             'created_by' => $createdBy,
         ]);
 
-        if (
-            app()->environment('production') &&
-            $wallet->user
-        ) {
+        if ($wallet->user) {
             $wallet->user->notify(
                 new \App\Notifications\WalletTransactionNotification(
                     $transaction

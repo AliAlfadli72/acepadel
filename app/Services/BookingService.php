@@ -188,5 +188,7 @@ class BookingService
             $booking->status = 'cancelled';
             $booking->save();
         });
+
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'cancelled'));
     }
 }

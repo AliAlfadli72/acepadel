@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState, useEffect } from 'react';
 import usePermissions from "@/hooks/usePermissions";
@@ -65,6 +65,47 @@ export default function AdminLayout({ header, children }) {
             window.removeEventListener('offline', handleOffline);
         };
 
+    }, []);
+
+    useEffect(() => {
+        if (window.Echo) {
+            const handleBookingUpdate = (e) => {
+                console.log('Real-time booking update:', e);
+                const only = ['pending_bookings'];
+                if (window.location.pathname.includes('/admin/bookings')) {
+                    only.push('bookings', 'stats');
+                }
+                router.reload({ only, preserveScroll: true, preserveState: true });
+            };
+
+            const handlePilatesBookingUpdate = (e) => {
+                console.log('Real-time pilates booking update:', e);
+                const only = ['pending_bookings'];
+                if (window.location.pathname.includes('/admin/pilates/bookings')) {
+                    only.push('bookings');
+                }
+                router.reload({ only, preserveScroll: true, preserveState: true });
+            };
+
+            const handleNotificationUpdate = (e) => {
+                console.log('Real-time global notification update:', e);
+                const only = ['pending_bookings'];
+                if (window.location.pathname.includes('/admin/notifications')) {
+                    only.push('notifications');
+                }
+                router.reload({ only, preserveScroll: true, preserveState: true });
+            };
+
+            window.Echo.channel('bookings').listen('BookingStatusUpdated', handleBookingUpdate);
+            window.Echo.channel('pilates-bookings').listen('PilatesBookingStatusUpdated', handlePilatesBookingUpdate);
+            window.Echo.channel('notifications').listen('NotificationBroadcasted', handleNotificationUpdate);
+
+            return () => {
+                window.Echo.leaveChannel('bookings');
+                window.Echo.leaveChannel('pilates-bookings');
+                window.Echo.leaveChannel('notifications');
+            };
+        }
     }, []);
 
     const user = auth.user;

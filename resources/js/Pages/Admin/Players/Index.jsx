@@ -78,8 +78,8 @@ export default function PlayersIndex({ players, filters, stats }) {
             password:'', password_confirmation:'', image:null,
             rank_level: p.player_profile?.rank_level || 'مبتدئ',
             points:         p.player_profile?.points         || 0,
-            wallet_balance: p.wallet?.balance                || 0,
-            pilates_wallet_balance: p.wallet?.pilates_balance || 0,
+            wallet_balance: Math.round(p.wallet?.balance || 0),
+            pilates_wallet_balance: Math.round(p.wallet?.pilates_balance || 0),
             matches_played: p.player_profile?.matches_played || 0,
             matches_won:    p.player_profile?.matches_won    || 0,
         });
@@ -441,6 +441,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                                         <input 
                                             type="number" 
                                             min="0" 
+                                            step="1"
                                             value={data[f.field]} 
                                             onFocus={e => e.target.select()}
                                             onChange={e => {

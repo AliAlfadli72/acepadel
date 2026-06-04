@@ -11,6 +11,26 @@ const Field = ({ label, children }) => (
     </div>
 );
 
+const generateTimeOptions = () => {
+    const options = [];
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+            const hh = String(h).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            const value = `${hh}:${mm}`;
+            
+            const ampm = h >= 12 ? 'م' : 'ص';
+            const displayHour = h % 12 === 0 ? 12 : h % 12;
+            const displayHourStr = String(displayHour).padStart(2, '0');
+            const label = `${displayHourStr}:${mm} ${ampm}`;
+            
+            options.push({ value, label });
+        }
+    }
+    return options;
+};
+const TIME_OPTIONS = generateTimeOptions();
+
 export default function PilatesIndex({ sessions, filters, stats, coaches = [] }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
@@ -337,14 +357,24 @@ export default function PilatesIndex({ sessions, filters, stats, coaches = [] })
                                 </Field>
 
                                 <Field label="وقت البدء *">
-                                    <input type="time" value={data.start_time} onChange={e => setData('start_time', e.target.value)}
-                                        className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" />
+                                    <select value={data.start_time} onChange={e => setData('start_time', e.target.value)}
+                                        className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm">
+                                        <option value="">-- اختر وقت البدء --</option>
+                                        {TIME_OPTIONS.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                    </select>
                                     {errors.start_time && <p className="text-red-500 text-xs">{errors.start_time}</p>}
                                 </Field>
 
                                 <Field label="وقت الانتهاء *">
-                                    <input type="time" value={data.end_time} onChange={e => setData('end_time', e.target.value)}
-                                        className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" />
+                                    <select value={data.end_time} onChange={e => setData('end_time', e.target.value)}
+                                        className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm">
+                                        <option value="">-- اختر وقت الانتهاء --</option>
+                                        {TIME_OPTIONS.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                    </select>
                                     {errors.end_time && <p className="text-red-500 text-xs">{errors.end_time}</p>}
                                 </Field>
                             </div>

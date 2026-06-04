@@ -99,7 +99,27 @@ class PilatesAdminController extends Controller
      */
     public function store(StoreSessionRequest $request)
     {
-        PilatesSession::create($request->validated());
+        $session = PilatesSession::create($request->validated());
+
+        // Send push notification to all users about the new session
+        try {
+            $users = \App\Models\User::whereNotNull('fcm_token')->get();
+            $pushService = app(\App\Services\PushNotificationService::class);
+            foreach ($users as $user) {
+                $locale = $user->locale ?? 'ar';
+                $title = $locale === 'en' ? 'New Pilates Session Added 🧘‍♀️' : 'جلسة بيلاتس جديدة 🧘‍♀️';
+                $body = $locale === 'en'
+                    ? "A new session '{$session->title}' has been scheduled."
+                    : "تمت إضافة جلسة جديدة '{$session->title}' في جدول المواعيد.";
+
+                $pushService->sendToUser($user, $title, $body, [
+                    'type' => 'new_session',
+                    'session_id' => (string) $session->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send new session push notifications: ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'تم إنشاء جلسة البيلاتس بنجاح.');
     }

@@ -11,6 +11,7 @@ use App\Notifications\PilatesBookingConfirmedNotification;
 use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Api\BuyPilatesPackageRequest;
 
 class PilatesApiController extends Controller
 {
@@ -73,6 +74,19 @@ class PilatesApiController extends Controller
             ->active()
             ->with('pilatesPackage')
             ->get() : [];
+
+        $locale = app()->getLocale();
+        $packages->each(function ($package) use ($locale) {
+            $package->name = $this->translatePackageName($package->name, $locale);
+        });
+
+        if ($user && $userActivePackages) {
+            $userActivePackages->each(function ($userPackage) use ($locale) {
+                if ($userPackage->pilatesPackage) {
+                    $userPackage->pilatesPackage->name = $this->translatePackageName($userPackage->pilatesPackage->name, $locale);
+                }
+            });
+        }
 
         return response()->json([
             'success' => true,
@@ -184,19 +198,23 @@ class PilatesApiController extends Controller
 
             event(new \App\Events\PilatesBookingStatusUpdated($booking->id, $booking->status));
 
-            // Send notification to user
-            if ($booking->status === 'confirmed') {
-                $user->notify(new PilatesBookingConfirmedNotification($booking));
-            } else {
-                $this->pushService->sendToUser(
-                    $user,
-                    'طلب حجز بيلاتس 🧘‍♀️',
-                    'تم استلام طلب حجزك لجلسة "' . $session->title . '" بانتظار تأكيد الدفع النقدي من الإدارة.',
-                    [
-                        'type' => 'booking',
-                        'pilates_booking_id' => (string) $booking->id
-                    ]
-                );
+            // Send notification to user safely (do not block the user if notification service fails)
+            try {
+                if ($booking->status === 'confirmed') {
+                    $user->notify(new PilatesBookingConfirmedNotification($booking));
+                } else {
+                    $this->pushService->sendToUser(
+                        $user,
+                        'طلب حجز بيلاتس 🧘‍♀️',
+                        'تم استلام طلب حجزك لجلسة "' . $session->title . '" بانتظار تأكيد الدفع النقدي من الإدارة.',
+                        [
+                            'type' => 'booking',
+                            'pilates_booking_id' => (string) $booking->id
+                        ]
+                    );
+                }
+            } catch (\Exception $notificationException) {
+                \Log::error('Pilates API booking notification failed: ' . $notificationException->getMessage());
             }
 
             return response()->json([
@@ -236,20 +254,35 @@ class PilatesApiController extends Controller
     /**
      * Subscribe/Buy a Pilates package via API.
      */
-    public function buyPackage(Request $request)
+    public function buyPackage(BuyPilatesPackageRequest $request)
     {
         $user = $request->user();
-        $request->validate([
-            'pilates_package_id' => 'required|exists:pilates_packages,id'
-        ]);
+        $validated = $request->validated();
 
-        $package = \App\Models\PilatesPackage::findOrFail($request->pilates_package_id);
+        $package = \App\Models\PilatesPackage::findOrFail($validated['pilates_package_id']);
+
+        // Check if user already has an active package (has remaining classes and is not expired)
+        $hasActivePackage = $user->userPilatesPackages()
+            ->active()
+            ->exists();
+
+        if ($hasActivePackage) {
+            return response()->json([
+                'success' => false,
+                'message' => app()->getLocale() === 'en'
+                    ? "Sorry, you already have an active package that hasn't expired. You cannot purchase another package until the current one is fully consumed or expired."
+                    : "عذراً، لديك باقة نشطة بالفعل ولم تنتهي بعد. لا يمكنك شراء باقة أخرى حتى تستهلك الباقة الحالية بالكامل أو تنتهي صلاحيتها."
+            ], 400);
+        }
+
         $wallet = $user->wallet;
 
         if (!$wallet || $wallet->pilates_balance < $package->price) {
             return response()->json([
                 'success' => false,
-                'message' => 'رصيدك في المحفظة غير كافٍ لشراء هذه الباقة. يرجى شحن محفظتك أولاً.'
+                'message' => app()->getLocale() === 'en'
+                    ? "Your wallet balance is insufficient to purchase this package. Please top up your wallet first."
+                    : "رصيدك في المحفظة غير كافٍ لشراء هذه الباقة. يرجى شحن محفظتك أولاً."
             ], 400);
         }
 
@@ -273,9 +306,15 @@ class PilatesApiController extends Controller
 
             DB::commit();
 
+            // Load and translate relation for instant response mapping
+            $userPackage->load('pilatesPackage');
+            if ($userPackage->pilatesPackage) {
+                $userPackage->pilatesPackage->name = $this->translatePackageName($userPackage->pilatesPackage->name, app()->getLocale());
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'تم الاشتراك في الباقة بنجاح!',
+                'message' => app()->getLocale() === 'en' ? 'Successfully subscribed to the package!' : 'تم الاشتراك في الباقة بنجاح!',
                 'data' => $userPackage
             ], 201);
 
@@ -287,5 +326,41 @@ class PilatesApiController extends Controller
                 'message' => $e->getMessage()
             ], 400);
         }
+    }
+
+    /**
+     * Helper to translate Pilates package name to English if locale is English.
+     */
+    private function translatePackageName($name, $locale)
+    {
+        if ($locale !== 'en') {
+            return $name;
+        }
+
+        $translations = [
+            'باقة 6 كلاسات (Silver)' => '6-Class Package (Silver)',
+            'باقة 12 كلاس (Gold)' => '12-Class Package (Gold)',
+            'باقة 6 كلاسات' => '6-Class Package',
+            'باقة 12 كلاس' => '12-Class Package',
+            'باقة 24 كلاس' => '24-Class Package',
+            'باقة بيلاتس' => 'Pilates Package',
+        ];
+
+        if (isset($translations[$name])) {
+            return $translations[$name];
+        }
+
+        // Fallback dynamic conversion using regex for numbers
+        $translated = preg_replace('/باقة\s+(\d+)\s+كلاس(ات)?/u', '$1-Class Package', $name);
+
+        if ($translated === $name) {
+            $translated = str_replace('باقة', 'Package', $translated);
+            $translated = str_replace('كلاسات', 'Classes', $translated);
+            $translated = str_replace('كلاس', 'Classes', $translated);
+            $translated = str_replace('حصة', 'Sessions', $translated);
+            $translated = str_replace('حصص', 'Sessions', $translated);
+        }
+
+        return $translated;
     }
 }

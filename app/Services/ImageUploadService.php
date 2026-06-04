@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Image\Image;
+use Spatie\Image\Enums\Fit;
 
 class ImageUploadService
 {
@@ -16,7 +17,7 @@ class ImageUploadService
         $file,
         string $folder = 'uploads',
         ?string $oldImage = null,
-        int $quality = 100
+        int $quality = 82
     ): string {
 
         // Delete old image if exists
@@ -33,7 +34,7 @@ class ImageUploadService
         }
 
         // Final full path
-        $fullPath = storage_path('app/public/' . $folder . '/' . $filename);
+        $fullPath = Storage::disk('public')->path($folder . '/' . $filename);
 
         /**
          * Convert to WebP
@@ -45,6 +46,7 @@ class ImageUploadService
          */
         Image::load($file->getPathname())
             ->format('webp')
+            ->fit(Fit::Max, 1200, 1200)
             ->quality($quality)
             ->save($fullPath);
 

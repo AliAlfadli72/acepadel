@@ -8,11 +8,19 @@ use Kreait\Firebase\Messaging\Notification;
 
 class PushNotificationService
 {
-    protected Messaging $messaging;
+    protected ?Messaging $messaging = null;
 
-    public function __construct(Messaging $messaging)
+    public function __construct()
     {
-        $this->messaging = $messaging;
+        // Lazy resolve to prevent crashing during instantiation when Firebase config is missing
+    }
+
+    protected function getMessaging()
+    {
+        if ($this->messaging === null) {
+            $this->messaging = app(Messaging::class);
+        }
+        return $this->messaging;
     }
 
     public function sendToUser($user, $title, $body, $data = [])
@@ -80,7 +88,10 @@ class PushNotificationService
 
             $message = CloudMessage::fromArray($messageArray);
 
-            $this->messaging->send($message);
+            $messaging = $this->getMessaging();
+            if ($messaging) {
+                $messaging->send($message);
+            }
             return true;
         } catch (\Throwable $e) {
             // Log the error

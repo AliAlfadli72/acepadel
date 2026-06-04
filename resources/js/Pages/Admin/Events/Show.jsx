@@ -128,16 +128,9 @@ export default function Show({ event }) {
         router.post(route('admin.events.registrations.placement', [event.id, registrationId]), { placement: placement || null }, { preserveScroll: true });
     };
 
-    // Sort registrations: approved first, then pending, then rejected
+    // Sort registrations: newest to oldest registration (created_at desc)
     const sortedRegistrations = [...(event.registrations || [])].sort((a, b) => {
-        const order = { approved: 1, pending: 2, rejected: 3 };
-        if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
-        if (a.status === 'approved' && b.status === 'approved') {
-            if (a.placement && !b.placement) return -1;
-            if (!a.placement && b.placement) return 1;
-            if (a.placement && b.placement) return a.placement - b.placement;
-        }
-        return 0;
+        return new Date(b.created_at) - new Date(a.created_at);
     });
 
     const approvedCount = sortedRegistrations.filter(r => r.status === 'approved').length;

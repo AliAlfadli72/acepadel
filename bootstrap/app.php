@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->api(append: [
+            'throttle:api',
+        ]);
+
         // Register Spatie Permission middleware aliases
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
@@ -45,6 +49,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($status === 403) {
                 $status = 404;
+            }
+
+            // Do not render Inertia pages for API requests
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
             }
 
             if (in_array($status, [401, 404, 419, 429, 500, 503])) {

@@ -22,7 +22,7 @@ class EventController extends Controller
             'registrations',
             // عدد المقاعد الفعلية المشغولة = approved فقط
             'registrations as approved_count' => fn ($q) => $q->where('status', 'approved'),
-        ])->orderBy('date', 'asc')->get();
+        ])->orderBy('date', 'desc')->get();
 
         // جلب تسجيلات المستخدم الحالي دفعةً واحدة
         $myRegistrations = $userId
@@ -130,7 +130,11 @@ class EventController extends Controller
             ]);
 
             // إشعار المستخدم بأن طلبه قيد المراجعة
-            $user->notify(new \App\Notifications\EventRegistrationNotification($event));
+            try {
+                $user->notify(new \App\Notifications\EventRegistrationNotification($event));
+            } catch (\Exception $notificationException) {
+                \Log::error('Event registration notification failed: ' . $notificationException->getMessage());
+            }
 
             return response()->json([
                 'status'  => 'success',

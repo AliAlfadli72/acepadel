@@ -13,7 +13,7 @@ class NotificationController extends Controller
     {
         $notifications = DB::table('notifications')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(10);
 
         // Map data JSON string to array
         $notifications->getCollection()->transform(function ($n) {

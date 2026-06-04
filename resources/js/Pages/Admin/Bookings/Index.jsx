@@ -32,20 +32,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
         setCourtId(filters?.court_id || '');
     }, [filters]);
 
-    useEffect(() => {
-        if (window.Echo) {
-            window.Echo.channel('bookings')
-                .listen('BookingStatusUpdated', (e) => {
-                    console.log('Real-time booking update:', e);
-                    router.reload({ only: ['bookings', 'stats'] });
-                });
-
-            return () => {
-                window.Echo.leaveChannel('bookings');
-            };
-        }
-    }, []);
-
     // Auto-polling (every 10 seconds) to ensure real-time updates for receptionist
     useEffect(() => {
         const interval = setInterval(() => {
