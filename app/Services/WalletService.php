@@ -17,60 +17,93 @@ class WalletService
     |--------------------------------------------------------------------------
     */
 
-    public function deposit(
-        Wallet $wallet,
-        float $amount,
-        string $description,
-        ?int $createdBy = null,
-        $reference = null
-    ): Transaction {
+public function deposit(
+    Wallet $wallet,
+    float $amount,
+    string $description,
+    string $studio = 'padel',
+    ?int $createdBy = null,
+    $reference = null
+): Transaction {
 
-        if ($amount <= 0) {
-            throw new Exception('Deposit amount must be greater than zero.');
+    if ($amount <= 0) {
+        throw new Exception('Deposit amount must be greater than zero.');
+    }
+
+    return DB::transaction(function () use (
+        $wallet,
+        $amount,
+        $description,
+        $studio,
+        $createdBy,
+        $reference
+    ) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Determine Balance Column
+        |--------------------------------------------------------------------------
+        */
+
+        $balanceColumn = $studio === 'pilates'
+            ? 'pilates_balance'
+            : 'balance';
+
+        $before = $wallet->{$balanceColumn};
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Balance
+        |--------------------------------------------------------------------------
+        */
+
+        $wallet->increment($balanceColumn, $amount);
+
+        $wallet->refresh();
+
+        $after = $wallet->{$balanceColumn};
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Transaction
+        |--------------------------------------------------------------------------
+        */
+
+        $transaction = $wallet->transactions()->create([
+            'amount' => $amount,
+
+            'studio' => $studio,
+
+            'type' => 'credit',
+            'status' => 'completed',
+
+            'balance_before' => $before,
+            'balance_after' => $after,
+
+            'description' => $description,
+
+            'reference_type' => $reference ? get_class($reference) : null,
+            'reference_id' => $reference?->id,
+
+            'processed_at' => now(),
+
+            'created_by' => $createdBy,
+        ]);
+
+        if (
+            app()->environment('production') &&
+            $wallet->user
+        ) {
+            $wallet->user->notify(
+                new \App\Notifications\WalletTransactionNotification(
+                    $transaction
+                )
+            );
         }
 
-        return DB::transaction(function () use (
-            $wallet,
-            $amount,
-            $description,
-            $createdBy,
-            $reference
-        ) {
-
-            $before = $wallet->balance;
-
-            // Update balance first
-            $wallet->increment('balance', $amount);
-
-            $wallet->refresh();
-
-            $transaction = $wallet->transactions()->create([
-                'amount' => $amount,
-                'studio' => 'padel',
-
-                'type' => 'credit',
-                'status' => 'completed',
-
-                'balance_before' => $before,
-                'balance_after' => $wallet->balance,
-
-                'description' => $description,
-
-                'reference_type' => $reference ? get_class($reference) : null,
-                'reference_id' => $reference?->id,
-
-                'processed_at' => now(),
-
-                'created_by' => $createdBy,
-            ]);
-
-            if ($wallet->user) {
-                $wallet->user->notify(new \App\Notifications\WalletTransactionNotification($transaction));
-            }
-
-            return $transaction;
-        });
-    }
+                return $transaction;
+            });
+        }
 
     /*
     |--------------------------------------------------------------------------

@@ -114,62 +114,35 @@ class CourtController extends Controller
         return redirect()->back()->with('success', 'تم تحديث الملعب بنجاح.');
     }
 
-    public function destroy(Court $court)
-    {
-        try {
+public function destroy(Court $court)
+{
+    try {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Check Future Bookings
-            |--------------------------------------------------------------------------
-            */
+        $hasBookings = $court->bookings()->exists();
 
-            $hasFutureBookings = $court->bookings()
-                ->where('start_time', '>', now())
-                ->whereIn('status', [
-                    'pending',
-                    'approved'
-                ])
-                ->exists();
-
-            if ($hasFutureBookings) {
-
-                return redirect()->back()->withErrors([
-                    'error' => 'لا يمكن حذف الملعب لوجود حجوزات مستقبلية.'
-                ]);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Delete Court Image
-            |--------------------------------------------------------------------------
-            */
-
-            if ($court->image_path) {
-
-                Storage::disk('public')->delete(
-                    $court->image_path
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Delete Court
-            |--------------------------------------------------------------------------
-            */
-
-            $court->delete();
-
-            return redirect()->back()->with(
-                'success',
-                'تم حذف الملعب بنجاح.'
-            );
-
-        } catch (\Exception $e) {
+        if ($hasBookings) {
 
             return redirect()->back()->withErrors([
-                'error' => $e->getMessage()
+                'error' => 'لا يمكن حذف أو تعطيل الملعب لوجود حجوزات مرتبطة به.'
             ]);
         }
+
+        if ($court->image_path) {
+            Storage::disk('public')->delete($court->image_path);
+        }
+
+        $court->delete();
+
+        return redirect()->back()->with(
+            'success',
+            'تم حذف الملعب بنجاح.'
+        );
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()->withErrors([
+            'error' => $e->getMessage()
+        ]);
     }
+}
 }

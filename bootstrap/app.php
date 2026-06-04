@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,6 +29,25 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+  ->withExceptions(function (Exceptions $exceptions): void {
+            $exceptions->render(function (Throwable $e, $request) {
+
+                $status = $e instanceof HttpExceptionInterface
+                    ? $e->getStatusCode()
+                    : 500;
+
+                    // Convert 403 -> 404
+                    if ($status === 403) {
+                        $status = 404;
+                    }
+
+                    if (in_array($status, [401, 404, 419, 429, 500, 503])) {
+                        return Inertia::render('Error', [
+                            'status' => $status,
+                        ])->toResponse($request)
+                        ->setStatusCode($status);
+                    }
+
+                return null;
+            });
     })->create();

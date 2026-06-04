@@ -6,6 +6,8 @@ import { router, usePage, Link, Head } from "@inertiajs/react";
 import Swal from "sweetalert2";
 import { resolveAsset } from '../../utils';
 
+const { errors } = usePage().props;
+
 
 export default function Book({ sessions = [], walletBalance = 0, activePackages = [], packages = [] }) {
   const { lang } = useContext(LangContext);
@@ -666,7 +668,7 @@ export default function Book({ sessions = [], walletBalance = 0, activePackages 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 30, scale: 0.95 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-white rounded-[26px] w-full max-w-lg overflow-hidden border border-gray-100 shadow-2xl"
+              className="bg-white rounded-[26px] w-full max-w-lg overflow-hidden border border-gray-100 shadow-2xl p-[30px]"
               dir={isAr ? "rtl" : "ltr"}
             >
               {/* Header */}
@@ -689,34 +691,79 @@ export default function Book({ sessions = [], walletBalance = 0, activePackages 
 
               {/* Body */}
               <div className="p-6.5 space-y-6">
+                {errors?.error && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+                    <div className="flex gap-3">
+
+                        <Icon
+                            icon="mdi:alert-circle"
+                            className="w-5 h-5 text-red-500 shrink-0"
+                        />
+
+                        <div>
+                            <p className="font-bold text-red-800 text-sm">
+                                خطأ في الحجز
+                            </p>
+
+                            <p className="text-red-700 text-sm mt-1">
+                                {errors.error}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            )}
                 {/* Details Recap Panel */}
-                <div className="rounded-[20px] bg-[#F4F4F4]/60 border border-[#393D40]/5 p-5 space-y-3.5">
-                  <div className="flex justify-between items-start border-b border-gray-200/40 pb-2.5">
-                    <div>
-                      <h4 className={`font-bold text-gray-900 text-base ${isAr ? "font-arabic" : "font-display"}`}>
-                        {selectedSession.title}
-                      </h4>
-                      <p className={`text-xs text-gray-400 mt-0.5 ${isAr ? "font-arabic" : ""}`}>
-                        {isAr 
-                          ? `مع الكابتن ${selectedSession.coach ? selectedSession.coach.name : 'غير محدد'} (${selectedSession.session_type === 'indoor' ? 'داخلية' : 'خارجية'})` 
-                          : `Coach: ${selectedSession.coach ? selectedSession.coach.name : 'Not specified'} (${selectedSession.session_type || 'indoor'})`}
-                      </p>
+                <div className="rounded-3xl bg-gradient-to-br from-[#393D40] to-[#222831] p-5 text-white">
+                    <div className="flex justify-between items-start">
+
+                        <div>
+                            <h4 className="font-bold text-lg">
+                                {selectedSession.title}
+                            </h4>
+
+                            <p className="text-white/70 text-sm mt-1">
+                                {selectedSession.coach?.name}
+                            </p>
+
+                            <p className="text-white/50 text-xs mt-1">
+                                {selectedSession.session_type === 'indoor'
+                                    ? 'جلسة داخلية'
+                                    : 'جلسة خارجية'}
+                            </p>
+                        </div>
+
+                        <div className="text-left">
+                            <p className="text-white/60 text-xs">
+                                السعر
+                            </p>
+
+                            <p className="text-3xl font-black">
+                                {parseFloat(
+                                    selectedSession.price_per_session
+                                ).toLocaleString()}
+                            </p>
+
+                            <p className="text-white/60 text-xs">
+                                ل.س
+                            </p>
+                        </div>
+
                     </div>
-                    <span className="font-display font-bold text-base text-[#393D40]">
-                      {parseFloat(selectedSession.price_per_session).toLocaleString("en-US")} SYP
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-[11px] text-gray-500">
-                    <div className="flex items-center gap-1.5 font-arabic">
-                      <Icon icon="mdi:calendar" className="w-4 h-4 text-gray-400" />
-                      <span>{formatDate(selectedSession.session_date).split('،')[1] || formatDate(selectedSession.session_date)}</span>
+
+                    <div className="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-white/10">
+
+                        <div className="flex items-center gap-2 text-sm">
+                            <Icon icon="mdi:calendar" />
+                            {formatDate(selectedSession.session_date)}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-sm">
+                            <Icon icon="mdi:clock-outline" />
+                            {formatTime(selectedSession.start_time)}
+                        </div>
+
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Icon icon="mdi:clock" className="w-4 h-4 text-gray-400" />
-                      <span dir="ltr">{formatTime(selectedSession.start_time)} - {formatTime(selectedSession.end_time)}</span>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Checkout Method Selector */}
@@ -845,7 +892,7 @@ export default function Book({ sessions = [], walletBalance = 0, activePackages 
               </div>
 
               {/* Footer */}
-              <div className="p-6.5 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+              <div className="mt-[10px] p-6.5 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
                 <button
                   type="button"
                   onClick={() => setSelectedSession(null)}

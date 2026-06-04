@@ -204,6 +204,34 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
     };
     const submitPayment = () => {
 
+    const errors = {};
+
+    const amount = Number(paymentData.amount);
+
+    if (!amount || amount <= 0) {
+        errors.amount = 'يرجى إدخال مبلغ صحيح';
+    }
+
+    const remaining =
+        selectedBooking.total_price -
+        (selectedBooking.paid_amount || 0);
+
+    if (amount > remaining) {
+        errors.amount =
+            `المبلغ لا يمكن أن يتجاوز ${remaining.toLocaleString()} ل.س`;
+    }
+
+    if (!paymentData.payment_method) {
+        errors.payment_method = 'يرجى اختيار طريقة الدفع';
+    }
+
+    if (Object.keys(errors).length > 0) {
+        setPaymentErrors(errors);
+        return;
+    }
+
+    setPaymentErrors({});
+
     router.post(
         route('admin.bookings.payment', selectedBooking.id),
         paymentData,
@@ -211,7 +239,6 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
             preserveScroll: true,
 
             onSuccess: () => {
-
                 setPaymentModal(false);
 
                 Swal.fire({
@@ -220,11 +247,25 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
                     timer: 1500,
                     showConfirmButton: false,
                 });
+            },
+
+            onError: (errors) => {
+
+                setPaymentErrors(errors);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text:
+                        errors.error ||
+                        errors.message ||
+                        'تعذر تنفيذ عملية الدفع',
+                });
             }
         }
     );
 };
-
+const [paymentErrors, setPaymentErrors] = useState({});
     const statusButtons = [
         { key: 'all',       label: 'الكل' },
         { key: 'pending',   label: 'قيد الانتظار' },
@@ -704,6 +745,26 @@ export default function BookingsIndex({ bookings, courts, players, coaches, stat
         </h3>
 
         <div className="space-y-4">
+            {Object.keys(paymentErrors).length > 0 && (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-2">
+            <Icon
+                icon="mdi:alert-circle"
+                className="w-5 h-5 text-red-500"
+            />
+
+            <h4 className="font-bold text-red-700">
+                يرجى تصحيح الأخطاء التالية
+            </h4>
+        </div>
+
+        <ul className="space-y-1 text-sm text-red-600">
+            {Object.values(paymentErrors).map((error, index) => (
+                <li key={index}>• {error}</li>
+            ))}
+        </ul>
+    </div>
+)}
 
             <div>
                 <label className="block text-sm font-bold mb-2">

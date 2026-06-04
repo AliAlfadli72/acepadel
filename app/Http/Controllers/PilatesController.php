@@ -32,16 +32,21 @@ class PilatesController extends Controller
         $today = now()->toDateString();
         $currentTime = now()->toTimeString();
 
-        $sessions = PilatesSession::with(['coach'])->where('status', 'active')
+        $sessions = PilatesSession::with(['coach'])
+            ->where('status', 'active')
             ->where(function ($query) use ($today, $currentTime) {
+
                 $query->where('session_date', '>', $today)
-                      ->orWhere(function ($q) use ($today, $currentTime) {
-                          $q->where('session_date', $today)
-                            ->where('start_time', '>=', $currentTime);
-                      });
+
+                    ->orWhere(function ($q) use ($today, $currentTime) {
+
+                        $q->where('session_date', $today)
+                        ->where('end_time', '>', $currentTime);
+
+                    });
             })
-            ->orderBy('session_date', 'asc')
-            ->orderBy('start_time', 'asc')
+            ->orderBy('session_date')
+            ->orderBy('start_time')
             ->get();
 
         $user = Auth::user();
@@ -53,7 +58,7 @@ class PilatesController extends Controller
                 ->exists() : false;
         });
 
-        $userWalletBalance = $user && $user->wallet ? (float) $user->wallet->balance : 0.0;
+        $userWalletBalance = $user && $user->wallet ? (float) $user->wallet->pilates_balance : 0.0;
         
         $userActivePackages = $user ? $user->userPilatesPackages()
             ->where('remaining_classes', '>', 0)
@@ -185,10 +190,19 @@ class PilatesController extends Controller
             $booking = null;
 
             if ($paymentMethod === 'wallet') {
+
                 $wallet = $user->wallet;
 
-                if (!$wallet || $wallet->balance < $session->price_per_session) {
-                    throw new \Exception('رصيدك في المحفظة غير كافٍ لإتمام الحجز. / Insufficient wallet balance.');
+                if (!$wallet) {
+                    throw new \Exception(
+                        'لا توجد محفظة مرتبطة بحسابك. / No wallet found for your account.'
+                    );
+                }
+
+                if ($wallet->pilates_balance < $session->price_per_session) {
+                    throw new \Exception(
+                        'رصيد محفظة البيلاتس غير كافٍ لإتمام الحجز. / Insufficient Pilates wallet balance.'
+                    );
                 }
 
                 // Create confirmed booking
@@ -200,7 +214,7 @@ class PilatesController extends Controller
                     'payment_method' => 'wallet',
                 ]);
 
-                // Deduct from wallet and create ledger entry
+                // Deduct from Pilates Wallet
                 $this->walletService->pilatesBookingPayment(
                     $wallet,
                     $booking,

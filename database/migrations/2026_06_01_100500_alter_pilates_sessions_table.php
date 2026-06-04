@@ -15,6 +15,7 @@ return new class extends Migration
             $table->enum('session_type', ['indoor', 'outdoor'])->default('indoor')->after('price_per_session');
             $table->foreignId('coach_id')->nullable()->after('description')->constrained('users')->onDelete('set null');
             $table->dropColumn('coach_name');
+            
         });
     }
 

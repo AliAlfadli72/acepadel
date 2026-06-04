@@ -21,7 +21,11 @@ return new class extends Migration
             $table->date('session_date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->enum('status', ['active', 'canceled'])->default('active');
+            $table->enum('status', [
+                'active',
+                'canceled',
+                'completed'
+            ])->default('active');
             $table->timestamps();
         });
     }

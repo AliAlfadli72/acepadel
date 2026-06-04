@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Transaction;
+use App\Models\Wallet;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\WalletService;
-use App\Models\Wallet;
 use Inertia\Inertia;
 
 class WalletController extends Controller
@@ -42,37 +43,68 @@ class WalletController extends Controller
     /**
      * Add funds to a wallet — Admin/Receptionist only.
      */
-    public function deposit(Request $request, Wallet $wallet)
-    {
-        // Only Admin or Receptionist can add funds
-        $user = Auth::user();
-        if (!$user->hasAnyRole(['Admin', 'Receptionist', 'Manager'])) {
-            abort(403, 'غير مصرح لك بإضافة رصيد.');
-        }
+public function deposit(Request $request, Wallet $wallet)
+{
+    /*
+    |--------------------------------------------------------------------------
+    | Authorization
+    |--------------------------------------------------------------------------
+    */
 
-        $request->validate([
-            'amount'      => 'required|numeric|min:1',
-            'description' => 'required|string|max:255',
-        ], [
-            'amount.required'      => 'يرجى إدخال المبلغ.',
-            'amount.numeric'       => 'يجب أن يكون المبلغ رقماً.',
-            'amount.min'           => 'يجب أن يكون المبلغ أكبر من صفر.',
-            'description.required' => 'يرجى إدخال سبب الإيداع.',
-        ]);
+    $user = Auth::user();
 
-        try {
-            $this->walletService->deposit(
-                $wallet,
-                (float) $request->amount,
-                $request->description,
-                $user->id
-            );
+    if (!$user->hasAnyRole([
+        'Admin',
+        'Receptionist',
+        'Manager'
+    ])) {
 
-            return redirect()->back()->with('success', 'تم إضافة الرصيد بنجاح.');
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
-        }
+        abort(403, 'غير مصرح لك بإضافة رصيد.');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation
+    |--------------------------------------------------------------------------
+    */
+
+    $request->validate([
+        'studio'      => 'required|in:padel,pilates',
+        'amount'      => 'required|numeric|min:1',
+        'description' => 'required|string|max:255',
+    ], [
+        'studio.required'      => 'يرجى اختيار نوع الرصيد.',
+        'studio.in'            => 'نوع الرصيد غير صالح.',
+        'amount.required'      => 'يرجى إدخال المبلغ.',
+        'amount.numeric'       => 'يجب أن يكون المبلغ رقماً.',
+        'amount.min'           => 'يجب أن يكون المبلغ أكبر من صفر.',
+        'description.required' => 'يرجى إدخال سبب الإيداع.',
+    ]);
+
+    try {
+
+        $this->walletService->deposit(
+            $wallet,
+            (float) $request->amount,
+            $request->description,
+            $request->studio,
+            $user->id
+        );
+
+        return redirect()->back()->with(
+            'success',
+            $request->studio === 'pilates'
+                ? 'تم إضافة الرصيد إلى محفظة البيلاتس بنجاح.'
+                : 'تم إضافة الرصيد إلى محفظة البادل بنجاح.'
+        );
+
+    } catch (\Exception $e) {
+
+        return redirect()->back()->withErrors([
+            'error' => $e->getMessage()
+        ]);
+    }
+}
 
     /**
      * Deduct funds from a wallet — Admin only.

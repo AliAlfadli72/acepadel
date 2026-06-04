@@ -184,37 +184,24 @@ class CoachController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Check Future Sessions
+            | Check Today & Future Sessions
             |--------------------------------------------------------------------------
             */
 
-            $hasFutureBookings = $coach->coachProfile
+            $hasUpcomingBookings = $coach->coachProfile
                 ?->bookings()
-                ->where('start_time', '>', now())
+                ->where('end_time', '>=', now())
                 ->whereIn('status', [
                     'pending',
-                    'approved'
+                    'approved',
                 ])
                 ->exists();
 
-            if ($hasFutureBookings) {
+            if ($hasUpcomingBookings) {
 
                 return redirect()->back()->withErrors([
-                    'error' => 'لا يمكن حذف المدرب لوجود جلسات تدريب مستقبلية.'
+                    'error' => 'لا يمكن إزالة المدرب لوجود جلسات تدريب حالية أو مستقبلية.'
                 ]);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Delete Image
-            |--------------------------------------------------------------------------
-            */
-
-            if ($coach->image_path) {
-
-                Storage::disk('public')->delete(
-                    $coach->image_path
-                );
             }
 
             /*
@@ -225,24 +212,9 @@ class CoachController extends Controller
 
             $coach->removeRole('Coach');
 
-            /*
-            |--------------------------------------------------------------------------
-            | Delete Coach Profile
-            |--------------------------------------------------------------------------
-            */
-
-            if ($coach->coachProfile) {
-
-                $coach->coachProfile->courts()->detach();
-
-                $coach->coachProfile->availabilities()->delete();
-
-                $coach->coachProfile->delete();
-            }
-
             return redirect()->back()->with(
                 'success',
-                'تم حذف المدرب بنجاح.'
+                'تم إزالة المدرب بنجاح.'
             );
 
         } catch (\Exception $e) {

@@ -185,8 +185,11 @@ class AdminBookingController extends Controller
             $players = User::role('Player')
                 ->get(['id', 'name', 'phone', 'email']);
 
-            $coaches = CoachProfile::with('user:id,name,phone,email')
-                ->get();
+$coaches = CoachProfile::whereHas('user', function ($query) {
+        $query->role('Coach');
+    })
+    ->with('user')
+    ->get();
 
 
             /*
@@ -470,24 +473,38 @@ class AdminBookingController extends Controller
     public function addPayment(Request $request, Booking $booking)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|in:cash,wallet,card,transfer',
+            'amount' => ['required', 'numeric', 'min:1'],
+            'payment_method' => ['required', 'in:cash,wallet,card,transfer'],
         ]);
-
-        $amount = (float) $request->amount;
 
         /*
         |--------------------------------------------------------------------------
-        | Prevent overpayment
+        | Booking validation
         |--------------------------------------------------------------------------
         */
 
-        $remaining = $booking->total_price - $booking->paid_amount;
+        if ($booking->status === 'cancelled') {
+            return back()->withErrors([
+                'amount' => 'لا يمكن إضافة دفعة إلى حجز ملغي.'
+            ]);
+        }
+
+        $remaining = max(
+            0,
+            (float) $booking->total_price - (float) $booking->paid_amount
+        );
+
+        if ($remaining <= 0) {
+            return back()->withErrors([
+                'amount' => 'تم تسديد هذا الحجز بالكامل.'
+            ]);
+        }
+
+        $amount = (float) $request->amount;
 
         if ($amount > $remaining) {
-
             return back()->withErrors([
-                'error' => 'المبلغ أكبر من المبلغ المتبقي.'
+                'amount' => "المبلغ يتجاوز المتبقي ({$remaining} ل.س)."
             ]);
         }
 
@@ -504,18 +521,17 @@ class AdminBookingController extends Controller
 
             $wallet = $booking->user->wallet;
 
-            if (!$wallet || $wallet->balance < $amount) {
-
+            if (!$wallet) {
                 return back()->withErrors([
-                    'error' => 'رصيد المحفظة غير كافٍ'
+                    'payment_method' => 'لا يوجد محفظة مرتبطة بهذا اللاعب.'
                 ]);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Use Wallet Service
-            |--------------------------------------------------------------------------
-            */
+            if ((float) $wallet->balance < $amount) {
+                return back()->withErrors([
+                    'amount' => 'رصيد المحفظة غير كافٍ لإتمام عملية الدفع.'
+                ]);
+            }
 
             $this->walletService->bookingPayment(
                 $wallet,
@@ -528,19 +544,18 @@ class AdminBookingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Cash / Card / Transfer Payments
+        | Cash / Card / Transfer
         |--------------------------------------------------------------------------
         */
 
         else {
 
             \App\Models\Transaction::create([
-
-            'wallet_id' => $booking->user?->wallet?->id,
+                'wallet_id' => $booking->user?->wallet?->id,
 
                 'amount' => $amount,
-                'payment_method' => $request->payment_method,
 
+                'payment_method' => $request->payment_method,
 
                 'type' => 'debit',
 
@@ -548,6 +563,7 @@ class AdminBookingController extends Controller
                     "دفعة حجز رقم #{$booking->id} ({$request->payment_method})",
 
                 'reference_type' => Booking::class,
+
                 'reference_id' => $booking->id,
 
                 'created_by' => auth()->id(),
@@ -560,14 +576,15 @@ class AdminBookingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $newPaidAmount = $booking->paid_amount + $amount;
+        $newPaidAmount = (float) $booking->paid_amount + $amount;
 
-        $paymentStatus = $newPaidAmount >= $booking->total_price
-            ? 'paid'
-            : 'partial';
+        $paymentStatus = match (true) {
+            $newPaidAmount <= 0 => 'unpaid',
+            $newPaidAmount >= (float) $booking->total_price => 'paid',
+            default => 'partial',
+        };
 
         $booking->update([
-
             'paid_amount' => $newPaidAmount,
 
             'payment_method' => $request->payment_method,

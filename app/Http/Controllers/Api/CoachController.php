@@ -76,10 +76,14 @@ class CoachController extends Controller
         // Get coaches attached to this court
         $coaches = $court->coaches()
             ->with(['user', 'availabilities'])
+            ->whereHas('user', function ($query) {
+                $query->role('Coach')
+                    ->where('is_active', true);
+            })
             ->whereHas('availabilities', function ($q) use ($dayOfWeek, $timeString) {
                 $q->where('day_of_week', $dayOfWeek)
-                  ->where('start_time', '<=', $timeString)
-                  ->where('end_time', '>', $timeString);
+                ->where('start_time', '<=', $timeString)
+                ->where('end_time', '>', $timeString);
             })
             ->get();
 

@@ -1,15 +1,74 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import usePermissions from "@/hooks/usePermissions";
 import { resolveAsset } from '../utils';
 
 
 export default function AdminLayout({ header, children }) {
     const { auth, logo_url, pending_bookings } = usePage().props;
+    const { flash } = usePage().props;
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [flashMessage, setFlashMessage] = useState(null);
+    const [flashType, setFlashType] = useState('success');
+
+    useEffect(() => {
+        const message =
+            flash?.success ||
+            flash?.error ||
+            flash?.warning ||
+            flash?.info;
+
+        if (message) {
+            setFlashMessage(message);
+
+            if (flash?.error) {
+                setFlashType('error');
+            } else if (flash?.warning) {
+                setFlashType('warning');
+            } else if (flash?.info) {
+                setFlashType('info');
+            } else {
+                setFlashType('success');
+            }
+
+            const timeout = setTimeout(() => {
+                setFlashMessage(null);
+            }, 5000);
+
+            return () => clearTimeout(timeout);
+        }
+    }, [flash]);
+
+    useEffect(() => {
+
+        const handleOffline = () => {
+            setIsOnline(false);
+        };
+
+        const handleOnline = () => {
+            setIsOnline(true);
+
+            setFlashType('success');
+            setFlashMessage('تم استعادة الاتصال بالإنترنت');
+
+            setTimeout(() => {
+                setFlashMessage(null);
+            }, 3000);
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+
+    }, []);
+
     const user = auth.user;
     const { can } = usePermissions();
-    console.log('User Permissions:', usePage().props.permissions);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const roles = usePage().props.roles || [];
@@ -196,12 +255,107 @@ export default function AdminLayout({ header, children }) {
                         </Link>
                     </div>
                 </header>
+{!isOnline && (
+    <div
+        className="
+            fixed bottom-6 right-6
+            z-[10000]
+            min-w-[320px]
+            max-w-md
+            rounded-2xl
+            border
+            border-red-200
+            bg-red-50
+            text-red-700
+            shadow-xl
+            backdrop-blur-sm
+            px-5
+            py-4
+        "
+    >
+        <div className="flex items-start gap-3">
+
+            <div className="mt-0.5">
+                <Icon
+                    icon="mdi:wifi-off"
+                    className="w-6 h-6"
+                />
+            </div>
+
+            <div className="flex-1">
+                <p className="font-bold">
+                    لا يوجد اتصال بالإنترنت
+                </p>
+
+                <p className="text-sm mt-1">
+                    بعض العمليات قد لا تعمل بشكل صحيح حتى يتم استعادة الاتصال.
+                </p>
+            </div>
+
+        </div>
+    </div>
+)}
 
                 {/* مساحة العرض */}
                 <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-x-hidden">
                     {children}
                 </main>
             </div>
+            {flashMessage && (
+            <div
+                className={`fixed bottom-6 right-6 z-[9999] min-w-[320px] max-w-md rounded-2xl border shadow-xl backdrop-blur-sm px-5 py-4 transition-all duration-500 ${
+                    flashType === 'error'
+                        ? 'bg-red-50 border-red-200 text-red-700'
+                        : flashType === 'warning'
+                        ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                        : flashType === 'info'
+                        ? 'bg-blue-50 border-blue-200 text-blue-700'
+                        : 'bg-green-50 border-green-200 text-green-700'
+                }`}
+            >
+                <div className="flex items-start gap-3">
+
+                    <div className="mt-0.5">
+                        <Icon
+                            icon={
+                                flashType === 'error'
+                                    ? 'mdi:close-circle'
+                                    : flashType === 'warning'
+                                    ? 'mdi:alert'
+                                    : flashType === 'info'
+                                    ? 'mdi:information'
+                                    : 'mdi:check-circle'
+                            }
+                            className="w-6 h-6"
+                        />
+                    </div>
+
+                    <div className="flex-1">
+                        <p className="font-bold">
+                            {flashType === 'error'
+                                ? 'خطأ'
+                                : flashType === 'warning'
+                                ? 'تنبيه'
+                                : flashType === 'info'
+                                ? 'معلومة'
+                                : 'تم بنجاح'}
+                        </p>
+
+                        <p className="text-sm mt-1">
+                            {flashMessage}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => setFlashMessage(null)}
+                        className="opacity-60 hover:opacity-100"
+                    >
+                        <Icon icon="mdi:close" className="w-5 h-5" />
+                    </button>
+
+                </div>
+            </div>
+)}
 
         </div>
     );

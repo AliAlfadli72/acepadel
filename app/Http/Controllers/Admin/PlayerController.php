@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Storage;
 use App\Services\ImageUploadService;
+use App\Models\Booking;
+
 
 class PlayerController extends Controller
 {
@@ -258,16 +260,35 @@ class PlayerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
     public function destroy(string $id)
     {
         $user = User::findOrFail($id);
-        
+
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'لا يمكنك حذف حسابك الخاص');
+        }
+
+        // Prevent deleting players with future bookings
+        $upcomingBookingsCount = Booking::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->where('start_time', '>', now())
+            ->count();
+
+        if ($upcomingBookingsCount > 0) {
+            return back()->with(
+                'error',
+                "لا يمكن حذف اللاعب لوجود {$upcomingBookingsCount} حجز قادم مرتبط به"
+            );
+        }
+
         if ($user->image_path) {
             Storage::disk('public')->delete($user->image_path);
         }
 
         $user->delete();
 
-        return redirect()->back()->with('success', 'تم حذف اللاعب بنجاح');
+        return back()->with('success', 'تم حذف اللاعب بنجاح');
     }
 }

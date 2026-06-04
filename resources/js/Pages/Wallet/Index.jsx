@@ -12,10 +12,11 @@ export default function WalletIndex({ wallet, transactions }) {
 
     const [showDepositModal, setShowDepositModal] = useState(false);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
-        amount: '',
-        description: '',
-    });
+        const { data, setData, post, processing, errors, reset } = useForm({
+            studio: 'padel',
+            amount: '',
+            description: '',
+        });
 
     const submitDeposit = (e) => {
         e.preventDefault();
@@ -52,61 +53,125 @@ export default function WalletIndex({ wallet, transactions }) {
                     )}
 
                     {/* Balance Card */}
-                    <div className="bg-gradient-to-br from-primary to-emerald-700 rounded-3xl p-8 text-white relative overflow-hidden">
-                        {/* decorative circles */}
-                        <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/5 rounded-full" />
-                        <div className="absolute -bottom-12 -right-12 w-56 h-56 bg-white/5 rounded-full" />
+                    {/* Wallet Balance Card */}
+<div className="bg-gradient-to-br from-primary to-emerald-700 rounded-3xl p-8 text-white relative overflow-hidden">
 
-                        <div className="relative flex justify-between items-start">
-                            <div>
-                                <p className="text-white/70 text-sm font-medium mb-2">الرصيد الحالي</p>
-                                <p className="text-5xl font-black tracking-tight">
-                                    {parseFloat(wallet.balance).toLocaleString('en-US')}
-                                </p>
-                                <p className="text-white/60 text-sm mt-1">ليرة سورية</p>
-                            </div>
-                            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
-                                <Icon icon="mdi:wallet" className="w-7 h-7 text-white" />
-                            </div>
-                        </div>
+    {/* decorative circles */}
+    <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/5 rounded-full" />
+    <div className="absolute -bottom-12 -right-12 w-56 h-56 bg-white/5 rounded-full" />
 
-                        {/* Quick stats */}
-                        <div className="relative mt-8 grid grid-cols-2 gap-4">
-                            <div className="bg-white/10 rounded-2xl p-4">
-                                <p className="text-white/60 text-xs mb-1">إجمالي الإيداع</p>
-                                <p className="text-white font-bold text-lg">
-                                    {formatAmount(
-                                        transactions
-                                            .filter(t => t.type === 'credit')
-                                            .reduce((sum, t) => sum + parseFloat(t.amount), 0)
-                                    )}
-                                </p>
-                            </div>
-                            <div className="bg-white/10 rounded-2xl p-4">
-                                <p className="text-white/60 text-xs mb-1">إجمالي الخصم</p>
-                                <p className="text-white font-bold text-lg">
-                                    {formatAmount(
-                                        transactions
-                                            .filter(t => t.type === 'debit')
-                                            .reduce((sum, t) => sum + parseFloat(t.amount), 0)
-                                    )}
-                                </p>
-                            </div>
-                        </div>
+    {/* Header */}
+    <div className="relative flex justify-between items-center">
+        <div>
+            <h2 className="text-2xl font-black">
+                المحافظ المالية
+            </h2>
+            <p className="text-white/70 text-sm mt-1">
+                أرصدة البادل والبيلاتس
+            </p>
+        </div>
 
-                        {/* Add Funds button — Admin only */}
-                        {isAdmin && (
-                            <div className="relative mt-6">
-                                <button
-                                    onClick={() => setShowDepositModal(true)}
-                                    className="flex items-center gap-2 bg-accent text-primary font-bold px-5 py-2.5 rounded-xl hover:bg-accent-dark transition-colors"
-                                >
-                                    <Icon icon="mdi:plus-circle" className="w-5 h-5" />
-                                    إضافة رصيد
-                                </button>
-                            </div>
-                        )}
-                    </div>
+        <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
+            <Icon icon="mdi:wallet" className="w-7 h-7 text-white" />
+        </div>
+    </div>
+
+    {/* Wallets */}
+    <div className="relative mt-8 grid md:grid-cols-2 gap-4">
+
+        {/* Padel */}
+        <div className="bg-white/10 rounded-2xl p-5 border border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <Icon icon="mdi:tennis-ball" className="w-5 h-5" />
+                </div>
+
+                <div>
+                    <p className="text-white/70 text-xs">
+                        محفظة البادل
+                    </p>
+
+                    <p className="text-2xl font-black">
+                        {parseFloat(wallet.balance || 0).toLocaleString('en-US')}
+                    </p>
+                </div>
+            </div>
+
+            <p className="text-white/60 text-xs">
+                ليرة سورية
+            </p>
+        </div>
+
+        {/* Pilates */}
+        <div className="bg-white/10 rounded-2xl p-5 border border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <Icon icon="mdi:yoga" className="w-5 h-5" />
+                </div>
+
+                <div>
+                    <p className="text-white/70 text-xs">
+                        محفظة البيلاتس
+                    </p>
+
+                    <p className="text-2xl font-black">
+                        {parseFloat(wallet.pilates_balance || 0).toLocaleString('en-US')}
+                    </p>
+                </div>
+            </div>
+
+            <p className="text-white/60 text-xs">
+                ليرة سورية
+            </p>
+        </div>
+
+    </div>
+
+    {/* Stats */}
+    <div className="relative mt-6 grid grid-cols-2 gap-4">
+        <div className="bg-white/10 rounded-2xl p-4">
+            <p className="text-white/60 text-xs mb-1">
+                إجمالي الإيداع
+            </p>
+
+            <p className="text-white font-bold text-lg">
+                {formatAmount(
+                    transactions
+                        .filter(t => t.type === 'credit')
+                        .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+                )}
+            </p>
+        </div>
+
+        <div className="bg-white/10 rounded-2xl p-4">
+            <p className="text-white/60 text-xs mb-1">
+                إجمالي الخصم
+            </p>
+
+            <p className="text-white font-bold text-lg">
+                {formatAmount(
+                    transactions
+                        .filter(t => t.type === 'debit')
+                        .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+                )}
+            </p>
+        </div>
+    </div>
+
+    {/* Add Balance */}
+    {isAdmin && (
+        <div className="relative mt-6">
+            <button
+                onClick={() => setShowDepositModal(true)}
+                className="flex items-center gap-2 bg-accent text-primary font-bold px-5 py-2.5 rounded-xl hover:bg-accent-dark transition-colors"
+            >
+                <Icon icon="mdi:plus-circle" className="w-5 h-5" />
+                إضافة رصيد
+            </button>
+        </div>
+    )}
+</div>
+
 
                     {/* Transactions Table */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -177,90 +242,174 @@ export default function WalletIndex({ wallet, transactions }) {
                     <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={() => setShowDepositModal(false)} />
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-primary">إضافة رصيد للمحفظة</h3>
+                        <h3 className="text-lg font-bold text-primary">
+                            إضافة رصيد للمحفظة
+                        </h3>
+
                             <button onClick={() => setShowDepositModal(false)} className="text-gray-400 hover:text-red-500 transition-colors">
                                 <Icon icon="mdi:close" className="w-6 h-6" />
                             </button>
                         </div>
 
-                        <form onSubmit={submitDeposit} className="p-6 space-y-5">
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700">
-                                    المبلغ <span className="text-gray-400 font-normal">(ل.س)</span>
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        value={data.amount}
-                                        onFocus={e => e.target.select()}
-                                        onChange={(e) => {
-                                            let val = e.target.value.replace(/\D/g, '');
-                                            if (val.length > 1 && val.startsWith('0')) {
-                                                val = val.replace(/^0+/, '');
-                                            }
-                                            setData('amount', val);
-                                        }}
-                                        className="w-full rounded-xl border-gray-200 focus:border-primary focus:ring-primary text-left pl-16"
-                                        placeholder="مثال: 5000"
-                                        dir="ltr"
-                                        required
-                                    />
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">ل.س</span>
-                                </div>
-                                {errors.amount && <p className="text-red-500 text-xs">{errors.amount}</p>}
-                            </div>
+<form onSubmit={submitDeposit} className="p-6 space-y-5">
 
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700">سبب الإيداع</label>
-                                <input
-                                    type="text"
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    className="w-full rounded-xl border-gray-200 focus:border-primary focus:ring-primary"
-                                    placeholder="مثال: شحن رصيد من الاستقبال"
-                                    required
-                                />
-                                {errors.description && <p className="text-red-500 text-xs">{errors.description}</p>}
-                            </div>
+    {/* Validation Summary */}
+    {Object.keys(errors).length > 0 && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center gap-2 mb-2 text-red-700 font-bold">
+                <Icon icon="mdi:alert-circle" className="w-5 h-5" />
+                يرجى تصحيح الأخطاء التالية
+            </div>
 
-                            {/* Quick amount presets */}
-                            <div className="flex flex-wrap gap-2">
-                                {[5000, 10000, 25000, 50000].map(preset => (
-                                    <button
-                                        key={preset}
-                                        type="button"
-                                        onClick={() => setData('amount', preset)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                                            data.amount == preset
-                                                ? 'border-primary bg-primary text-white'
-                                                : 'border-gray-200 text-gray-600 hover:border-primary/50'
-                                        }`}
-                                    >
-                                        {preset.toLocaleString('en-US')} ل.س
-                                    </button>
-                                ))}
-                            </div>
+            <ul className="space-y-1 text-sm text-red-600">
+                {Object.values(errors).map((error, index) => (
+                    <li key={index}>• {error}</li>
+                ))}
+            </ul>
+        </div>
+    )}
 
-                            <div className="pt-4 flex gap-3 border-t border-gray-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDepositModal(false)}
-                                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
-                                >
-                                    إلغاء
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {processing && <Icon icon="mdi:loading" className="w-4 h-4 animate-spin" />}
-                                    تأكيد الإيداع
-                                </button>
-                            </div>
-                        </form>
+    {/* Studio */}
+    <div className="space-y-2">
+        <label className="block text-sm font-bold text-gray-700">
+            نوع الرصيد
+        </label>
+
+        <select
+            value={data.studio}
+            onChange={(e) => setData('studio', e.target.value)}
+            className={`w-full rounded-xl ${
+                errors.studio
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-200 focus:border-primary focus:ring-primary'
+            }`}
+        >
+            <option value="padel">رصيد البادل</option>
+            <option value="pilates">رصيد البيلاتس</option>
+        </select>
+
+        {errors.studio && (
+            <p className="text-red-500 text-xs font-medium">
+                {errors.studio}
+            </p>
+        )}
+    </div>
+
+    {/* Amount */}
+    <div className="space-y-2">
+        <label className="block text-sm font-bold text-gray-700">
+            المبلغ
+            <span className="text-gray-400 font-normal mr-1">
+                (ل.س)
+            </span>
+        </label>
+
+        <div className="relative">
+            <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={data.amount}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+
+                    if (val.length > 1 && val.startsWith('0')) {
+                        val = val.replace(/^0+/, '');
+                    }
+
+                    setData('amount', val);
+                }}
+                className={`w-full rounded-xl text-left pl-16 ${
+                    errors.amount
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                        : 'border-gray-200 focus:border-primary focus:ring-primary'
+                }`}
+                placeholder="مثال: 5000"
+                dir="ltr"
+            />
+
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">
+                ل.س
+            </span>
+        </div>
+
+        {errors.amount && (
+            <p className="text-red-500 text-xs font-medium">
+                {errors.amount}
+            </p>
+        )}
+    </div>
+
+    {/* Description */}
+    <div className="space-y-2">
+        <label className="block text-sm font-bold text-gray-700">
+            سبب الإيداع
+        </label>
+
+        <input
+            type="text"
+            value={data.description}
+            onChange={(e) => setData('description', e.target.value)}
+            className={`w-full rounded-xl ${
+                errors.description
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-200 focus:border-primary focus:ring-primary'
+            }`}
+            placeholder="مثال: شحن رصيد من الاستقبال"
+        />
+
+        {errors.description && (
+            <p className="text-red-500 text-xs font-medium">
+                {errors.description}
+            </p>
+        )}
+    </div>
+
+    {/* Quick Amount Presets */}
+    <div className="flex flex-wrap gap-2">
+        {[5000, 10000, 25000, 50000].map((preset) => (
+            <button
+                key={preset}
+                type="button"
+                onClick={() => setData('amount', preset)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    data.amount == preset
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-gray-200 text-gray-600 hover:border-primary/50'
+                }`}
+            >
+                {preset.toLocaleString('en-US')} ل.س
+            </button>
+        ))}
+    </div>
+
+    {/* Actions */}
+    <div className="pt-4 flex gap-3 border-t border-gray-100">
+        <button
+            type="button"
+            onClick={() => setShowDepositModal(false)}
+            className="flex-1 px-4 py-2.5 rounded-xl font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+        >
+            إلغاء
+        </button>
+
+        <button
+            type="submit"
+            disabled={processing}
+            className="flex-1 px-4 py-2.5 rounded-xl font-bold bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+            {processing && (
+                <Icon
+                    icon="mdi:loading"
+                    className="w-4 h-4 animate-spin"
+                />
+            )}
+
+            تأكيد الإيداع
+        </button>
+    </div>
+</form>
                     </div>
                 </div>
             )}

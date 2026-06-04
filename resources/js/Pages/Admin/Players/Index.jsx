@@ -2,12 +2,12 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import Swal from 'sweetalert2';
 import usePermissions from "@/hooks/usePermissions";
 import { resolveAsset } from '../../../utils';
 
 const RANKS = ['مبتدئ', 'متوسط', 'متقدم', 'محترف', 'نخبة'];
-
 const rankTranslation = {
     'Beginner': 'مبتدئ',
     'Intermediate': 'متوسط',
@@ -15,7 +15,6 @@ const rankTranslation = {
     'Professional': 'محترف',
     'Elite': 'نخبة',
 };
-
 const getRank = (r) => rankTranslation[r] || r;
 
 const rankColor = (r) => {
@@ -36,6 +35,7 @@ export default function PlayersIndex({ players, filters, stats }) {
     const [editingPlayer, setEditingPlayer] = useState(null);
     const [search, setSearch]             = useState(filters?.search || '');
     const [rank,   setRank]               = useState(filters?.rank   || '');
+    const { auth } = usePage().props;
 
     const applyFilters = (overrides = {}) => {
         const p = { search: overrides.search ?? search, rank: overrides.rank ?? rank };
@@ -292,15 +292,15 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                                 </button>
                                                             )}
 
-                                                            {can('players.delete') && (
-                                                                <button
-                                                                    onClick={() => deletePlayer(p.id)}
-                                                                    className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
-                                                                    title="حذف"
-                                                                >
-                                                                    <Icon icon="mdi:delete-outline" className="w-4 h-4" />
-                                                                </button>
-                                                            )}
+                                                                {can('players.delete') && auth.user.id !== p.id && (
+                                                                    <button
+                                                                        onClick={() => deletePlayer(p.id)}
+                                                                        className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+                                                                        title="حذف"
+                                                                    >
+                                                                        <Icon icon="mdi:delete-outline" className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
 
                                                         </div>
                                                     </td>
@@ -355,6 +355,25 @@ export default function PlayersIndex({ players, filters, stats }) {
                         </div>
 
                         <form onSubmit={submit} className="p-5 space-y-4">
+                            {Object.keys(errors).length > 0 && (
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Icon
+                                            icon="mdi:alert-circle"
+                                            className="w-5 h-5 text-red-500"
+                                        />
+                                        <h4 className="font-bold text-red-700">
+                                            يرجى تصحيح الأخطاء التالية
+                                        </h4>
+                                    </div>
+
+                                    <ul className="space-y-1 text-sm text-red-600">
+                                        {Object.values(errors).map((error, index) => (
+                                            <li key={index}>• {error}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                             {/* Image */}
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center flex-shrink-0 relative">
@@ -397,15 +416,11 @@ export default function PlayersIndex({ players, filters, stats }) {
 
                                     </div>
                             </div>
-                            {errors.image && <p className="text-red-500 text-xs">{errors.image}</p>}
-                            {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
-                            {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
-                            {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <Field label={editingPlayer ? 'كلمة المرور (للتغيير فقط)' : 'كلمة المرور *'}>
                                     <input type="password" value={data.password} onChange={e => setData('password', e.target.value)} className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" />
-                                    {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
+                                    {/* {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>} */}
                                 </Field>
                                 <Field label="المستوى">
                                     <select value={data.rank_level} onChange={e => setData('rank_level', e.target.value)} className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm">
@@ -438,7 +453,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                                             }}
                                             className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" 
                                         />
-                                        {errors[f.field] && <p className="text-red-500 text-xs">{errors[f.field]}</p>}
+                                    {errors[f.field] && <p className="text-red-500 text-xs">{errors[f.field]}</p>}
                                     </Field>
                                 ))}
                             </div>

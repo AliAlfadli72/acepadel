@@ -39,8 +39,10 @@ class HandleInertiaRequests extends Middleware
                 ]) : null,
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success' => fn () => session('success'),
+                'error'   => fn () => session('error'),
+                'warning' => fn () => session('warning'),
+                'info'    => fn () => session('info'),
                 'booking_id' => fn () => $request->session()->get('booking_id'),
             ],
             'permissions' => fn () => auth()->check()

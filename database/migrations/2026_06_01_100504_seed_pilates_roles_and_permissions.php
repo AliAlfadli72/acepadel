@@ -15,15 +15,22 @@ return new class extends Migration
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Define Pilates-specific permissions
-        $permissions = [
-            'pilates.view',
-            'pilates.create',
-            'pilates.edit',
-            'pilates.delete',
-            'pilates.bookings.view',
-            'pilates.bookings.approve',
-            'pilates.finance.view',
-        ];
+            $permissions = [
+                'dashboard.view',
+
+                'players.view',
+                'players.create',
+                'players.edit',
+                'players.delete',
+
+                'pilates.view',
+                'pilates.create',
+                'pilates.edit',
+                'pilates.delete',
+                'pilates.bookings.view',
+                'pilates.bookings.approve',
+                'pilates.finance.view',
+            ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
