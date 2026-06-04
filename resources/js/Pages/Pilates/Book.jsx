@@ -6,7 +6,6 @@ import { router, usePage, Link, Head } from "@inertiajs/react";
 import Swal from "sweetalert2";
 import { resolveAsset } from '../../utils';
 
-const { errors } = usePage().props;
 
 
 export default function Book({ sessions = [], walletBalance = 0, activePackages = [], packages = [] }) {
@@ -14,6 +13,7 @@ export default function Book({ sessions = [], walletBalance = 0, activePackages 
   const { auth } = usePage().props;
   const isAr = lang === "ar";
   const user = auth?.user;
+  const { errors } = usePage().props;
 
   const [activeMainTab, setActiveMainTab] = useState("sessions");
 
