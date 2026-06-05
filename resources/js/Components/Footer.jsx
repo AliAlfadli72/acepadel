@@ -151,16 +151,16 @@ export default function Footer({ lang }) {
           </div>
           <div className="flex gap-6">
             {[
-              { ar: "الشروط", en: "Terms" },
-              { ar: "الخصوصية", en: "Privacy" },
+              { ar: "الشروط", en: "Terms", routeName: "terms" },
+              { ar: "الخصوصية", en: "Privacy", routeName: "privacy" },
             ].map((item) => (
-              <a
+              <Link
                 key={item.en}
-                href="#"
+                href={route(item.routeName)}
                 className={`text-white/30 text-[11px] uppercase tracking-widest hover:text-accent transition-colors ${isArabic ? "font-arabic" : ""}`}
               >
                 {isArabic ? item.ar : item.en}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
