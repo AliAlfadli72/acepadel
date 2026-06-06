@@ -36,34 +36,34 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        $exceptions->render(function (Throwable $e, $request) {
+        // $exceptions->render(function (Throwable $e, $request) {
 
-            // Let Laravel handle validation errors normally
-            if ($e instanceof ValidationException) {
-                return null;
-            }
+        //     // Let Laravel handle validation errors normally
+        //     if ($e instanceof ValidationException) {
+        //         return null;
+        //     }
 
-            $status = $e instanceof HttpExceptionInterface
-                ? $e->getStatusCode()
-                : 500;
+        //     $status = $e instanceof HttpExceptionInterface
+        //         ? $e->getStatusCode()
+        //         : 500;
 
-            if ($status === 403) {
-                $status = 404;
-            }
+        //     if ($status === 403) {
+        //         $status = 404;
+        //     }
 
-            // Do not render Inertia pages for API requests
-            if ($request->is('api/*') || $request->expectsJson()) {
-                return null;
-            }
+        //     // Do not render Inertia pages for API requests
+        //     if ($request->is('api/*') || $request->expectsJson()) {
+        //         return null;
+        //     }
 
-            if (in_array($status, [401, 404, 419, 429, 500, 503])) {
-                return Inertia::render('Error', [
-                    'status' => $status,
-                ])
-                ->toResponse($request)
-                ->setStatusCode($status);
-            }
+        //     if (in_array($status, [401, 404, 419, 429, 500, 503])) {
+        //         return Inertia::render('Error', [
+        //             'status' => $status,
+        //         ])
+        //         ->toResponse($request)
+        //         ->setStatusCode($status);
+        //     }
 
-            return null;
-        });
+        //     return null;
+        // });
     })->create();
