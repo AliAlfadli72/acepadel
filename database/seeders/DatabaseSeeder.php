@@ -43,37 +43,37 @@ class DatabaseSeeder extends Seeder
             'balance' => 0,
         ]);
         // OTHER USERS
-        $users = [
-            ['name' => 'Test Manager', 'email' => 'manager@acepadel.com', 'role' => 'Manager'],
-            ['name' => 'Test Coach', 'email' => 'coach@acepadel.com', 'role' => 'Coach'],
-            ['name' => 'Test Player', 'email' => 'player@acepadel.com', 'role' => 'Player'],
-            ['name' => 'Test Receptionist', 'email' => 'receptionist@acepadel.com', 'role' => 'Receptionist'],
-            ['name' => 'Test Staff', 'email' => 'staff@acepadel.com', 'role' => 'Staff'],
-        ];
+        // $users = [
+        //     ['name' => 'Test Manager', 'email' => 'manager@acepadel.com', 'role' => 'Manager'],
+        //     ['name' => 'Test Coach', 'email' => 'coach@acepadel.com', 'role' => 'Coach'],
+        //     ['name' => 'Test Player', 'email' => 'player@acepadel.com', 'role' => 'Player'],
+        //     ['name' => 'Test Receptionist', 'email' => 'receptionist@acepadel.com', 'role' => 'Receptionist'],
+        //     ['name' => 'Test Staff', 'email' => 'staff@acepadel.com', 'role' => 'Staff'],
+        // ];
 
-        foreach ($users as $userData) {
+        // foreach ($users as $userData) {
 
-            $user = User::create([
-                'name' => $userData['name'],
-                'email' => $userData['email'],
-                'phone' => '+963' . rand(100000000, 999999999),
-                'password' => bcrypt('password'),
-            ]);
+        //     $user = User::create([
+        //         'name' => $userData['name'],
+        //         'email' => $userData['email'],
+        //         'phone' => '+963' . rand(100000000, 999999999),
+        //         'password' => bcrypt('password'),
+        //     ]);
 
-            $user->assignRole($userData['role']);
-            // Player Profile
-            PlayerProfile::create([
-                'user_id' => $user->id,
-                'rank_level' => 'Beginner',
-                'points' => 0,
-                'matches_played' => 0,
-                'matches_won' => 0,
-            ]);
-                        // Wallet
-            Wallet::create([
-                'user_id' => $user->id,
-                'balance' => 0,
-            ]);
-        }
+        //     $user->assignRole($userData['role']);
+        //     // Player Profile
+        //     PlayerProfile::create([
+        //         'user_id' => $user->id,
+        //         'rank_level' => 'Beginner',
+        //         'points' => 0,
+        //         'matches_played' => 0,
+        //         'matches_won' => 0,
+        //     ]);
+        //                 // Wallet
+        //     Wallet::create([
+        //         'user_id' => $user->id,
+        //         'balance' => 0,
+        //     ]);
+        // }
     }
 }

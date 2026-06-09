@@ -5,18 +5,30 @@ import { Icon } from "@iconify/react";
 import { resolveAsset } from "../utils";
 
 export default function Navbar({ lang, setLang }) {
-  const { url, logo_url, icon_url } = usePage().props;
-  const isArabic   = lang === "ar";
-  const [scrolled,  setScrolled]  = useState(false);
+  const page = usePage();
+
+  const { logo_url, icon_url } = page.props;
+  const currentUrl = page.url;
+
+  const isArabic = lang === "ar";
+
+  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
+
+    window.addEventListener("scroll", onScroll, {
+      passive: true,
+    });
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => { setMobileOpen(false); }, [url]);
+  // Close mobile menu whenever route changes
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [currentUrl]);
 
   const links = [
     { routeName: "home",        label: { ar: "الرئيسية",  en: "Home"    } },

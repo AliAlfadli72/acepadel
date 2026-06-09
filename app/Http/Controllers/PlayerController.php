@@ -31,8 +31,7 @@ public function index(Request $request)
     $topPlayers = (clone $baseQuery)
         ->join('player_profiles', 'users.id', '=', 'player_profiles.user_id')
         ->orderByDesc('player_profiles.points')
-        ->select('users.*')
-        ->distinct()
+        ->select('users.*', 'player_profiles.points')
         ->take(5)
         ->get();
 
@@ -100,8 +99,7 @@ public function index(Request $request)
 
     ->join('player_profiles', 'users.id', '=', 'player_profiles.user_id')
     ->orderByDesc('player_profiles.points')
-    ->select('users.*')
-    ->distinct()
+    ->select('users.*', 'player_profiles.points')
 
     ->paginate(12)
     ->withQueryString();
@@ -109,8 +107,7 @@ public function index(Request $request)
     $allPlayers = (clone $baseQuery)
         ->join('player_profiles', 'users.id', '=', 'player_profiles.user_id')
         ->orderByDesc('player_profiles.points')
-        ->select('users.*')
-        ->distinct()
+        ->select('users.*', 'player_profiles.points')
         ->get();
 
     return Inertia::render('Players', [
