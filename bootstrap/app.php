@@ -36,50 +36,50 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        $exceptions->render(function (Throwable $e, $request) {
+        // $exceptions->render(function (Throwable $e, $request) {
 
-            // Let Laravel handle validation errors normally
-            if ($e instanceof ValidationException) {
-                return null;
-            }
+        //     // Let Laravel handle validation errors normally
+        //     if ($e instanceof ValidationException) {
+        //         return null;
+        //     }
 
-            $status = $e instanceof HttpExceptionInterface
-                ? $e->getStatusCode()
-                : 500;
+        //     $status = $e instanceof HttpExceptionInterface
+        //         ? $e->getStatusCode()
+        //         : 500;
 
-            if ($status === 403) {
-                $status = 404;
-            }
+        //     if ($status === 403) {
+        //         $status = 404;
+        //     }
 
-            // ✅ CRITICAL FIX: Always return JSON for API routes — NEVER return HTML/Inertia
-            // This prevents the mobile app from receiving HTML when auth token is invalid/expired
-            if ($request->is('api/*') || $request->expectsJson()) {
-                $message = match ($status) {
-                    401 => 'انتهت جلسة الدخول. يرجى تسجيل الدخول مجدداً.',
-                    403 => 'غير مصرح لك بالوصول.',
-                    404 => 'المورد المطلوب غير موجود.',
-                    419 => 'انتهت صلاحية الجلسة. أعد المحاولة.',
-                    429 => 'طلبات كثيرة جداً. يرجى الانتظار.',
-                    500 => 'خطأ في السيرفر. يرجى المحاولة لاحقاً.',
-                    503 => 'الخدمة غير متاحة مؤقتاً.',
-                    default => $e->getMessage() ?: 'حدث خطأ غير متوقع.',
-                };
+        //     // ✅ CRITICAL FIX: Always return JSON for API routes — NEVER return HTML/Inertia
+        //     // This prevents the mobile app from receiving HTML when auth token is invalid/expired
+        //     if ($request->is('api/*') || $request->expectsJson()) {
+        //         $message = match ($status) {
+        //             401 => 'انتهت جلسة الدخول. يرجى تسجيل الدخول مجدداً.',
+        //             403 => 'غير مصرح لك بالوصول.',
+        //             404 => 'المورد المطلوب غير موجود.',
+        //             419 => 'انتهت صلاحية الجلسة. أعد المحاولة.',
+        //             429 => 'طلبات كثيرة جداً. يرجى الانتظار.',
+        //             500 => 'خطأ في السيرفر. يرجى المحاولة لاحقاً.',
+        //             503 => 'الخدمة غير متاحة مؤقتاً.',
+        //             default => $e->getMessage() ?: 'حدث خطأ غير متوقع.',
+        //         };
 
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $message,
-                    'code' => $status,
-                ], $status);
-            }
+        //         return response()->json([
+        //             'status' => 'error',
+        //             'message' => $message,
+        //             'code' => $status,
+        //         ], $status);
+        //     }
 
-            if (in_array($status, [401, 404, 419, 429, 500, 503])) {
-                return Inertia::render('Error', [
-                    'status' => $status,
-                ])
-                ->toResponse($request)
-                ->setStatusCode($status);
-            }
+        //     if (in_array($status, [401, 404, 419, 429, 500, 503])) {
+        //         return Inertia::render('Error', [
+        //             'status' => $status,
+        //         ])
+        //         ->toResponse($request)
+        //         ->setStatusCode($status);
+        //     }
 
-            return null;
-        });
+        //     return null;
+        // });
     })->create();
