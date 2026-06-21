@@ -27,6 +27,7 @@ class User extends Authenticatable
         'image_path',
         'otp_code',
         'otp_expires_at',
+        'phone_verified_at',
         'password',
         'fcm_token',
         'notif_bookings',
@@ -53,13 +54,22 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'otp_expires_at' => 'datetime',
-            'notif_bookings' => 'boolean',
-            'notif_events' => 'boolean',
-            'notif_offers' => 'boolean',
+            'email_verified_at'  => 'datetime',
+            'phone_verified_at'  => 'datetime',
+            'otp_expires_at'     => 'datetime',
+            'password'           => 'hashed',
+            'notif_bookings'     => 'boolean',
+            'notif_events'       => 'boolean',
+            'notif_offers'       => 'boolean',
         ];
+    }
+
+    /**
+     * هل تم توثيق رقم الهاتف عبر واتساب OTP؟
+     */
+    public function isPhoneVerified(): bool
+    {
+        return !is_null($this->phone_verified_at);
     }
 
     public function playerProfile()

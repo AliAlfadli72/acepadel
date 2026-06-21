@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    // ─────────────────────────────────────────────────────────────
+    // Meta WhatsApp Cloud API — OTP Authentication
+    // ─────────────────────────────────────────────────────────────
+    'meta_wa' => [
+        'phone_number_id'    => env('META_WA_PHONE_NUMBER_ID'),
+        'business_account_id'=> env('META_WA_BUSINESS_ACCOUNT_ID'),
+        'access_token'       => env('META_WA_ACCESS_TOKEN'),
+        'verify_token'       => env('META_WA_VERIFY_TOKEN', 'ace_padel_secure_webhook_token'),
+        'template_name'      => env('META_WA_TEMPLATE_NAME', 'ace_padel_verification'),
+    ],
+
 ];

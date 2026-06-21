@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique()->nullable();
-            $table->string('phone')->unique()->nullable();
-            $table->string('otp_code')->nullable();
-            $table->timestamp('otp_expires_at')->nullable();
+            $table->string('email')->unique()->nullable();           // nullable — الدخول بالهاتف أساسي
+            $table->string('phone')->unique()->nullable()->index();  // required عملياً، unique + indexed
+            $table->string('otp_code')->nullable();                 // رمز OTP المؤقت
+            $table->timestamp('otp_expires_at')->nullable();        // وقت انتهاء OTP
+            $table->timestamp('phone_verified_at')->nullable();     // توثيق الهاتف عبر واتساب
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->string('image_path')->nullable();

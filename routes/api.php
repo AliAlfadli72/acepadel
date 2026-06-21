@@ -10,14 +10,32 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\CoachController;
+use App\Http\Controllers\Api\WebhookController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Auth Routes
+// ─────────────────────────────────────────────────────────────
+// WhatsApp OTP Authentication (المسار الرئيسي للموبايل)
+// ─────────────────────────────────────────────────────────────
+Route::prefix('otp')->group(function () {
+    Route::post('/send',   [AuthController::class, 'sendOtp']);
+    Route::post('/verify', [AuthController::class, 'verifyOtp']);
+});
+
+// ─────────────────────────────────────────────────────────────
+// Meta WhatsApp Webhook
+// Callback URL : https://acepadel.com/api/webhook/whatsapp
+// Verify Token  : ace_padel_secure_webhook_token
+// ─────────────────────────────────────────────────────────────
+// GET  → Meta verification challenge (يجب قبول GET لإتمام إعداد الـ Webhook)
+// POST → أحداث واتساب الواردة (رسائل، إيصالات، إلخ)
+Route::match(['get', 'post'], '/webhook/whatsapp', [WebhookController::class, 'handle']);
+
+// Legacy Auth Routes (للوحة الإدارة / احتياطي)
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login',    [AuthController::class, 'login']);
 
 // Protected API Routes
 Route::middleware('auth:sanctum')->group(function () {
