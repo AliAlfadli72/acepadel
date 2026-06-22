@@ -57,73 +57,48 @@ class PlayerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'phone' => 'required|string|max:255|unique:users,phone',
-            'password'       => ['required', Rules\Password::defaults()],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
-            'points'         => 'required|integer|min:0',
-            'wallet_balance' => 'required|numeric|min:0',
+            'name'                   => 'required|string|max:255',
+            'phone'                  => 'required|string|max:255|unique:users,phone',
+            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
+            'points'                 => 'required|integer|min:0',
+            'wallet_balance'         => 'required|numeric|min:0',
             'pilates_wallet_balance' => 'required|numeric|min:0',
-            'matches_played' => 'required|integer|min:0',
-            'matches_won'    => 'required|integer|min:0',
+            'matches_played'         => 'required|integer|min:0',
+            'matches_won'            => 'required|integer|min:0',
         ], [
-            'name.required'           => 'الاسم الكامل مطلوب.',
-            'name.max'                => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
-            'email.required' => 'البريد الإلكتروني مطلوب.',
-            'phone.required' => 'رقم الجوال مطلوب.',
-            'email.email'             => 'صيغة البريد الإلكتروني غير صحيحة.',
-            'email.unique'            => 'هذا البريد الإلكتروني مستخدم مسبقاً.',
-            'phone.unique'            => 'رقم الجوال مستخدم مسبقاً.',
-            'password.required'       => 'كلمة المرور مطلوبة.',
-            'points.required'         => 'حقل النقاط مطلوب.',
-            'points.integer'          => 'النقاط يجب أن تكون رقماً صحيحاً.',
-            'points.min'              => 'النقاط يجب أن تكون 0 أو أكثر.',
-            'wallet_balance.required' => 'رصيد المحفظة (بادل) مطلوب.',
-            'wallet_balance.numeric'  => 'رصيد المحفظة (بادل) يجب أن يكون رقماً.',
-            'wallet_balance.min'      => 'رصيد المحفظة (بادل) يجب أن يكون 0 أو أكثر.',
+            'name.required'                   => 'الاسم الكامل مطلوب.',
+            'name.max'                        => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
+            'phone.required'                  => 'رقم الجوال مطلوب.',
+            'phone.unique'                    => 'رقم الجوال مستخدم مسبقاً.',
+            'points.required'                 => 'حقل النقاط مطلوب.',
+            'wallet_balance.required'         => 'رصيد المحفظة (بادل) مطلوب.',
             'pilates_wallet_balance.required' => 'رصيد محفظة البيلاتس مطلوب.',
-            'pilates_wallet_balance.numeric'  => 'رصيد محفظة البيلاتس يجب أن يكون رقماً.',
-            'pilates_wallet_balance.min'      => 'رصيد محفظة البيلاتس يجب أن يكون 0 أو أكثر.',
-            'matches_played.required' => 'عدد المباريات مطلوب.',
-            'matches_played.integer'  => 'عدد المباريات يجب أن يكون رقماً صحيحاً.',
-            'matches_won.required'    => 'عدد الانتصارات مطلوب.',
-            'matches_won.integer'     => 'عدد الانتصارات يجب أن يكون رقماً صحيحاً.',
-            'image.image'             => 'الملف يجب أن يكون صورة.',
-            'image.mimes'             => 'الصورة يجب أن تكون من نوع: jpeg, png, jpg, gif.',
-            'image.max'               => 'حجم الصورة يجب ألا يتجاوز 2 ميغابايت.',
+            'matches_played.required'         => 'عدد المباريات مطلوب.',
+            'matches_won.required'            => 'عدد الانتصارات مطلوب.',
         ]);
 
         $imagePath = null;
-
         if ($request->hasFile('image')) {
-
-            $imagePath = ImageUploadService::upload(
-                $request->file('image'),
-                'profiles'
-            );
+            $imagePath = ImageUploadService::upload($request->file('image'), 'profiles');
         }
 
+        // المصادقة عبر واتساب OTP — لا كلمة سر ولا إيميل
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+            'name'       => $request->name,
+            'email'      => null,
+            'phone'      => $request->phone,
+            'password'   => null, // يدخل عبر OTP
             'image_path' => $imagePath,
         ]);
 
-        // Assign 'Player' role
         $user->assignRole('Player');
 
-        // Update auto-created player profile
         $user->playerProfile()->update([
             'points'         => $request->points,
             'matches_played' => $request->matches_played,
             'matches_won'    => $request->matches_won,
-            // rank_level يُحسب تلقائياً من النقاط
         ]);
 
-        // Update auto-created wallet
         $walletService = app(\App\Services\WalletService::class);
         $wallet = $user->wallet ?: $user->wallet()->firstOrCreate([], ['balance' => 0, 'pilates_balance' => 0]);
         if ($request->wallet_balance > 0) {
@@ -144,54 +119,26 @@ class PlayerController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'phone' => 'required|string|max:255|unique:users,phone,'.$user->id,
-            'password'       => ['nullable', Rules\Password::defaults()],
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
-            'points'         => 'required|integer|min:0',
-            'wallet_balance' => 'required|numeric|min:0',
+            'name'                   => 'required|string|max:255',
+            'phone'                  => 'required|string|max:255|unique:users,phone,'.$user->id,
+            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
+            'points'                 => 'required|integer|min:0',
+            'wallet_balance'         => 'required|numeric|min:0',
             'pilates_wallet_balance' => 'required|numeric|min:0',
-            'matches_played' => 'required|integer|min:0',
-            'matches_won'    => 'required|integer|min:0',
+            'matches_played'         => 'required|integer|min:0',
+            'matches_won'            => 'required|integer|min:0',
         ], [
-            'name.required'            => 'الاسم الكامل مطلوب.',
-            'name.max'                 => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
-            'email.required' => 'البريد الإلكتروني مطلوب.',
+            'name.required'  => 'الاسم الكامل مطلوب.',
             'phone.required' => 'رقم الجوال مطلوب.',
-            'email.email'              => 'صيغة البريد الإلكتروني غير صحيحة.',
-            'email.unique'             => 'هذا البريد الإلكتروني مستخدم مسبقاً.',
-            'phone.unique'             => 'رقم الجوال مستخدم مسبقاً.',
-            'points.required'          => 'حقل النقاط مطلوب.',
-            'points.integer'           => 'النقاط يجب أن تكون رقماً صحيحاً.',
-            'points.min'               => 'النقاط يجب أن تكون 0 أو أكثر.',
-            'wallet_balance.required'  => 'رصيد المحفظة (بادل) مطلوب.',
-            'wallet_balance.numeric'   => 'رصيد المحفظة (بادل) يجب أن يكون رقماً.',
-            'wallet_balance.min'       => 'رصيد المحفظة (بادل) يجب أن يكون 0 أو أكثر.',
-            'pilates_wallet_balance.required' => 'رصيد محفظة البيلاتس مطلوب.',
-            'pilates_wallet_balance.numeric'  => 'رصيد محفظة البيلاتس يجب أن يكون رقماً.',
-            'pilates_wallet_balance.min'      => 'رصيد محفظة البيلاتس يجب أن يكون 0 أو أكثر.',
-            'matches_played.required'  => 'عدد المباريات مطلوب.',
-            'matches_played.integer'   => 'عدد المباريات يجب أن يكون رقماً صحيحاً.',
-            'matches_won.required'     => 'عدد الانتصارات مطلوب.',
-            'matches_won.integer'      => 'عدد الانتصارات يجب أن يكون رقماً صحيحاً.',
-            'image.image'              => 'الملف يجب أن يكون صورة.',
-            'image.mimes'              => 'الصورة يجب أن تكون من نوع: jpeg, png, jpg, gif.',
-            'image.max'                => 'حجم الصورة يجب ألا يتجاوز 2 ميغابايت.',
+            'phone.unique'   => 'رقم الجوال مستخدم مسبقاً.',
         ]);
 
         $data = [
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'  => $request->name,
             'phone' => $request->phone,
         ];
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
         if ($request->hasFile('image')) {
-
             $data['image_path'] = ImageUploadService::upload(
                 $request->file('image'),
                 'profiles',

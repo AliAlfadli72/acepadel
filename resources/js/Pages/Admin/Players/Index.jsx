@@ -47,10 +47,7 @@ export default function PlayersIndex({ players, filters, stats }) {
 
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         name: '',
-        email: '',
         phone: '',
-        password: '',
-        password_confirmation: '',
         image: null,
         rank_level: 'مبتدئ',
         points: 0,
@@ -74,14 +71,14 @@ export default function PlayersIndex({ players, filters, stats }) {
         clearErrors();
         setEditingPlayer(p);
         setData({
-            name: p.name, email: p.email||'', phone: p.phone||'',
-            password:'', password_confirmation:'', image:null,
+            name: p.name, phone: p.phone||'',
+            image:null,
             rank_level: p.player_profile?.rank_level || 'مبتدئ',
-            points:         p.player_profile?.points         || 0,
-            wallet_balance: Math.round(p.wallet?.balance || 0),
+            points:                 p.player_profile?.points         || 0,
+            wallet_balance:         Math.round(p.wallet?.balance || 0),
             pilates_wallet_balance: Math.round(p.wallet?.pilates_balance || 0),
-            matches_played: p.player_profile?.matches_played || 0,
-            matches_won:    p.player_profile?.matches_won    || 0,
+            matches_played:         p.player_profile?.matches_played || 0,
+            matches_won:            p.player_profile?.matches_won    || 0,
         });
         setIsModalOpen(true);
     };
@@ -90,10 +87,10 @@ export default function PlayersIndex({ players, filters, stats }) {
         e.preventDefault();
         if (editingPlayer) {
             router.post(route('admin.players.update', editingPlayer.id), {
-                _method:'PUT', name:data.name, email:data.email, phone:data.phone,
-                password:data.password, password_confirmation:data.password_confirmation,
+                _method:'PUT', name:data.name, phone:data.phone,
                 image:data.image, rank_level:data.rank_level, points:data.points,
-                wallet_balance:data.wallet_balance, pilates_wallet_balance:data.pilates_wallet_balance, matches_played:data.matches_played, matches_won:data.matches_won,
+                wallet_balance:data.wallet_balance, pilates_wallet_balance:data.pilates_wallet_balance,
+                matches_played:data.matches_played, matches_won:data.matches_won,
             }, { 
                 forceFormData:true, 
                 onSuccess:() => { setIsModalOpen(false); reset(); },
@@ -399,29 +396,24 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                 type="text"
                                                 value={data.phone}
                                                 onChange={e => setData('phone', e.target.value)}
-                                                placeholder="0912345678"
+                                                placeholder="+963XXXXXXXXX"
+                                                dir="ltr"
                                                 className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm"
                                             />
                                         </Field>
 
-                                        <Field label="البريد الإلكتروني *">
-                                            <input
-                                                type="email"
-                                                value={data.email}
-                                                onChange={e => setData('email', e.target.value)}
-                                                placeholder="example@email.com"
-                                                className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm"
-                                            />
-                                        </Field>
+                                        {/* ملاحظة للأدمن: الدخول عبر OTP واتساب فقط */}
+                                        <div className="col-span-2 bg-blue-50 rounded-lg p-3 text-xs text-blue-700 flex items-center gap-2">
+                                            <span>ℹ️</span>
+                                            <span>يدخل اللاعب عبر رمز واتساب على رقم الجوال المدخل — لا حاجة لكلمة مرور أو بريد إلكتروني.</span>
+                                        </div>
 
                                     </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <Field label={editingPlayer ? 'كلمة المرور (للتغيير فقط)' : 'كلمة المرور *'}>
-                                    <input type="password" value={data.password} onChange={e => setData('password', e.target.value)} className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm" />
-                                    {/* {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>} */}
-                                </Field>
+
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                                 <Field label="المستوى">
                                     <select value={data.rank_level} onChange={e => setData('rank_level', e.target.value)} className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm">
                                         {RANKS.map(r => <option key={r} value={r}>{r}</option>)}
