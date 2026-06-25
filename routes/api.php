@@ -40,6 +40,7 @@ Route::post('/login',    [AuthController::class, 'login']);
 // Protected API Routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::delete('/account', [AuthController::class, 'deleteAccount']);
     
     // Bookings API
     Route::get('/user-bookings', [BookingController::class, 'userBookings']);

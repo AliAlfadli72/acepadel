@@ -367,4 +367,69 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Delete Account — Apple App Store Guideline 5.1.1(v)
+    // DELETE /api/account
+    // Strategy: Anonymize PII + hard-delete sensitive records.
+    // Bookings & wallet transactions are preserved for admin reports.
+    // ─────────────────────────────────────────────────────────────
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        // ── Guard: Block if user has active future bookings ───────
+        $hasActiveBookings = \App\Models\Booking::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->where('start_time', '>', now())
+            ->exists();
+
+        if ($hasActiveBookings) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'لا يمكنك حذف الحساب لوجود حجوزات نشطة. يرجى إلغاؤها أولاً أو التواصل مع الإدارة.',
+                'message_en' => 'Cannot delete account with active bookings. Please cancel them first or contact support.',
+            ], 422);
+        }
+
+        // ── Step 1: Revoke all auth tokens ────────────────────────
+        $user->tokens()->delete();
+
+        // ── Step 2: Delete sensitive personal records ─────────────
+        // Player profile (stats, rank)
+        if ($user->playerProfile) {
+            $user->playerProfile->delete();
+        }
+
+        // Notifications
+        $user->notifications()->delete();
+
+        // Event registrations
+        \App\Models\EventRegistration::where('user_id', $user->id)->delete();
+
+        // Pilates bookings & packages
+        \App\Models\PilatesBooking::where('user_id', $user->id)->delete();
+        \App\Models\UserPilatesPackage::where('user_id', $user->id)->delete();
+
+        // ── Step 3: Anonymize the user row (preserve FK integrity) ─
+        // Bookings, wallets, and transactions are intentionally kept
+        // intact for admin financial reporting.
+        $user->forceFill([
+            'name'             => 'Deleted User',
+            'phone'            => 'deleted_' . $user->id,
+            'email'            => null,
+            'image_path'       => null,
+            'fcm_token'        => null,
+            'otp_code'         => null,
+            'otp_expires_at'   => null,
+            'phone_verified_at' => null,
+            'password'         => null,
+        ])->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم حذف حسابك بنجاح.',
+        ]);
+    }
 }
