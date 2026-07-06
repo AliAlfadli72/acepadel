@@ -55,6 +55,7 @@ export default function PlayersIndex({ players, filters, stats }) {
         pilates_wallet_balance: 0,
         matches_played: 0,
         matches_won: 0,
+        password: '',
     });
 
     const openAdd = () => { 
@@ -79,6 +80,7 @@ export default function PlayersIndex({ players, filters, stats }) {
             pilates_wallet_balance: Math.round(p.wallet?.pilates_balance || 0),
             matches_played:         p.player_profile?.matches_played || 0,
             matches_won:            p.player_profile?.matches_won    || 0,
+            password: '',
         });
         setIsModalOpen(true);
     };
@@ -91,6 +93,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                 image:data.image, rank_level:data.rank_level, points:data.points,
                 wallet_balance:data.wallet_balance, pilates_wallet_balance:data.pilates_wallet_balance,
                 matches_played:data.matches_played, matches_won:data.matches_won,
+                password:data.password,
             }, { 
                 forceFormData:true, 
                 onSuccess:() => { setIsModalOpen(false); reset(); },
@@ -402,10 +405,21 @@ export default function PlayersIndex({ players, filters, stats }) {
                                             />
                                         </Field>
 
+                                        <Field label={editingPlayer ? "كلمة المرور (اتركها فارغة لعدم التغيير)" : "كلمة المرور"}>
+                                            <input
+                                                type="password"
+                                                value={data.password}
+                                                onChange={e => setData('password', e.target.value)}
+                                                placeholder={editingPlayer ? "••••••••" : "تعيين كلمة مرور للاعب"}
+                                                dir="ltr"
+                                                className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm"
+                                            />
+                                        </Field>
+
                                         {/* ملاحظة للأدمن: الدخول عبر OTP واتساب فقط */}
                                         <div className="col-span-2 bg-blue-50 rounded-lg p-3 text-xs text-blue-700 flex items-center gap-2">
                                             <span>ℹ️</span>
-                                            <span>يدخل اللاعب عبر رمز واتساب على رقم الجوال المدخل — لا حاجة لكلمة مرور أو بريد إلكتروني.</span>
+                                            <span>يدخل اللاعب عبر رمز واتساب على رقم الجوال المدخل — أو يمكنه استخدام كلمة المرور لتسجيل الدخول.</span>
                                         </div>
 
                                     </div>

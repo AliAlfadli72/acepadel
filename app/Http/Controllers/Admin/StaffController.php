@@ -97,7 +97,7 @@ class StaffController extends Controller
             'email'          => 'nullable|required_without:phone|string|email|max:255|unique:users,email,'.$user->id,
             'phone'          => 'nullable|required_without:email|string|max:255|unique:users,phone,'.$user->id,
             'password'       => ['nullable', Rules\Password::defaults()],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
             'role'           => 'required|in:Receptionist,Staff,Manager,Coach,Pilates Admin,Pilates Coach',
             'position'       => 'nullable|string|max:255',
             'shift_name'     => 'nullable|string|max:255',

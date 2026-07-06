@@ -59,12 +59,13 @@ class PlayerController extends Controller
         $request->validate([
             'name'                   => 'required|string|max:255',
             'phone'                  => 'required|string|max:255|unique:users,phone',
-            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
+            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
             'points'                 => 'required|integer|min:0',
             'wallet_balance'         => 'required|numeric|min:0',
             'pilates_wallet_balance' => 'required|numeric|min:0',
             'matches_played'         => 'required|integer|min:0',
             'matches_won'            => 'required|integer|min:0',
+            'password'               => 'nullable|string|min:6',
         ], [
             'name.required'                   => 'الاسم الكامل مطلوب.',
             'name.max'                        => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
@@ -75,6 +76,7 @@ class PlayerController extends Controller
             'pilates_wallet_balance.required' => 'رصيد محفظة البيلاتس مطلوب.',
             'matches_played.required'         => 'عدد المباريات مطلوب.',
             'matches_won.required'            => 'عدد الانتصارات مطلوب.',
+            'password.min'                    => 'يجب ألا تقل كلمة المرور عن 6 أحرف.',
         ]);
 
         $imagePath = null;
@@ -82,12 +84,12 @@ class PlayerController extends Controller
             $imagePath = ImageUploadService::upload($request->file('image'), 'profiles');
         }
 
-        // المصادقة عبر واتساب OTP — لا كلمة سر ولا إيميل
+        // المصادقة عبر واتساب OTP أو كلمة المرور
         $user = User::create([
             'name'       => $request->name,
             'email'      => null,
             'phone'      => $request->phone,
-            'password'   => null, // يدخل عبر OTP
+            'password'   => $request->password ? Hash::make($request->password) : null,
             'image_path' => $imagePath,
         ]);
 
@@ -121,22 +123,28 @@ class PlayerController extends Controller
         $request->validate([
             'name'                   => 'required|string|max:255',
             'phone'                  => 'required|string|max:255|unique:users,phone,'.$user->id,
-            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
+            'image'                  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
             'points'                 => 'required|integer|min:0',
             'wallet_balance'         => 'required|numeric|min:0',
             'pilates_wallet_balance' => 'required|numeric|min:0',
             'matches_played'         => 'required|integer|min:0',
             'matches_won'            => 'required|integer|min:0',
+            'password'               => 'nullable|string|min:6',
         ], [
             'name.required'  => 'الاسم الكامل مطلوب.',
             'phone.required' => 'رقم الجوال مطلوب.',
             'phone.unique'   => 'رقم الجوال مستخدم مسبقاً.',
+            'password.min'   => 'يجب ألا تقل كلمة المرور عن 6 أحرف.',
         ]);
 
         $data = [
             'name'  => $request->name,
             'phone' => $request->phone,
         ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
 
         if ($request->hasFile('image')) {
             $data['image_path'] = ImageUploadService::upload(

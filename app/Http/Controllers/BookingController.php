@@ -136,6 +136,16 @@ public function store(Request $request)
             $request->coach_id
         );
 
+        event(new \App\Events\BookingStatusUpdated($booking->id, 'created'));
+
+        if ($user) {
+            try {
+                $user->notify(new \App\Notifications\BookingPendingNotification($booking));
+            } catch (\Exception $notificationException) {
+                \Illuminate\Support\Facades\Log::error('Web padel booking notification failed: ' . $notificationException->getMessage());
+            }
+        }
+
         return redirect()->back()->with([
             'success'    => 'تم إرسال طلب الحجز بنجاح. بانتظار موافقة الإدارة.',
             'booking_id' => $booking->id

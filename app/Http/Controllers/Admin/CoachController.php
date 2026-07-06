@@ -106,7 +106,7 @@ class CoachController extends Controller
             'email' => 'nullable|required_without:phone|string|email|max:255|unique:users,email,'.$coach->id,
             'phone' => 'nullable|required_without:email|string|max:20|unique:users,phone,'.$coach->id,
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'bio' => 'nullable|string',
             'specialty' => 'nullable|string|max:255',
             'hourly_rate' => 'nullable|numeric|min:0',
