@@ -38,16 +38,16 @@ class AdminBookingController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            // Coach → only bookings assigned to him
-            if ($user->hasRole('Coach')) {
+            // Coach → only bookings assigned to him (if not admin/receptionist)
+            if ($user->hasRole('Coach') && !$user->hasAnyRole(['Admin', 'admin', 'Manager', 'Receptionist'])) {
 
                 $coachProfileId = optional($user->coachProfile)->id;
 
                 $query->where('coach_profile_id', $coachProfileId);
             }
 
-            // Player → only his own bookings
-            elseif ($user->hasRole('Player')) {
+            // Player → only his own bookings (if not admin/receptionist)
+            elseif ($user->hasRole('Player') && !$user->hasAnyRole(['Admin', 'admin', 'Manager', 'Receptionist'])) {
 
                 $query->where('user_id', $user->id);
             }
