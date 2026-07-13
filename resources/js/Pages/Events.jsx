@@ -2,7 +2,7 @@ import AppLayout, { LangContext } from '../Layouts/AppLayout';
 import { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, Head } from "@inertiajs/react";
 import { resolveAsset } from '../utils';
 
 const fallbackImages = [
@@ -79,6 +79,12 @@ export default function Events({ events }) {
 
   return (
     <div className="bg-[#F8FAF8] text-[#222831] min-h-screen relative overflow-hidden" dir={isArabic ? "rtl" : "ltr"}>
+      <Head>
+        <title>{isArabic ? "البطولات والفعاليات | تحديات بادل دمشق" : "Tournaments & Events | Damascus Padel Challenges"}</title>
+        <meta name="description" content={isArabic 
+          ? "اكتشف البطولات والفعاليات الجارية والمقبلة في نادي آيس بادل دمشق. سجل في المنافسات، وكن جزءاً من الفعاليات الرياضية المميزة." 
+          : "Discover ongoing and upcoming tournaments and events at Ace Padel Club Damascus. Sign up for competitions and be part of outstanding sports events."} />
+      </Head>
       {/* Decorative background grid and light-mode glow */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
       <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#d6e02e]/6 blur-[120px] pointer-events-none" />
@@ -105,7 +111,7 @@ export default function Events({ events }) {
       {/* HERO SECTION */}
       <section className="relative overflow-hidden pt-32 pb-20 px-6 border-b border-gray-200 bg-white">
         <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none select-none font-display font-black text-[12rem] lg:text-[22rem] tracking-tighter leading-none text-stroke-sport-active uppercase">
-          {isArabic ? "أكاديمية" : "ACADEMY"}
+          {isArabic ? "كلوب" : "CLUB"}
         </div>
         <div className="max-w-7xl mx-auto flex flex-col items-start justify-center relative z-10 text-right rtl:text-right ltr:text-left">
           <motion.div 
@@ -122,8 +128,8 @@ export default function Events({ events }) {
             </h1>
             <p className={`text-gray-500 max-w-2xl font-medium text-lg leading-relaxed ${isArabic ? "font-arabic" : ""}`}>
               {isArabic
-                ? "تابع أحدث الفعاليات والبطولات في آيس بادل أكاديمي. سجل مشاركتك وكن جزءاً من التاريخ."
-                : "Follow the latest events and tournaments at Ace Padel Academy. Register and be part of history."}
+                ? "تابع أحدث الفعاليات والبطولات في آيس بادل كلوب. سجل مشاركتك وكن جزءاً من التاريخ."
+                : "Follow the latest events and tournaments at Ace Padel Club. Register and be part of history."}
             </p>
           </motion.div>
         </div>

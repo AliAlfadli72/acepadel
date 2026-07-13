@@ -208,7 +208,7 @@ export default function Index({ events, filters = {}, stats = {} }) {
                             <h2 className="text-lg font-extrabold text-slate-900">
                                 الفعاليات والبطولات
                             </h2>
-                            <p className="text-xs text-slate-500 mt-0.5">إدارة فعاليات الأكاديمية ومتابعة طلبات التسجيل</p>
+                            <p className="text-xs text-slate-500 mt-0.5">إدارة فعاليات النادي ومتابعة طلبات التسجيل</p>
                         </div>
                     </div>
                     {can('events.create') && (

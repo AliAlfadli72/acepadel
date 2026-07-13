@@ -2,7 +2,7 @@ import AppLayout, { LangContext } from '../Layouts/AppLayout';
 import { motion, AnimatePresence } from "framer-motion";
 import { useContext, useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { router, usePage } from "@inertiajs/react";
+import { router, usePage, Head } from "@inertiajs/react";
 import { resolveAsset } from '../utils';
 
 // Animated Counter Component using English/Latin numerals
@@ -314,6 +314,12 @@ export default function Players({
 
     return (
         <div className="bg-[#F8FAF8] text-[#1E293B] min-h-screen" dir={isArabic ? "rtl" : "ltr"}>
+            <Head>
+                <title>{isArabic ? "ترتيب اللاعبين | متصدري نادي آيس بادل دمشق" : "Players Ranking | Ace Padel Club Damascus Leaderboard"}</title>
+                <meta name="description" content={isArabic 
+                    ? "شاهد جدول ترتيب متصدري لاعبي البادل في نادي آيس بادل دمشق. تتبع النقاط، المراتب، والإحصائيات الحية لأبطالنا." 
+                    : "Check the players leaderboard and rankings at Ace Padel Club Damascus. Track points, ranks, and live stats of our champions."} />
+            </Head>
             {/* HERO SECTION */}
             <section className="bg-gradient-to-b from-white to-[#F8FAF8] border-b border-slate-100 pt-32 pb-12 px-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000001_1px,transparent_1px),linear-gradient(to_bottom,#00000001_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
@@ -348,7 +354,7 @@ export default function Players({
                                 {isArabic ? "أفضل 3 لاعبين" : "Top 3 Players"}
                             </h2>
                             <p className="text-slate-400 font-medium text-sm mt-1">
-                                {isArabic ? "أبطال الأكاديمية المتصدرين للأسبوع" : "The leading champions of the academy this week"}
+                                {isArabic ? "أبطال النادي المتصدرين للأسبوع" : "The leading champions of the club this week"}
                             </p>
                         </div>
 

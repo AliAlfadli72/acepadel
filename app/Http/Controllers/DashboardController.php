@@ -668,6 +668,44 @@ public function index()
                     ];
                 });
 
+        // حساب إشغال الملاعب الفعلي للبادل
+        $stats['court_occupancy'] = \App\Models\Court::where('is_active', true)
+            ->get()
+            ->map(function ($court) {
+                $todayBookingsCount = \App\Models\Booking::where('court_id', $court->id)
+                    ->whereDate('start_time', today())
+                    ->where('status', '!=', 'cancelled')
+                    ->count();
+
+                // نفترض أن الحد الأقصى لساعات الإشغال اليومي هو 12 ساعة (حجز)
+                $percentage = min(100, (int)round(($todayBookingsCount / 12) * 100));
+
+                $bookingsLabel = $todayBookingsCount === 1 
+                    ? 'حجز واحد اليوم' 
+                    : ($todayBookingsCount === 2 
+                        ? 'حجزان اليوم' 
+                        : ($todayBookingsCount > 2 && $todayBookingsCount <= 10 
+                            ? "$todayBookingsCount حجوزات اليوم" 
+                            : "$todayBookingsCount حجز اليوم"));
+
+                return [
+                    'name' => $court->name,
+                    'percentage' => $percentage,
+                    'bookings' => $bookingsLabel,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        $totalCourtsCount = \App\Models\Court::where('is_active', true)->count();
+        $totalTodayBookingsCount = \App\Models\Booking::whereDate('start_time', today())
+            ->where('status', '!=', 'cancelled')
+            ->count();
+
+        $stats['court_occupancy_avg'] = $totalCourtsCount > 0 
+            ? min(100, (int)round(($totalTodayBookingsCount / ($totalCourtsCount * 12)) * 100)) 
+            : 0;
+
     } else {
 
         /*
@@ -676,98 +714,178 @@ public function index()
         |--------------------------------------------------------------------------
         */
 
-        $stats['total_bookings'] =
-            $user
-                ? $user->bookings()->count()
-                : 0;
+        $stats['wallet_balance'] = ($user && $user->wallet) ? (float)$user->wallet->balance : 0.0;
 
-        $stats['wallet_balance'] =
-            ($user && $user->wallet)
-                ? $user->wallet->balance
-                : 0;
+        // Active Pilates packages with remaining classes
+        $stats['active_packages'] = \App\Models\UserPilatesPackage::with('pilatesPackage')
+            ->where('user_id', $user->id)
+            ->active()
+            ->get()
+            ->map(function ($upp) {
+                return [
+                    'package_name' => $upp->pilatesPackage?->name ?? 'باقة بيلاتس',
+                    'remaining_classes' => $upp->remaining_classes,
+                    'expires_at' => $upp->expires_at ? $upp->expires_at->format('Y-m-d') : null,
+                ];
+            })->toArray();
 
-        $stats['upcoming_matches'] =
-            $user
-                ? $user->bookings()
-                    ->whereIn('status', [
-                        'approved',
-                        'pending',
-                    ])
-                    ->where(
-                        'start_time',
-                        '>',
-                        now()
-                    )
-                    ->count()
-                : 0;
+        // Upcoming Padel Bookings
+        $upcomingPadel = \App\Models\Booking::with('court')
+            ->where('user_id', $user->id)
+            ->where('start_time', '>=', now())
+            ->whereIn('status', ['approved', 'pending'])
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'type' => 'padel',
+                    'title' => ($b->court?->name ?? 'بادل') . ' (بادل)',
+                    'start_time' => $b->start_time,
+                    'end_time' => $b->end_time,
+                    'status' => $b->status,
+                ];
+            });
 
+        // Upcoming Pilates Bookings
+        $upcomingPilates = \App\Models\PilatesBooking::with('pilatesSession')
+            ->where('user_id', $user->id)
+            ->whereHas('pilatesSession', function ($q) {
+                $q->where('session_date', '>=', now()->toDateString());
+            })
+            ->whereIn('status', ['confirmed', 'pending'])
+            ->get()
+            ->map(function ($pb) {
+                $session = $pb->pilatesSession;
+                $date = '';
+                if ($session->session_date) {
+                    $date = is_string($session->session_date) 
+                        ? substr($session->session_date, 0, 10) 
+                        : $session->session_date->format('Y-m-d');
+                }
+                $startTime = $session->start_time ? "$date {$session->start_time}" : '';
+                $endTime = $session->end_time ? "$date {$session->end_time}" : '';
+                
+                $status = $pb->status;
+                if ($status === 'confirmed') {
+                    $status = 'approved';
+                }
+                
+                return [
+                    'id' => $pb->id,
+                    'type' => 'pilates',
+                    'title' => ($session->title ?? 'جلسة بيلاتس') . ' (بيلاتس)',
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'status' => $status,
+                ];
+            });
+
+        // Merged upcoming bookings
+        $upcomingBookings = $upcomingPadel->concat($upcomingPilates)
+            ->sortBy('start_time')
+            ->values();
+
+        $stats['upcoming_bookings'] = $upcomingBookings->take(5)->toArray();
+        $stats['upcoming_matches'] = $upcomingBookings->count();
+
+        // Past Bookings (Recent Activities)
+        $pastPadel = \App\Models\Booking::with('court')
+            ->where('user_id', $user->id)
+            ->where('start_time', '<', now())
+            ->orderBy('start_time', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'type' => 'padel',
+                    'title' => ($b->court?->name ?? 'بادل') . ' (بادل)',
+                    'start_time' => $b->start_time,
+                    'end_time' => $b->end_time,
+                    'status' => $b->status,
+                    'created_at' => $b->created_at,
+                ];
+            });
+
+        $pastPilates = \App\Models\PilatesBooking::with('pilatesSession')
+            ->where('user_id', $user->id)
+            ->whereHas('pilatesSession', function ($q) {
+                $q->where('session_date', '<', now()->toDateString());
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($pb) {
+                $session = $pb->pilatesSession;
+                $date = '';
+                if ($session->session_date) {
+                    $date = is_string($session->session_date) 
+                        ? substr($session->session_date, 0, 10) 
+                        : $session->session_date->format('Y-m-d');
+                }
+                $startTime = $session->start_time ? "$date {$session->start_time}" : '';
+                $endTime = $session->end_time ? "$date {$session->end_time}" : '';
+                
+                $status = $pb->status;
+                if ($status === 'confirmed') {
+                    $status = 'approved';
+                }
+                
+                return [
+                    'id' => $pb->id,
+                    'type' => 'pilates',
+                    'title' => ($session->title ?? 'جلسة بيلاتس') . ' (بيلاتس)',
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'status' => $status,
+                    'created_at' => $pb->created_at,
+                ];
+            });
+
+        $recentActivities = $pastPadel->concat($pastPilates)
+            ->sortByDesc('created_at')
+            ->values();
+
+        $stats['recent_activity'] = $recentActivities->take(5)->map(function ($activity) {
+            return [
+                'id' => $activity['id'],
+                'title' => $activity['title'],
+                'time' => $activity['created_at'] ? $activity['created_at']->locale('ar')->diffForHumans() : '',
+                'status' => $activity['status'],
+            ];
+        })->toArray();
+
+        // Total bookings count (Padel + Pilates)
+        $totalPadel = \App\Models\Booking::where('user_id', $user->id)->count();
+        $totalPilates = \App\Models\PilatesBooking::where('user_id', $user->id)->count();
+        $stats['total_bookings'] = $totalPadel + $totalPilates;
+
+        // Custom chart data: show Padel vs Pilates bookings count in the last 7 days
         $bookingsData = [];
-
         foreach ($last7Days as $date) {
+            $dailyPadel = \App\Models\Booking::where('user_id', $user->id)
+                ->whereDate('created_at', $date)
+                ->count();
+            
+            $dailyPilates = \App\Models\PilatesBooking::where('user_id', $user->id)
+                ->whereDate('created_at', $date)
+                ->count();
 
-            $dailyBookingsCount =
-                $user
-                    ? $user->bookings()
-                        ->whereDate(
-                            'created_at',
-                            $date
-                        )
-                        ->count()
-                    : 0;
-
-            $dayName =
-                \Carbon\Carbon::parse($date)
-                    ->locale('ar')
-                    ->translatedFormat('D');
+            $dayName = \Carbon\Carbon::parse($date)
+                ->locale('ar')
+                ->translatedFormat('D');
 
             $bookingsData[] = [
-
                 'date' => $dayName,
-
-                'count' => $dailyBookingsCount,
+                'count' => $dailyPadel + $dailyPilates,
             ];
         }
-
-        $stats['bookings_data'] =
-            $bookingsData;
-
-        $stats['recent_activity'] =
-            clone collect(
-
-                $user
-
-                ? $user->bookings()
-                    ->latest()
-                    ->take(5)
-                    ->get()
-                    ->map(function ($b) {
-
-                        return [
-
-                            'id' => $b->id,
-
-                            'title' =>
-                                'حجز ملعب '
-                                .
-                                $b->court_id,
-
-                            'time' =>
-                                $b->created_at
-                                    ->locale('ar')
-                                    ->diffForHumans(),
-
-                            'status' =>
-                                $b->status,
-                        ];
-                    })
-
-                : []
-            );
+        $stats['bookings_data'] = $bookingsData;
     }
 
     return Inertia::render('Dashboard', [
-
         'stats' => $stats,
+        'isPlayer' => $user->hasRole('Player') && !$user->hasAnyRole(['Admin', 'Manager', 'Receptionist', 'Pilates Admin']),
     ]);
 }
 

@@ -49,7 +49,7 @@ export default function Footer({ lang }) {
             </div>
             <div className="flex flex-col leading-none">
               <span className={`font-display font-black text-2xl tracking-tight text-white ${isArabic ? "font-arabic" : ""}`}>
-                {isArabic ? "آيس بادل أكاديمي" : "ACE PADEL ACADEMY"}
+                {isArabic ? "آيس بادل كلوب" : "ACE PADEL CLUB"}
               </span>
               <span className="text-[9px] uppercase tracking-[0.25em] text-white/50">By JYM</span>
             </div>
@@ -85,7 +85,7 @@ export default function Footer({ lang }) {
         <div>
           <h3 className={`text-white font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2 ${isArabic ? "font-arabic" : ""}`}>
             <span className="w-4 h-[2px] bg-accent rounded-full"></span>
-            {isArabic ? "تصفح الأكاديمية" : "Explore"}
+            {isArabic ? "تصفح النادي" : "Explore"}
           </h3>
           <ul className="space-y-3">
             {links.map((link) => (
@@ -121,7 +121,7 @@ export default function Footer({ lang }) {
               <div>
                 <p className={`text-[10px] text-white/40 uppercase mb-0.5 ${isArabic ? "font-arabic" : ""}`}>{isArabic ? "الموقع" : "Location"}</p>
                 <p className={`text-white/70 text-sm ${isArabic ? "font-arabic" : ""}`}>
-                  {isArabic ? "دمشق - أوتوستراد الفيحاء" : "Damascus, AlFayha Highway"}
+                  {isArabic ? "دمشق - أوتوستراد المزة - نادي الوحدة الرياضي" : "Damascus, Mezzeh Highway, Al-Wahda Sports Club"}
                 </p>
               </div>
             </li>
@@ -142,7 +142,7 @@ export default function Footer({ lang }) {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className={`text-white/30 text-[11px] font-mono uppercase tracking-widest ${isArabic ? "font-arabic" : ""}`}>
-            © 2026 ACE PADEL ACADEMY — ALL RIGHTS RESERVED
+            © 2026 ACE PADEL CLUB — ALL RIGHTS RESERVED
           </p>
           <div className="flex gap-6">
             {[

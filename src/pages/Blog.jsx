@@ -33,7 +33,7 @@ const POSTS = [
   },
   {
     id: 4,
-    category: { ar: "الأكاديمية", en: "Academy" },
+    category: { ar: "النادي", en: "Club" },
     title: { ar: "Ace Juniors: كيف نبني أبطال المستقبل في دمشق", en: "Ace Juniors: How We Build Tomorrow's Champions in Damascus" },
     excerpt: { ar: "برنامج Ace Juniors ليس مجرد تدريب، بل هو منهج متكامل لبناء الشخصية والمهارات الرياضية معاً.", en: "Ace Juniors isn't just training—it's a complete curriculum for building character and athletic skills together." },
     readTime: { ar: "8 دقائق", en: "8 min read" },
@@ -53,7 +53,7 @@ const POSTS = [
     id: 6,
     category: { ar: "نمط الحياة", en: "Lifestyle" },
     title: { ar: "ثقافة البادل: أكثر من مجرد رياضة في سوريا", en: "Padel Culture: More Than Just a Sport in Syria" },
-    excerpt: { ar: "رياضة البادل تتحول إلى ظاهرة اجتماعية في دمشق. كيف تساهم آيس بادل أكاديمي في هذا التحول؟", en: "Padel is becoming a social phenomenon in Damascus. How is Ace Padel Academy contributing to this transformation?" },
+    excerpt: { ar: "رياضة البادل تتحول إلى ظاهرة اجتماعية في دمشق. كيف تساهم آيس بادل كلوب في هذا التحول؟", en: "Padel is becoming a social phenomenon in Damascus. How is Ace Padel Club contributing to this transformation?" },
     readTime: { ar: "5 دقائق", en: "5 min read" },
     date: { ar: "22 مارس 2026", en: "Mar 22, 2026" },
     icon: "mdi:account-group",
@@ -65,7 +65,7 @@ const CATS = [
   { key: "Padel Techniques", ar: "تقنيات البادل",  en: "Padel Techniques" },
   { key: "Health Tips",      ar: "نصائح صحية",     en: "Health Tips" },
   { key: "Pilates",          ar: "البيلاتس",       en: "Pilates" },
-  { key: "Academy",          ar: "الأكاديمية",     en: "Academy" },
+  { key: "Club",              ar: "النادي",         en: "Club" },
   { key: "Lifestyle",        ar: "نمط الحياة",     en: "Lifestyle" },
 ];
 

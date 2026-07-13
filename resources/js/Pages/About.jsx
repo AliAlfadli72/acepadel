@@ -2,6 +2,7 @@ import AppLayout, { LangContext } from '../Layouts/AppLayout';
 import { useContext } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
+import { Head } from "@inertiajs/react";
 
 export default function About() {
   const { lang } = useContext(LangContext);
@@ -30,6 +31,12 @@ export default function About() {
 
   return (
     <div className="bg-white" dir={isArabic ? "rtl" : "ltr"}>
+      <Head>
+        <title>{isArabic ? "من نحن | قصة نادي آيس بادل دمشق" : "About Us | The Ace Padel Club Damascus Story"}</title>
+        <meta name="description" content={isArabic 
+          ? "تعرف على قصة نادي آيس بادل دمشق، أول نادي معتمد لملاعب البادل في سوريا، ورؤيتنا لتعزيز ثقافة هذه الرياضة ونمط الحياة الصحي." 
+          : "Learn about the Ace Padel Club Damascus story, the first certified padel club in Syria, and our vision to promote padel sport and wellness."} />
+      </Head>
       {/* HERO SECTION */}
       <section className="relative pt-32 pb-20 px-6 bg-[#F8FAF8] border-b border-gray-200 overflow-hidden">
         <div className="absolute inset-0 opacity-5">
@@ -46,7 +53,7 @@ export default function About() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold tracking-widest uppercase mb-6">
               <Icon icon="mdi:information-variant" className="w-4 h-4" />
-              {isArabic ? "آيس بادل أكاديمي" : "Ace Padel Academy"}
+              {isArabic ? "نادي آيس بادل" : "Ace Padel Club"}
             </span>
             <h1 className={`font-display font-black text-primary mb-6 ${isArabic ? "font-arabic text-4xl md:text-5xl lg:text-6xl" : "text-5xl md:text-6xl lg:text-7xl"}`}>
               {isArabic ? "نصنع أبطالاً" : "Building Champions"}
@@ -74,8 +81,8 @@ export default function About() {
             </h2>
             <p className={`text-gray-600 leading-relaxed text-lg mb-8 ${isArabic ? "font-arabic" : ""}`}>
               {isArabic
-                ? "نهدف إلى نشر ثقافة البادل في سوريا والمنطقة، وبناء مجتمع رياضي متكامل يجمع بين الصحة، الاحتراف، والمنافسة الشريفة. نسعى لأن نكون الأكاديمية الرائدة التي تخرّج أبطالاً يمثلوننا في المحافل الدولية."
-                : "We aim to spread the culture of padel in Syria and the region, building a comprehensive sports community that combines health, professionalism, and fair competition. We strive to be the leading academy that graduates champions representing us in international arenas."}
+                ? "نهدف إلى نشر ثقافة البادل في سوريا والمنطقة، وبناء مجتمع رياضي متكامل يجمع بين الصحة، الاحتراف، والمنافسة الشريفة. نسعى لأن نكون النادي الرائد الذي يخرّج أبطالاً يمثلوننا في المحافل الدولية."
+                : "We aim to spread the culture of padel in Syria and the region, building a comprehensive sports community that combines health, professionalism, and fair competition. We strive to be the leading club that graduates champions representing us in international arenas."}
             </p>
             <div className="flex gap-4">
               <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex-1">

@@ -44,8 +44,8 @@ export default function Privacy() {
       icon: "mdi:handshake-outline",
       title: { ar: "5. مشاركة البيانات مع أطراف ثالثة", en: "5. Third-Party Sharing" },
       content: {
-        ar: "أكاديمية آيس بادل لا تبيع ولا تتاجر ولا تشارك بياناتك الشخصية مع أي جهات خارجية أو أطراف ثالثة لأغراض تسويقية. يتم استخدامها حصرياً لتشغيل التطبيق والموقع وخدمات الأكاديمية.",
-        en: "Ace Padel Academy does not sell, trade, or share your personal data with any external third parties for marketing purposes. Your data is used exclusively to operate the application, website, and academy booking services."
+        ar: "نادي آيس بادل لا يبيع ولا يتاجر ولا يشارك بياناتك الشخصية مع أي جهات خارجية أو أطراف ثالثة لأغراض تسويقية. يتم استخدامها حصرياً لتشغيل التطبيق والموقع وخدمات النادي.",
+        en: "Ace Padel Club does not sell, trade, or share your personal data with any external third parties for marketing purposes. Your data is used exclusively to operate the application, website, and club booking services."
       }
     }
   ];

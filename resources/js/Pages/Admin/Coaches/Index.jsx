@@ -239,7 +239,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h3 className="text-xl font-bold text-primary">المدربين المسجلين</h3>
-                            <p className="text-gray-500 text-sm">إدارة حسابات المدربين وتحليل أدائهم في الأكاديمية</p>
+                            <p className="text-gray-500 text-sm">إدارة حسابات المدربين وتحليل أدائهم في النادي</p>
                         </div>
                         {can('coaches.create') && (
                         <button 
@@ -710,7 +710,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                                             <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                                 <Icon icon="mdi:calendar-clock" className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                                                 <p className="text-sm text-gray-600 font-medium">لم يتم تحديد أوقات عمل محددة</p>
-                                                <p className="text-xs text-gray-500">سيكون المدرب متاحاً في كافة أوقات عمل الأكاديمية (أو حسب أوقات الملاعب).</p>
+                                                <p className="text-xs text-gray-500">سيكون المدرب متاحاً في كافة أوقات عمل النادي (أو حسب أوقات الملاعب).</p>
                                             </div>
                                         )}
                                     </div>

@@ -6,31 +6,50 @@ const errors = {
         title: 'يرجى تسجيل الدخول',
         description: 'يجب تسجيل الدخول للوصول إلى هذه الصفحة.',
         icon: 'mdi:account-lock',
+        bg: 'bg-blue-50',
+        color: 'text-blue-600',
+    },
+    403: {
+        title: 'غير مصرح لك بالوصول',
+        description: 'عذراً، ليس لديك الصلاحيات الكافية لعرض هذه الصفحة.',
+        icon: 'mdi:shield-alert',
+        bg: 'bg-amber-50',
+        color: 'text-amber-600',
     },
     404: {
         title: 'الصفحة غير موجودة',
-        description: 'عذراً، الصفحة التي تبحث عنها غير موجودة.',
+        description: 'عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.',
         icon: 'mdi:file-search',
+        bg: 'bg-rose-50',
+        color: 'text-rose-600',
     },
     419: {
         title: 'انتهت صلاحية الجلسة',
         description: 'يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.',
         icon: 'mdi:clock-alert',
+        bg: 'bg-orange-50',
+        color: 'text-orange-600',
     },
     429: {
         title: 'طلبات كثيرة جداً',
         description: 'يرجى الانتظار قليلاً قبل المحاولة مرة أخرى.',
         icon: 'mdi:speedometer',
+        bg: 'bg-purple-50',
+        color: 'text-purple-600',
     },
     500: {
         title: 'خطأ في الخادم',
-        description: 'حدث خطأ غير متوقع.',
+        description: 'حدث خطأ غير متوقع في خوادمنا. نحن نعمل على إصلاحه حالياً.',
         icon: 'mdi:server-off',
+        bg: 'bg-red-50',
+        color: 'text-red-600',
     },
     503: {
         title: 'النظام تحت الصيانة',
-        description: 'نقوم حالياً بإجراء بعض التحديثات.',
+        description: 'نقوم حالياً بإجراء بعض التحديثات لتحسين الخدمة. سنعود قريباً.',
         icon: 'mdi:tools',
+        bg: 'bg-emerald-50',
+        color: 'text-emerald-600',
     },
 };
 
@@ -61,7 +80,7 @@ export default function Error({ status }) {
                                 </h1>
 
                                 <p className="text-white/80 mt-2 font-medium">
-                                    Ace Padel Academy
+                                    Ace Padel Club
                                 </p>
                             </div>
                         </div>
@@ -115,7 +134,7 @@ export default function Error({ status }) {
 
                     {/* Footer */}
                     <div className="mt-4 text-center text-xs text-gray-400">
-                        Ace Padel Academy © {new Date().getFullYear()}
+                        Ace Padel Club © {new Date().getFullYear()}
                     </div>
 
                 </div>

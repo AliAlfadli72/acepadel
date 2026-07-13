@@ -554,7 +554,7 @@ const submitExpense = (e) => {
                 </h2>
 
                 <p className="text-xs text-slate-500 mt-0.5">
-                    إدارة جميع مصروفات الأكاديمية
+                    إدارة جميع مصروفات النادي
                 </p>
             </div>
         </div>

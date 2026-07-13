@@ -27,8 +27,8 @@ export default function Contact({ lang }) {
       icon: "mdi:map-marker",
       title: { ar: "الموقع", en: "Location" },
       lines: [
-        { label: { ar: "العنوان", en: "Address" }, val: isArabic ? "دمشق - أوتوستراد الفيحاء" : "Damascus — AlFayha Highway", href: "#map" },
-        { label: { ar: "المجمع", en: "Complex" }, val: isArabic ? "الاتحاد الرياضي العسكري" : "Military Sports Union", href: "#map" },
+        { label: { ar: "العنوان", en: "Address" }, val: isArabic ? "دمشق - أوتوستراد المزة" : "Damascus — Mezzeh Highway", href: "#map" },
+        { label: { ar: "النادي", en: "Club" }, val: isArabic ? "نادي الوحدة الرياضي" : "Al-Wahda Sports Club", href: "#map" },
       ],
       color: "bg-accent/20 text-primary",
     },
@@ -67,8 +67,8 @@ export default function Contact({ lang }) {
             </h1>
             <p className={`text-gray-500 max-w-xl mx-auto ${isArabic ? "font-arabic" : ""}`}>
               {isArabic
-                ? "سواء كانت لديك استفسارات عن الحجز، الأكاديمية أو أي خدمة أخرى — فريقنا جاهز للمساعدة."
-                : "Whether you have questions about booking, the academy, or any service — our team is ready to help."}
+                ? "سواء كانت لديك استفسارات عن الحجز، النادي أو أي خدمة أخرى — فريقنا جاهز للمساعدة."
+                : "Whether you have questions about booking, the club, or any service — our team is ready to help."}
             </p>
           </motion.div>
         </div>
@@ -122,14 +122,14 @@ export default function Contact({ lang }) {
             </h2>
             <div id="map" className="w-full h-80 rounded-3xl overflow-hidden border border-gray-200 shadow-card" style={{backgroundColor:'#E8F0E8'}}>
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3326.5!2d36.28!3d33.5!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzPCsDMwJzAwLjAiTiAzNsKwMTYnNDguMCJF!5e0!3m2!1sen!2ssy!4v1713531000000"
+                src="https://maps.google.com/maps?q=33.529249,36.2966476&z=17&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0, filter: "saturate(0.8) contrast(1.1)" }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Ace Padel Academy Location"
+                title="Ace Padel Club Location"
               />
             </div>
 
@@ -140,10 +140,10 @@ export default function Contact({ lang }) {
               </div>
               <div>
                 <p className={`font-bold text-gray-900 text-sm ${isArabic ? "font-arabic" : ""}`}>
-                  {isArabic ? "أوتوستراد الفيحاء، الاتحاد الرياضي العسكري، دمشق" : "AlFayha Highway, Military Sports Union, Damascus"}
+                  {isArabic ? "دمشق، أوتوستراد المزة، نادي الوحدة الرياضي" : "Damascus, Mezzeh Highway, Al-Wahda Sports Club"}
                 </p>
                 <a
-                  href="https://maps.google.com"
+                  href="https://www.google.com/maps/place//data=!4m2!3m1!1s0x1518e7001fffdb7d:0xef61ec4bc8d792c6?sa=X&ved=1t:8290&ictx=111"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`text-primary text-xs font-semibold hover:underline ${isArabic ? "font-arabic" : ""}`}

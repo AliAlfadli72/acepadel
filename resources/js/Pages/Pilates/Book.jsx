@@ -299,7 +299,7 @@ export default function Book({ sessions = [], walletBalance = 0, activePackages 
               {/* Main image container */}
               <div className="relative rounded-[40px] overflow-hidden border-8 border-white shadow-xl aspect-[4/3] lg:aspect-[1.1] bg-white">
                 <img 
-                  src={resolveAsset('/pilates-studio.png')} 
+                  src={resolveAsset('/pilates-studio.webp')} 
                   alt="The Reformer Room Pilates Studio" 
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" 
                 />
@@ -944,7 +944,7 @@ export default function Book({ sessions = [], walletBalance = 0, activePackages 
               
               <p className={`text-xs text-gray-500 mb-6.5 leading-relaxed ${isAr ? "font-arabic" : ""}`}>
                 {isAr 
-                  ? "لحجز حصص البيلاتس والتحقق من حسابك ومحفظتك، يجب تسجيل الدخول أو إنشاء حساب جديد على أكاديميتنا." 
+                  ? "لحجز حصص البيلاتس والتحقق من حسابك ومحفظتك، يجب تسجيل الدخول أو إنشاء حساب جديد في نادينا." 
                   : "To book a wellness session and track payments, you must have an active member account. Please log in to proceed."}
               </p>
 

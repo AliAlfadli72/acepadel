@@ -47,7 +47,7 @@ export default function Navbar({ lang, setLang }) {
               <span className={`font-display font-black text-xl tracking-tight text-primary ${isArabic ? "font-arabic" : ""}`}>
                 {isArabic ? "آيس بادل" : "ACE PADEL"}
               </span>
-              <span className="text-[9px] uppercase tracking-[0.25em] text-gray-500">Academy</span>
+              <span className="text-[9px] uppercase tracking-[0.25em] text-gray-500">Club</span>
             </div>
           </Link>
 

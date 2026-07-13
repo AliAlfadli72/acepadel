@@ -118,6 +118,7 @@ export default function AdminLayout({ header, children }) {
         ((roles.includes('Pilates Admin') || roles.includes('Pilates Coach')) && !roles.includes('Admin') && !roles.includes('Manager') && !roles.includes('Receptionist'));
 
     const pendingCount = (pending_bookings?.padel || 0) + (pending_bookings?.pilates || 0);
+    const canViewNotifications = roles.includes('Admin') || roles.includes('admin') || roles.includes('Manager') || roles.includes('Receptionist') || roles.includes('Pilates Admin');
 
     const menuItems = [
 
@@ -282,18 +283,20 @@ export default function AdminLayout({ header, children }) {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        <Link 
-                            href={route('admin.notifications.index')}
-                            className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors relative"
-                            title="الإشعارات"
-                        >
-                            <Icon icon="mdi:bell-outline" className="w-5 h-5" />
-                            {pendingCount > 0 && (
-                                <span className="absolute -top-1 -left-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-bounce shadow-sm">
-                                    {pendingCount}
-                                </span>
-                            )}
-                        </Link>
+                        {canViewNotifications && (
+                            <Link 
+                                href={route('admin.notifications.index')}
+                                className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors relative"
+                                title="الإشعارات"
+                            >
+                                <Icon icon="mdi:bell-outline" className="w-5 h-5" />
+                                {pendingCount > 0 && (
+                                    <span className="absolute -top-1 -left-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-bounce shadow-sm">
+                                        {pendingCount}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
                     </div>
                 </header>
 {!isOnline && (

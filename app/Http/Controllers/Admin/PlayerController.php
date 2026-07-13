@@ -32,7 +32,7 @@ class PlayerController extends Controller
                    ->orWhere('email', 'like', "%{$search}%")
             ))
             ->when($rank, fn($q) => $q->whereHas('playerProfile', fn($qp) => $qp->where('rank_level', $rank)))
-            ->with(['playerProfile', 'wallet'])
+            ->with(['playerProfile', 'wallet', 'roles'])
             ->paginate(10)
             ->withQueryString();
 
@@ -119,6 +119,16 @@ class PlayerController extends Controller
     public function update(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+
+        // منع رتبة الموظف من تعديل الرتب الأعلى منه
+        $currentUser = auth()->user();
+        if ($currentUser->hasRole('Receptionist') && $user->hasAnyRole(['Admin', 'admin', 'Manager', 'Receptionist'])) {
+            return back()->with('error', 'لا يمكنك تعديل حسابات المدراء أو موظفي الاستقبال الآخرين.');
+        }
+
+        if ($currentUser->hasRole('Manager') && $user->hasAnyRole(['Admin', 'admin'])) {
+            return back()->with('error', 'لا يمكنك تعديل حسابات مسؤولي النظام.');
+        }
 
         $request->validate([
             'name'                   => 'required|string|max:255',
@@ -219,6 +229,16 @@ class PlayerController extends Controller
     public function destroy(string $id)
     {
         $user = User::findOrFail($id);
+
+        // منع رتبة الموظف من تعديل الرتب الأعلى منه
+        $currentUser = auth()->user();
+        if ($currentUser->hasRole('Receptionist') && $user->hasAnyRole(['Admin', 'admin', 'Manager', 'Receptionist'])) {
+            return back()->with('error', 'لا يمكنك حذف حسابات المدراء أو موظفي الاستقبال الآخرين.');
+        }
+
+        if ($currentUser->hasRole('Manager') && $user->hasAnyRole(['Admin', 'admin'])) {
+            return back()->with('error', 'لا يمكنك حذف حسابات مسؤولي النظام.');
+        }
 
         // Prevent deleting yourself
         if ($user->id === auth()->id()) {

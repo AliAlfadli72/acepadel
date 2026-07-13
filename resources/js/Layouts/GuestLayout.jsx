@@ -5,7 +5,7 @@ export default function GuestLayout({ children, lang = 'ar', setLang }) {
     const { icon_url } = usePage().props;
 
     const t = {
-        location:  isAr ? 'دمشق — أوتوستراد الفيحاء' : 'Damascus — AlFayha Highway',
+        location:  isAr ? 'دمشق — أوتوستراد المزة - نادي الوحدة الرياضي' : 'Damascus — Mezzeh Highway, Al-Wahda Sports Club',
         slogan1:   isAr ? 'العَب.'    : 'PLAY.',
         slogan2:   isAr ? 'تَدرَّب.'  : 'TRAIN.',
         slogan3:   isAr ? 'تَفَوَّق.' : 'EXCEL.',
@@ -16,7 +16,7 @@ export default function GuestLayout({ children, lang = 'ar', setLang }) {
         members:   isAr ? 'عضو'    : 'Members',
         certified: isAr ? 'معتمد'  : 'Certified',
         openDaily: isAr ? 'مفتوح يومياً · 7:00 ص — 2:00 ص' : 'Open Daily · 7:00 AM — 2:00 AM',
-        brandName: isAr ? 'آيس بادل أكاديمي' : 'ACE PADEL ACADEMY',
+        brandName: isAr ? 'نادي آيس بادل' : 'ACE PADEL CLUB',
         toggleBtn: isAr ? 'English' : 'العربية',
     };
 

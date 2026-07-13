@@ -44,7 +44,7 @@ const SERVICES = [
     id: "academy",
     icon: "mdi:whistle",
     tag: { ar: "تدريب", en: "Training" },
-    title: { ar: "أكاديمية آيس للتدريب", en: "Ace Training Academy" },
+    title: { ar: "نادي آيس للتدريب", en: "Ace Training Club" },
     description: {
       ar: "برامج تدريبية متخصصة تناسب كل المستويات، من Ace Juniors للناشئين إلى دروس متقدمة للمحترفين، بإشراف مدربين معتمدين دولياً.",
       en: "Specialized training programs for all levels, from Ace Juniors for beginners to advanced lessons for professionals, led by internationally certified coaches.",

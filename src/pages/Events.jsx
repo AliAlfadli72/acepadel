@@ -14,8 +14,8 @@ const EVENTS = [
     prize: { ar: "جائزة مالية", en: "Prize Money" },
     participants: 64,
     desc: {
-      ar: "البطولة السنوية الكبرى لآيس بادل أكاديمي. منافسات في فئات متعددة (رجال، سيدات، مزدوج) بمشاركة أبرز اللاعبين في سوريا.",
-      en: "The grand annual championship of Ace Padel Academy. Competition across multiple categories with Syria's top players."
+      ar: "البطولة السنوية الكبرى لآيس بادل كلوب. منافسات في فئات متعددة (رجال، سيدات، مزدوج) بمشاركة أبرز اللاعبين في سوريا.",
+      en: "The grand annual championship of Ace Padel Club. Competition across multiple categories with Syria's top players."
     },
     status: "upcoming",
     color: "bg-primary text-white",
@@ -100,8 +100,8 @@ export default function Events({ lang }) {
             </h1>
             <p className={`text-gray-500 max-w-2xl mx-auto ${isArabic ? "font-arabic" : ""}`}>
               {isArabic
-                ? "تابع أحدث الفعاليات والبطولات في آيس بادل أكاديمي. سجل مشاركتك وكن جزءاً من التاريخ."
-                : "Follow the latest events and tournaments at Ace Padel Academy. Register and be part of history."}
+                ? "تابع أحدث الفعاليات والبطولات في آيس بادل كلوب. سجل مشاركتك وكن جزءاً من التاريخ."
+                : "Follow the latest events and tournaments at Ace Padel Club. Register and be part of history."}
             </p>
           </motion.div>
         </div>

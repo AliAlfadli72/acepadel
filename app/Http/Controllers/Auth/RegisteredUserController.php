@@ -31,7 +31,14 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $loginIdentifier = strtolower($request->email);
+        $emailInput = $request->input('email');
+        if ($emailInput && !filter_var($emailInput, FILTER_VALIDATE_EMAIL)) {
+            $request->merge([
+                'email' => User::normalizePhone($emailInput)
+            ]);
+        }
+
+        $loginIdentifier = $request->email;
         $isEmail = filter_var($loginIdentifier, FILTER_VALIDATE_EMAIL);
         $column = $isEmail ? 'email' : 'phone';
 

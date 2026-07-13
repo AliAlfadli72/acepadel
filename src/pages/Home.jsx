@@ -153,7 +153,7 @@ export default function Home({ lang }) {
     {
       icon: "mdi:whistle",
       tag: isArabic ? "تدريب" : "Training",
-      title: isArabic ? "أكاديمية آيس" : "Ace Academy",
+      title: isArabic ? "نادي آيس" : "Ace Club",
       desc: isArabic
         ? "برامج Ace Juniors للناشئين، دروس للمحترفين، وحصص جماعية بإشراف مدربين معتمدين دولياً."
         : "Ace Juniors programs, pro-level coaching, and group sessions with internationally certified trainers.",
@@ -199,7 +199,7 @@ export default function Home({ lang }) {
     },
     {
       name: isArabic ? "سارة المصري" : "Sara Al-Masri",
-      role: isArabic ? "عضو في أكاديمية آيس" : "Ace Academy Member",
+      role: isArabic ? "عضو في نادي آيس" : "Ace Club Member",
       text: isArabic
         ? "جربت استوديو البيلاتس وكان تجربة رائعة. المدربون محترفون جداً والأجواء هادئة ومريحة."
         : "The Pilates studio is a wonderful experience. Professional trainers and a wonderfully calming atmosphere.",
@@ -245,7 +245,7 @@ export default function Home({ lang }) {
                 className="section-label mb-8 w-fit"
               >
                 <Icon icon="mdi:map-marker" className="w-3.5 h-3.5 text-primary" />
-                {isArabic ? "دمشق — أوتوستراد الفيحاء" : "Damascus — AlFayha Highway"}
+                 {isArabic ? "دمشق — أوتوستراد المزة - نادي الوحدة الرياضي" : "Damascus — Mezzeh Highway, Al-Wahda Sports Club"}
               </motion.div>
 
               <motion.h1
@@ -259,7 +259,7 @@ export default function Home({ lang }) {
                     آيس<br />
                     <span className="text-[#2C5234]">بادل</span>{" "}
                     <span className="relative inline-block">
-                      <span className="relative z-10">أكاديمي</span>
+                      <span className="relative z-10">كلوب</span>
                       <span className="absolute bottom-0 left-0 right-0 h-3 bg-accent/50 -rotate-1 z-0" />
                     </span>
                   </>
@@ -268,7 +268,7 @@ export default function Home({ lang }) {
                     ACE<br />
                     <span className="text-[#2C5234]">PADEL</span>{" "}
                     <span className="relative inline-block">
-                      <span className="relative z-10">ACADEMY</span>
+                      <span className="relative z-10">CLUB</span>
                       <span className="absolute bottom-1 left-0 right-0 h-3 bg-accent/50 -rotate-1 z-0" />
                     </span>
                   </>
@@ -332,7 +332,7 @@ export default function Home({ lang }) {
               <div className="relative rounded-[32px] overflow-hidden shadow-[0_24px_80px_rgba(44,82,52,0.25)] aspect-[4/3]">
                 <img
                   src="/hero-court.png"
-                  alt="Professional Padel Court — Ace Padel Academy Damascus"
+                  alt="Professional Padel Court — Ace Padel Club Damascus"
                   className="w-full h-full object-cover"
                 />
                 {/* Overlay badge */}
@@ -508,7 +508,7 @@ export default function Home({ lang }) {
               </h2>
               <p className={`text-gray-600 mb-8 leading-relaxed ${isArabic ? "font-arabic" : ""}`}>
                 {isArabic
-                  ? "استوديو البيلاتس في آيس أكاديمي مصمم خصيصاً لتكملة رياضة البادل، مع التركيز على القوة الذهنية، الثبات العضلي، وتقليل الإصابات."
+                  ? "استوديو البيلاتس في آيس كلوب مصمم خصيصاً لتكملة رياضة البادل، مع التركيز على القوة الذهنية، الثبات العضلي، وتقليل الإصابات."
                   : "The Ace Pilates Studio is specially designed to complement padel, focusing on mental strength, muscle stability, and injury prevention."}
               </p>
 
@@ -643,13 +643,13 @@ export default function Home({ lang }) {
                 </h2>
                 <p className={`text-white/70 mb-8 leading-relaxed ${isArabic ? "font-arabic" : ""}`}>
                   {isArabic
-                    ? "نحن في قلب دمشق، على أوتوستراد الفيحاء، في مجمع الاتحاد الرياضي العسكري."
-                    : "We're in the heart of Damascus, on AlFayha Highway, in the Military Sports Union complex."}
+                    ? "نحن في قلب دمشق، على أوتوستراد المزة، في نادي الوحدة الرياضي."
+                    : "We're in the heart of Damascus, on Mezzeh Highway, inside Al-Wahda Sports Club."}
                 </p>
                 <div className="space-y-4">
                   {[
                     { icon: "mdi:phone",      val: "0945 000 365", href: "tel:0945000365", isPhone: true },
-                    { icon: "mdi:map-marker", val: isArabic ? "دمشق - أوتوستراد الفيحاء - الاتحاد الرياضي العسكري" : "Damascus, AlFayha Highway, Military Sports Union", href: "#" },
+                    { icon: "mdi:map-marker", val: isArabic ? "دمشق - أوتوستراد المزة - نادي الوحدة الرياضي" : "Damascus, Mezzeh Highway, Al-Wahda Sports Club", href: "https://www.google.com/maps/place//data=!4m2!3m1!1s0x1518e7001fffdb7d:0xef61ec4bc8d792c6?sa=X&ved=1t:8290&ictx=111" },
                     { icon: "mdi:clock",      val: isArabic ? "يومياً من 7:00 صباحاً حتى 2:00 فجراً" : "Daily: 7:00 AM — 2:00 AM", href: null },
                   ].map(({ icon, val, href, isPhone }, idx) => (
                     <div key={idx} className="flex items-start gap-4">

@@ -9,11 +9,28 @@ use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $notifications = DB::table('notifications')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $user = $request->user();
+        $query = DB::table('notifications');
+
+        $pilatesTypes = [
+            'App\\Notifications\\PilatesSessionCancelledNotification',
+            'App\\Notifications\\PilatesBookingConfirmedNotification',
+            'App\\Notifications\\PilatesBookingCancelledNotification',
+        ];
+
+        if ($user->hasRole('Pilates Admin') || $user->hasRole('Pilates Coach')) {
+            // إذا كان المستخدم يحمل صلاحيات البيلاتس فقط (وليس مديراً أو موظف استقبال عام)
+            if (!$user->hasAnyRole(['Admin', 'Manager', 'Receptionist'])) {
+                $query->whereIn('type', $pilatesTypes);
+            }
+        } else {
+            // بقية المسؤولين يرون كافة الإشعارات العامة والمالية باستثناء إشعارات البيلاتس
+            $query->whereNotIn('type', $pilatesTypes);
+        }
+
+        $notifications = $query->orderBy('created_at', 'desc')->paginate(10);
 
         // Map data JSON string to array
         $notifications->getCollection()->transform(function ($n) {

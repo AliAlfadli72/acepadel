@@ -248,6 +248,11 @@ $coaches = CoachProfile::whereHas('user', function ($query) {
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || !$user->hasAnyRole(['Admin', 'admin', 'Receptionist'])) {
+            abort(403, 'غير مصرح لك بإنشاء حجز يدوي.');
+        }
+
         $request->validate([
             'user_id'    => 'required|exists:users,id',
             'court_id'   => 'required|exists:courts,id',

@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -13,6 +13,8 @@ dayjs.locale('ar');
 
 export default function BookingsIndex({ bookings, courts, players, coaches, stats, filters }) {
     const { can } = usePermissions();
+    const { roles } = usePage().props;
+    const canCreateManualBooking = can('bookings.create') && (roles.includes('Admin') || roles.includes('admin') || roles.includes('Receptionist'));
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -302,7 +304,7 @@ const [paymentErrors, setPaymentErrors] = useState({});
                                 {bookings.total} حجز{hasActiveFilters && <span className="text-primary font-bold"> (فلتر مفعّل)</span>}
                             </p>
                         </div>
-                        {can('bookings.create') && (
+                        {canCreateManualBooking && (
                         <button
                             onClick={() => setIsModalOpen(true)}
                             className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors"

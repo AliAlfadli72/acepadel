@@ -72,6 +72,47 @@ class User extends Authenticatable
         return !is_null($this->phone_verified_at);
     }
 
+    /**
+     * توحيد صيغة رقم الهاتف (أرقام فقط، مع إضافة رمز البلد الافتراضي +963 وإزالة الأصفار البادئة)
+     */
+    public static function normalizePhone(?string $phone): ?string
+    {
+        if (empty($phone)) {
+            return $phone;
+        }
+
+        // الحفاظ على صيغة أرقام الفحص الخاصة بالبريد الإلكتروني
+        if (str_starts_with($phone, 'DUMMY_')) {
+            return $phone;
+        }
+
+        // إبقاء الأرقام فقط
+        $digits = preg_replace('/\D/', '', $phone);
+
+        // إذا كان يبدأ بـ 00، نزيله
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        // إذا كان يبدأ بـ 0 وطوله 10 (مثل 09XXXXXXXX)، نستبدل الـ 0 بـ 963
+        if (str_starts_with($digits, '0') && strlen($digits) === 10) {
+            $digits = '963' . substr($digits, 1);
+        } elseif (str_starts_with($digits, '9') && strlen($digits) === 9) {
+            // مثل 99XXXXXXXX -> 96399XXXXXXXX
+            $digits = '963' . $digits;
+        }
+
+        return '+' . $digits;
+    }
+
+    /**
+     * Mutator لتوحيد رقم الهاتف تلقائياً عند الحفظ في قاعدة البيانات
+     */
+    public function setPhoneAttribute($value)
+    {
+        $this->attributes['phone'] = self::normalizePhone($value);
+    }
+
     public function playerProfile()
     {
         return $this->hasOne(PlayerProfile::class);

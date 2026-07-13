@@ -124,34 +124,75 @@ class CoachController extends Controller
      */
     public function myBookings(Request $request)
     {
-        $coachProfileId = optional($request->user()->coachProfile)->id;
+        $user = $request->user();
+        $mergedBookings = collect();
 
-        if (!$coachProfileId) {
-            return response()->json([
-                'status' => 'success',
-                'data'   => [],
-            ]);
+        // 1. حجوزات البادل (إذا كان للمستخدم ملف تعريف مدرب بادل)
+        $coachProfileId = optional($user->coachProfile)->id;
+        if ($coachProfileId) {
+            $padelBookings = Booking::with(['court', 'user'])
+                ->where('coach_profile_id', $coachProfileId)
+                ->get()
+                ->map(function ($booking) {
+                    return [
+                        'id'          => $booking->id,
+                        'court_name'  => ($booking->court?->name ?? '—') . ' (بادل)',
+                        'player_name' => $booking->user?->name  ?? '—',
+                        'start_time'  => $booking->start_time,
+                        'end_time'    => $booking->end_time,
+                        'status'      => $booking->status,
+                        'total_price' => (float)$booking->total_price,
+                    ];
+                });
+            $mergedBookings = $mergedBookings->concat($padelBookings);
         }
 
-        $bookings = Booking::with(['court', 'user'])
-            ->where('coach_profile_id', $coachProfileId)
-            ->orderBy('start_time', 'desc')
-            ->get()
-            ->map(function ($booking) {
-                return [
-                    'id'          => $booking->id,
-                    'court_name'  => $booking->court?->name ?? '—',
-                    'player_name' => $booking->user?->name  ?? '—',
-                    'start_time'  => $booking->start_time,
-                    'end_time'    => $booking->end_time,
-                    'status'      => $booking->status,
-                    'total_price' => $booking->total_price,
-                ];
-            });
+        // 2. حجوزات البيلاتس (إذا كان المستخدم يحمل دور مدرب بيلاتس)
+        if ($user->hasRole('Pilates Coach')) {
+            $pilatesBookings = \App\Models\PilatesBooking::with(['user', 'pilatesSession'])
+                ->whereHas('pilatesSession', function ($q) use ($user) {
+                    $q->where('coach_id', $user->id);
+                })
+                ->get()
+                ->map(function ($pb) {
+                    $session = $pb->pilatesSession;
+                    
+                    $date = '';
+                    if ($session->session_date) {
+                        $date = is_string($session->session_date) 
+                            ? substr($session->session_date, 0, 10) 
+                            : $session->session_date->format('Y-m-d');
+                    }
+                    
+                    $startTime = $session->start_time ? "$date {$session->start_time}" : '';
+                    $endTime = $session->end_time ? "$date {$session->end_time}" : '';
+
+                    $status = $pb->status;
+                    if ($status === 'confirmed') {
+                        $status = 'approved'; // لتتوافق مع تسميات تطبيق الموبايل (مؤكد)
+                    } elseif ($status === 'canceled') {
+                        $status = 'cancelled';
+                    }
+
+                    return [
+                        'id'          => $pb->id,
+                        'court_name'  => ($session->title ?? 'بيلاتس') . ' (بيلاتس)',
+                        'player_name' => $pb->user?->name ?? '—',
+                        'start_time'  => $startTime,
+                        'end_time'    => $endTime,
+                        'status'      => $status,
+                        'total_price' => (float)$pb->paid_amount,
+                    ];
+                });
+            $mergedBookings = $mergedBookings->concat($pilatesBookings);
+        }
+
+        // ترتيب الحجوزات تنازلياً حسب وقت البدء
+        $sortedBookings = $mergedBookings->sortByDesc('start_time')->values();
 
         return response()->json([
             'status' => 'success',
-            'data'   => $bookings,
+            'data'   => $sortedBookings,
         ]);
     }
 }

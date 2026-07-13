@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {  useRef , useContext } from "react";
 import { useInView } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 
 function FadeIn({ children, delay = 0, direction = "up", className = "" }) {
   const ref = useRef(null);
@@ -39,14 +39,14 @@ const SERVICES = [
       { icon: "mdi:thermometer", ar: "تهوية مثالية", en: "Optimal ventilation" },
     ],
     price: { ar: "من 2000 ل.س / ساعة", en: "From 2,000 SYP/hour" },
-    image: "/hero-court.png",
+    image: "/hero-court.webp",
     color: "bg-primary/10 text-primary",
   },
   {
     id: "academy",
     icon: "mdi:whistle",
     tag: { ar: "تدريب", en: "Training" },
-    title: { ar: "أكاديمية آيس للتدريب", en: "Ace Training Academy" },
+    title: { ar: "نادي آيس للتدريب", en: "Ace Training Club" },
     description: {
       ar: "برامج تدريبية متخصصة تناسب كل المستويات، من Ace Juniors للناشئين إلى دروس متقدمة للمحترفين، بإشراف مدربين معتمدين دولياً.",
       en: "Specialized training programs for all levels, from Ace Juniors for beginners to advanced lessons for professionals, led by internationally certified coaches.",
@@ -58,7 +58,7 @@ const SERVICES = [
       { icon: "mdi:certificate", ar: "مدربون معتمدون دولياً", en: "Internationally certified coaches" },
     ],
     price: { ar: "من 1500 ل.س / حصة", en: "From 1,500 SYP/session" },
-    image: "/hero-court.png",
+    image: "/hero-court.webp",
     color: "bg-accent/20 text-primary",
   },
   {
@@ -77,7 +77,7 @@ const SERVICES = [
       { icon: "mdi:leaf", ar: "تمارين مكملة لرياضيي البادل", en: "Complementary padel workouts" },
     ],
     price: { ar: "من 1000 ل.س / جلسة", en: "From 1,000 SYP/session" },
-    image: "/pilates-studio.png",
+    image: "/pilates-studio.webp",
     color: "bg-green-100 text-primary",
   },
   {
@@ -96,7 +96,7 @@ const SERVICES = [
       { icon: "mdi:wifi", ar: "واي فاي مجاني وسريع", en: "Free high-speed Wi-Fi" },
     ],
     price: { ar: "يفتح للجميع", en: "Open to all" },
-    image: "/social-terrace.png",
+    image: "/social-terrace.webp",
     color: "bg-emerald-50 text-primary",
   },
 ];
@@ -108,6 +108,12 @@ export default function Services() {
 
   return (
     <div className="bg-white" dir={isArabic ? "rtl" : "ltr"}>
+      <Head>
+        <title>{isArabic ? "خدماتنا | ملاعب بادل، تدريب واستوديو بيلاتس دمشق" : "Our Services | Padel Courts, Training & Pilates Damascus"}</title>
+        <meta name="description" content={isArabic 
+          ? "تصفح خدمات نادي آيس بادل دمشق: حجز ملاعب البادل الدولية، برامج التدريب للأطفال والمحترفين، حصص البيلاتس والعافية، والمطعم الصحي." 
+          : "Explore Ace Padel Club Damascus services: international padel court booking, training programs for juniors & pros, Pilates wellness, and our healthy food corner."} />
+      </Head>
       {/* PAGE HERO */}
       <section className="border-b border-gray-200 py-20 px-6" style={{backgroundColor:'#F8FAF8'}}>
         <div className="max-w-7xl mx-auto text-center">

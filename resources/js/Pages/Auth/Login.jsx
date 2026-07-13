@@ -16,10 +16,10 @@ export default function Login({ status, canResetPassword }) {
     const isAr = lang === 'ar';
 
     const t = {
-        pageTitle:  isAr ? 'تسجيل الدخول — آيس بادل' : 'Login — Ace Padel Academy',
+        pageTitle:  isAr ? 'تسجيل الدخول — آيس بادل' : 'Login — Ace Padel Club',
         heading1:   isAr ? 'أهلاً' : 'WELCOME',
         heading2:   isAr ? 'بعودتك.' : 'BACK.',
-        subtitle:   isAr ? 'سجّل دخولك إلى حسابك في آيس بادل.' : 'Sign in to your Ace Padel Academy account.',
+        subtitle:   isAr ? 'سجّل دخولك إلى حسابك في آيس بادل.' : 'Sign in to your Ace Padel Club account.',
         emailLabel: isAr ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email Address or Phone Number',
         emailPH:    isAr ? 'بريدك الإلكتروني أو رقم هاتفك' : 'your@email.com or phone number',
         passLabel:  isAr ? 'كلمة المرور' : 'Password',
@@ -31,7 +31,7 @@ export default function Login({ status, canResetPassword }) {
         noAccount:  isAr ? 'ليس لديك حساب؟' : "Don't have an account?",
         register:   isAr ? 'إنشاء حساب جديد' : 'Create new account',
         backSite:   isAr ? 'العودة للموقع' : 'Back to Website',
-        footer:     isAr ? `آيس بادل أكاديمي © ${new Date().getFullYear()} · دمشق، سوريا` : `ACE PADEL ACADEMY © ${new Date().getFullYear()} · Damascus, Syria`,
+        footer:     isAr ? `آيس بادل كلوب © ${new Date().getFullYear()} · دمشق، سوريا` : `ACE PADEL CLUB © ${new Date().getFullYear()} · Damascus, Syria`,
     };
 
     const submit = (e) => {

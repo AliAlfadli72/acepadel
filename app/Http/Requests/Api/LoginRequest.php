@@ -17,6 +17,19 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * تهيئة البيانات قبل عملية التحقق.
+     */
+    protected function prepareForValidation()
+    {
+        $identifier = $this->input('identifier');
+        if ($identifier && !filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $this->merge([
+                'identifier' => \App\Models\User::normalizePhone($identifier),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array

@@ -135,7 +135,7 @@ export default function CourtsIndex({ courts }) {
                         <div>
                             <h3 className="text-xl font-bold text-primary">الملاعب الحالية</h3>
                           {can('courts.edit') && (
-                            <p className="text-gray-500 text-sm">إدارة كافة ملاعب الأكاديمية وإعداداتها</p>
+                            <p className="text-gray-500 text-sm">إدارة كافة ملاعب النادي وإعداداتها</p>
                             )}
                         </div>
                         {can('courts.create') && (

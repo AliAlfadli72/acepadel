@@ -96,7 +96,7 @@ class AuthController extends Controller
             'phone' => 'required|string|min:9|max:20',
         ]);
 
-        $phone = $request->phone;
+        $phone = User::normalizePhone($request->phone);
         $otp   = $this->whatsApp->generateOtp();
         $ttl   = WhatsAppAuthService::OTP_TTL_MINUTES;
 
@@ -149,7 +149,8 @@ class AuthController extends Controller
             'fcm_token' => 'sometimes|string|nullable',
         ]);
 
-        $user = User::where('phone', $request->phone)->first();
+        $phone = User::normalizePhone($request->phone);
+        $user = User::where('phone', $phone)->first();
 
         if (!$user) {
             return response()->json([
@@ -212,15 +213,34 @@ class AuthController extends Controller
         $email = $isEmail ? $request->identifier : null;
         $phone = $isEmail ? ('DUMMY_' . time() . rand(100, 999)) : $request->identifier;
 
-        $user = User::create([
-            'name'      => $request->name,
-            'email'     => $email,
-            'phone'     => $phone,
-            'password'  => Hash::make($request->password),
-            'fcm_token' => $request->fcm_token,
-        ]);
+        // Check if a user with this phone/email already exists but has no password
+        if ($isEmail) {
+            $user = User::where('email', $email)->first();
+        } else {
+            $user = User::where('phone', $phone)->first();
+        }
 
-        $user->assignRole('Player');
+        if ($user && is_null($user->password)) {
+            $user->update([
+                'name'              => $request->name,
+                'password'          => Hash::make($request->password),
+                'fcm_token'         => $request->fcm_token,
+                'phone_verified_at' => now(),
+            ]);
+        } else {
+            $user = User::create([
+                'name'              => $request->name,
+                'email'             => $email,
+                'phone'             => $phone,
+                'password'          => Hash::make($request->password),
+                'fcm_token'         => $request->fcm_token,
+                'phone_verified_at' => now(),
+            ]);
+        }
+
+        if (!$user->hasAnyRole(['Admin', 'Coach', 'Manager', 'Receptionist', 'Staff', 'Player'])) {
+            $user->assignRole('Player');
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

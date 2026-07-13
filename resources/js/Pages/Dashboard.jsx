@@ -1,5 +1,5 @@
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, Link } from "@inertiajs/react";
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
@@ -147,7 +147,7 @@ function MiniSparkline({ trend = 'up' }) {
     );
 }
 
-export default function Dashboard({ stats = {}, isPilates = false }) {
+export default function Dashboard({ stats = {}, isPilates = false, isPlayer = false }) {
     const { auth } = usePage().props;
     const roles = auth.user?.roles || [];
 
@@ -156,6 +156,7 @@ export default function Dashboard({ stats = {}, isPilates = false }) {
 
     const canViewFinance = isAdmin || (isPilates && roles.includes("Pilates Admin"));
     const isArabic = true;
+    const isPlayerUser = isPlayer || (roles.includes("Player") && !roles.includes("Admin") && !roles.includes("Manager") && !roles.includes("Receptionist") && !roles.includes("Pilates Admin"));
 
     // Staggered Container Animation
     const containerVariants = {
@@ -191,6 +192,355 @@ export default function Dashboard({ stats = {}, isPilates = false }) {
         }
         return null;
     };
+
+    if (isPlayerUser) {
+        return (
+            <AdminLayout
+                dark={false}
+                header={
+                    <h2 className="text-xl font-extrabold tracking-tight text-[#0F172A] font-arabic">
+                        بوابتي الرياضية
+                    </h2>
+                }
+            >
+                <Head title="بوابتي الرياضية | آيس بادل" />
+
+                <div className="py-6 font-arabic text-slate-800 bg-[#F8FAFC] min-h-screen">
+                    <motion.div
+                        className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        {/* Welcome Header Card */}
+                        <motion.div
+                            variants={cellVariants}
+                            className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-slate-200/60 p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.015)] relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#84CC16]/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                            <div className="relative z-10">
+                                <h3 className="text-2xl font-black text-[#0F172A] mb-1.5">
+                                    أهلاً بك، {auth.user.name} 👋
+                                </h3>
+                                <p className="text-[#64748B] text-xs font-medium">
+                                    مرحباً بك في بوابتك الرياضية بنادي آيس بادل. هنا يمكنك تتبع رصيدك، باقاتك وحجوزاتك القادمة.
+                                </p>
+                            </div>
+                            <div className="relative z-10 flex flex-wrap items-center gap-3">
+                                <Link
+                                    href={route('booking.guest')}
+                                    className="px-5 py-2.5 bg-[#84CC16] text-white rounded-xl font-bold text-xs hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shadow-[#84CC16]/20"
+                                >
+                                    <Icon icon="mdi:calendar-plus" className="w-4 h-4" />
+                                    احجز ملعباً
+                                </Link>
+                                <Link
+                                    href={route('pilates.booking.page')}
+                                    className="px-5 py-2.5 bg-[#0F172A] text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-all flex items-center gap-1.5"
+                                >
+                                    <Icon icon="mdi:yoga" className="w-4 h-4" />
+                                    حجز جلسة بيلاتس
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* Top Stats: Wallet & Pilates Packages */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            {/* Wallet Balance Card */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="bg-white border border-slate-200/60 rounded-[2rem] p-6 text-slate-800 relative overflow-hidden flex flex-col justify-between h-[180px] shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
+                            >
+                                <div className="absolute top-0 right-0 w-48 h-48 bg-[#84CC16]/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1">
+                                                الرصيد الحالي بالمحفظة
+                                            </p>
+                                            <div className="flex items-baseline gap-1.5">
+                                                <h3 className="text-3xl font-black text-[#0F172A] tracking-tight leading-none font-sans">
+                                                    {(stats.wallet_balance || 0).toLocaleString("en-US")}
+                                                </h3>
+                                                <span className="text-xs text-[#84CC16] font-black uppercase">ل.س</span>
+                                            </div>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-400">
+                                            <Icon icon="solar:wallet-2-bold-duotone" className="w-6 h-6 text-[#84CC16]" />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-slate-100 pt-4">
+                                        <span className="text-[10px] text-slate-400 font-bold">اشحن محفظتك للاستفادة من الحجز الفوري</span>
+                                        <Link
+                                            href={route('wallet.index')}
+                                            className="text-xs font-bold text-[#84CC16] hover:underline flex items-center gap-1"
+                                        >
+                                            تفاصيل المحفظة
+                                            <Icon icon="mdi:chevron-left" className="w-4 h-4" />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Pilates Packages Card */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="bg-white border border-slate-200/60 rounded-[2rem] p-6 text-slate-800 relative overflow-hidden flex flex-col justify-between h-[180px] shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
+                            >
+                                <div className="absolute top-0 right-0 w-48 h-48 bg-[#84CC16]/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-[#64748B] text-[10px] uppercase font-bold tracking-widest mb-1">
+                                                باقات البيلاتس النشطة
+                                            </p>
+                                            {stats.active_packages && stats.active_packages.length > 0 ? (
+                                                <div className="space-y-1.5 mt-1 max-h-[80px] overflow-y-auto custom-scrollbar">
+                                                    {stats.active_packages.map((pkg, i) => (
+                                                        <div key={i} className="flex items-center justify-between gap-2 border-b border-slate-50 pb-1">
+                                                            <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{pkg.package_name}</span>
+                                                            <span className="text-[10px] bg-lime-500/10 text-[#84CC16] px-2 py-0.5 rounded-full font-bold">
+                                                                {pkg.remaining_classes} حصة متبقية
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <h3 className="text-xs font-extrabold text-slate-400 mt-2">
+                                                    لا يوجد باقات نشطة حالياً
+                                                </h3>
+                                            )}
+                                        </div>
+                                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-400">
+                                            <Icon icon="mdi:yoga" className="w-6 h-6 text-[#84CC16]" />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-slate-100 pt-4">
+                                        <span className="text-[10px] text-slate-400 font-bold">اشترك في باقات البيلاتس بأفضل الأسعار</span>
+                                        <Link
+                                            href={route('pilates.booking.page')}
+                                            className="text-xs font-bold text-[#84CC16] hover:underline flex items-center gap-1"
+                                        >
+                                            شراء باقة بيلاتس
+                                            <Icon icon="mdi:chevron-left" className="w-4 h-4" />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Bento Grid Row 2: Bookings & Recent Activity */}
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+                            {/* Upcoming Bookings List (60% Width / lg:col-span-3) */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="lg:col-span-3 bg-white border border-slate-200/60 rounded-[2rem] p-6 text-slate-800 relative overflow-hidden flex flex-col justify-between h-[360px] shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
+                            >
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3 shrink-0">
+                                        <h4 className="text-sm font-black text-[#0F172A] flex items-center gap-1.5">
+                                            <Icon icon="solar:calendar-bold-duotone" className="w-5 h-5 text-[#84CC16]" />
+                                            جدول حجوزاتي القادمة
+                                        </h4>
+                                        <span className="text-[10px] font-bold bg-[#84CC16]/10 text-[#84CC16] px-2 py-0.5 rounded-full">
+                                            {stats.upcoming_matches || 0} حجز قادم
+                                        </span>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                                        {stats.upcoming_bookings && stats.upcoming_bookings.length > 0 ? (
+                                            stats.upcoming_bookings.map((booking, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200/40 hover:bg-slate-100/50 transition-all"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                                                            booking.type === 'pilates' 
+                                                                ? 'bg-purple-50 text-purple-600 border border-purple-100' 
+                                                                : 'bg-lime-50 text-[#84CC16] border border-lime-100'
+                                                        }`}>
+                                                            <Icon icon={booking.type === 'pilates' ? "mdi:yoga" : "mdi:tennis"} className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="font-extrabold text-xs text-slate-800">
+                                                                {booking.title}
+                                                            </h5>
+                                                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5 dir-ltr text-right">
+                                                                {booking.start_time} - {booking.end_time.split(' ').pop()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold border ${
+                                                        booking.status === 'approved' 
+                                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                                            : 'bg-amber-50 text-amber-600 border-amber-100'
+                                                    }`}>
+                                                        {booking.status === 'approved' ? 'مؤكد' : 'قيد الانتظار'}
+                                                    </span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-center py-8">
+                                                <Icon icon="solar:calendar-add-linear" className="w-12 h-12 text-slate-300 mb-2" />
+                                                <p className="text-xs font-bold text-slate-400">لا يوجد لديك أي حجوزات قادمة</p>
+                                                <Link
+                                                    href={route('booking.guest')}
+                                                    className="mt-3 text-xs font-bold text-[#84CC16] hover:underline"
+                                                >
+                                                    احجز أول ملاعبك الآن
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Recent Activities (40% Width / lg:col-span-2) */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="lg:col-span-2 bg-white border border-slate-200/60 rounded-[2rem] p-6 text-slate-800 relative overflow-hidden flex flex-col justify-between h-[360px] shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300"
+                            >
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3 shrink-0">
+                                        <h4 className="text-sm font-black text-[#0F172A] flex items-center gap-1.5">
+                                            <Icon icon="solar:history-bold-duotone" className="w-5 h-5 text-slate-500" />
+                                            النشاطات السابقة
+                                        </h4>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                                        {stats.recent_activity && stats.recent_activity.length > 0 ? (
+                                            stats.recent_activity.map((activity, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100/50 transition-colors"
+                                                >
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                        activity.status === "approved"
+                                                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                                            : activity.status === "pending"
+                                                              ? "bg-amber-50 text-amber-600 border border-amber-100"
+                                                              : "bg-rose-50 text-rose-600 border border-rose-100"
+                                                    }`}>
+                                                        <Icon
+                                                            icon={
+                                                                activity.status === "approved"
+                                                                    ? "mdi:calendar-check"
+                                                                    : activity.status === "pending"
+                                                                      ? "mdi:calendar-clock"
+                                                                      : "mdi:calendar-remove"
+                                                            }
+                                                            className="w-4.5 h-4.5"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-bold text-slate-800 truncate">
+                                                            {activity.title}
+                                                        </p>
+                                                        <p className="text-[9px] text-slate-400 font-semibold mt-0.5">
+                                                            {activity.time}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                                                <p className="text-xs font-bold text-slate-400">لا يوجد نشاطات سابقة</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Summary Metrics Cards */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            {/* Card 1: Total Bookings */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", translateY: -2, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="bg-white border border-slate-200/60 rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 flex flex-col justify-between"
+                            >
+                                <div className="flex justify-between items-center mb-3">
+                                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/50 flex items-center justify-center">
+                                        <Icon icon="mdi:calendar-multiselect" className="w-5.5 h-5.5" />
+                                    </div>
+                                </div>
+                                <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
+                                    إجمالي الحجوزات
+                                </p>
+                                <p className="text-3xl font-black text-slate-900 mt-1 font-sans">
+                                    {stats.total_bookings || 0}
+                                </p>
+                            </motion.div>
+
+                            {/* Card 2: Upcoming bookings count */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", translateY: -2, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="bg-white border border-slate-200/60 rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 flex flex-col justify-between"
+                            >
+                                <div className="flex justify-between items-center mb-3">
+                                    <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100/50 flex items-center justify-center">
+                                        <Icon icon="mdi:calendar-clock" className="w-5.5 h-5.5" />
+                                    </div>
+                                </div>
+                                <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
+                                    الحجوزات القادمة
+                                </p>
+                                <p className="text-3xl font-black text-slate-900 mt-1 font-sans">
+                                    {stats.upcoming_matches || 0}
+                                </p>
+                            </motion.div>
+
+                            {/* Card 3: Active pilates packages count */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", translateY: -2, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="bg-white border border-slate-200/60 rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 flex flex-col justify-between"
+                            >
+                                <div className="flex justify-between items-center mb-3">
+                                    <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 border border-purple-100/50 flex items-center justify-center">
+                                        <Icon icon="mdi:ticket-percent-outline" className="w-5.5 h-5.5" />
+                                    </div>
+                                </div>
+                                <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
+                                    الباقات النشطة
+                                </p>
+                                <p className="text-3xl font-black text-slate-900 mt-1 font-sans">
+                                    {stats.active_packages ? stats.active_packages.length : 0}
+                                </p>
+                            </motion.div>
+
+                            {/* Card 4: Wallet balance */}
+                            <motion.div
+                                variants={cellVariants}
+                                whileHover={{ borderColor: "#CBD5E1", translateY: -2, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.03)" }}
+                                className="bg-white border border-slate-200/60 rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 flex flex-col justify-between"
+                            >
+                                <div className="flex justify-between items-center mb-3">
+                                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/50 flex items-center justify-center">
+                                        <Icon icon="solar:wallet-2-bold-duotone" className="w-5.5 h-5.5" />
+                                    </div>
+                                </div>
+                                <p className="text-[#64748B] font-extrabold text-[11px] uppercase tracking-wider mb-1">
+                                    رصيد المحفظة
+                                </p>
+                                <p className="text-3xl font-black text-[#84CC16] mt-1 font-sans">
+                                    {(stats.wallet_balance || 0).toLocaleString("en-US")}
+                                </p>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout
@@ -378,7 +728,7 @@ export default function Dashboard({ stats = {}, isPilates = false }) {
                                         </h4>
                                         {!isPilates && (
                                             <span className="text-[10px] bg-slate-50 border border-slate-200/60 text-[#64748B] px-2 py-0.5 rounded-full font-bold">
-                                                معدل اليوم: 68%
+                                                معدل اليوم: {stats.court_occupancy_avg || 0}%
                                             </span>
                                         )}
                                     </div>
@@ -390,12 +740,7 @@ export default function Dashboard({ stats = {}, isPilates = false }) {
                                     <div className="space-y-4 my-2 max-h-[220px] overflow-y-auto custom-scrollbar">
                                         {(isPilates 
                                             ? (stats.session_occupancy || [])
-                                            : [
-                                                { name: 'الملعب الأول (أزرق)', percentage: 85, bookings: '12 حجز' },
-                                                { name: 'الملعب الثاني (أحمر)', percentage: 60, bookings: '8 حجوزات' },
-                                                { name: 'الملعب الثالث (عشب)', percentage: 40, bookings: '5 حجوزات' },
-                                                { name: 'الملعب الرابع (داخلي)', percentage: 90, bookings: '14 حجز' },
-                                            ]
+                                            : (stats.court_occupancy || [])
                                         ).map((item, idx) => (
                                             <div key={idx} className="space-y-1.5">
                                                 <div className="flex justify-between text-xs font-bold">
@@ -435,7 +780,7 @@ export default function Dashboard({ stats = {}, isPilates = false }) {
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <h4 className="text-xs font-black text-[#64748B] uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-3 mb-2">
                                     <Icon icon="solar:cup-first-bold-duotone" className="w-4.5 h-4.5 text-[#84CC16]" />
-                                    {isPilates ? "أبطال استوديو البيلاتس" : (isArabic ? "أبطال الأكاديمية" : "ACADEMY CHAMPIONS")}
+                                    {isPilates ? "أبطال استوديو البيلاتس" : (isArabic ? "أبطال النادي" : "CLUB CHAMPIONS")}
                                 </h4>
 
                                 <div className="grid grid-cols-2 gap-4 flex-1 items-center">

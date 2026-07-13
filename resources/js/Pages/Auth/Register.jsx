@@ -17,7 +17,7 @@ export default function Register() {
     const isAr = lang === 'ar';
 
     const t = {
-        pageTitle:  isAr ? 'إنشاء حساب — آيس بادل' : 'Register — Ace Padel Academy',
+        pageTitle:  isAr ? 'إنشاء حساب — آيس بادل' : 'Register — Ace Padel Club',
         heading1:   isAr ? 'حساب' : 'CREATE',
         heading2:   isAr ? 'جديد.' : 'ACCOUNT.',
         subtitle:   isAr ? 'انضم إلينا وابدأ حجز ملاعبك بسهولة.' : 'Join us and start booking your courts easily.',
@@ -32,7 +32,7 @@ export default function Register() {
         already:    isAr ? 'لديك حساب بالفعل؟ سجل دخولك' : 'Already registered? Sign in',
         or:         isAr ? 'أو' : 'or',
         backSite:   isAr ? 'العودة للموقع' : 'Back to Website',
-        footer:     isAr ? `آيس بادل أكاديمي © ${new Date().getFullYear()} · دمشق، سوريا` : `ACE PADEL ACADEMY © ${new Date().getFullYear()} · Damascus, Syria`,
+        footer:     isAr ? `آيس بادل كلوب © ${new Date().getFullYear()} · دمشق، سوريا` : `ACE PADEL CLUB © ${new Date().getFullYear()} · Damascus, Syria`,
     };
 
     const submit = (e) => {

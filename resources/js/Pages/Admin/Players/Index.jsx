@@ -35,7 +35,30 @@ export default function PlayersIndex({ players, filters, stats }) {
     const [editingPlayer, setEditingPlayer] = useState(null);
     const [search, setSearch]             = useState(filters?.search || '');
     const [rank,   setRank]               = useState(filters?.rank   || '');
-    const { auth } = usePage().props;
+    const { auth, roles } = usePage().props;
+
+    const canManagePlayer = (targetPlayer) => {
+        const userRoles = (roles || []).map(r => r.toLowerCase());
+        const targetRoles = (targetPlayer.roles || []).map(r => r.name.toLowerCase());
+
+        const isTargetAdmin = targetRoles.includes('admin');
+        const isTargetManager = targetRoles.includes('manager');
+        const isTargetReceptionist = targetRoles.includes('receptionist');
+
+        if (userRoles.includes('receptionist')) {
+            if (isTargetAdmin || isTargetManager || isTargetReceptionist) {
+                return false;
+            }
+        }
+
+        if (userRoles.includes('manager')) {
+            if (isTargetAdmin) {
+                return false;
+            }
+        }
+
+        return true;
+    };
 
     const applyFilters = (overrides = {}) => {
         const p = { search: overrides.search ?? search, rank: overrides.rank ?? rank };
@@ -66,7 +89,7 @@ export default function PlayersIndex({ players, filters, stats }) {
 
     const openEdit = (p) => {
 
-        if (!can('players.edit')) {
+        if (!can('players.edit') || !canManagePlayer(p)) {
             return;
         }
         clearErrors();
@@ -282,7 +305,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                     <td className="px-5 py-3.5">
                                                         <div className="flex items-center gap-1.5">
 
-                                                            {can('players.edit') && (
+                                                            {can('players.edit') && canManagePlayer(p) && (
                                                                 <button
                                                                     onClick={() => openEdit(p)}
                                                                     className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
@@ -292,7 +315,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                                 </button>
                                                             )}
 
-                                                                {can('players.delete') && auth.user.id !== p.id && (
+                                                                {can('players.delete') && auth.user.id !== p.id && canManagePlayer(p) && (
                                                                     <button
                                                                         onClick={() => deletePlayer(p.id)}
                                                                         className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"

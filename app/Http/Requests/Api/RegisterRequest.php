@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -17,6 +18,19 @@ class RegisterRequest extends FormRequest
     }
 
     /**
+     * تهيئة البيانات قبل عملية التحقق.
+     */
+    protected function prepareForValidation()
+    {
+        $identifier = $this->input('identifier');
+        if ($identifier && !filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $this->merge([
+                'identifier' => \App\Models\User::normalizePhone($identifier),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
@@ -24,8 +38,14 @@ class RegisterRequest extends FormRequest
         $isEmail = filter_var($this->input('identifier'), FILTER_VALIDATE_EMAIL);
         return [
             'name'       => ['required', 'string', 'max:255'],
-            'identifier' => ['required', 'string', $isEmail ? 'unique:users,email' : 'unique:users,phone'],
-            'password'   => ['required', 'string', 'min:8', 'confirmed'],
+            'identifier' => [
+                'required',
+                'string',
+                $isEmail 
+                    ? Rule::unique('users', 'email')->whereNotNull('password')
+                    : Rule::unique('users', 'phone')->whereNotNull('password')
+            ],
+            'password'   => ['required', 'string', 'min:8'],
         ];
     }
 

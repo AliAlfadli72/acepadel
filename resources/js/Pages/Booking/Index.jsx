@@ -177,7 +177,7 @@ export default function BookingIndex({ auth, courts, userBookings, flash, errors
                     <div className="relative z-10 max-w-3xl mx-auto">
                         <span className="inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-4"
                             style={{ backgroundColor: 'rgba(214,224,46,0.15)', color: '#d6e02e', letterSpacing: '0.15em' }}>
-                            آيس بادل أكاديمي
+                            نادي آيس بادل
                         </span>
                         <h1 className="text-4xl font-black text-white mb-3">احجز ملعبك الآن</h1>
                         <p className="text-base" style={{ color: 'rgba(255,255,255,0.65)' }}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useContext } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import { motion, useInView } from "framer-motion";
 import { Icon } from "@iconify/react";
 import AppLayout, { LangContext } from "../Layouts/AppLayout";
@@ -156,7 +156,7 @@ export default function Home() {
     {
       icon: "mdi:whistle",
       tag: isArabic ? "تدريب" : "Training",
-      title: isArabic ? "أكاديمية آيس" : "Ace Academy",
+      title: isArabic ? "نادي آيس" : "Ace Club",
       desc: isArabic
         ? "برامج Ace Juniors للناشئين، دروس للمحترفين، وحصص جماعية بإشراف مدربين معتمدين دولياً."
         : "Ace Juniors programs, pro-level coaching, and group sessions with internationally certified trainers.",
@@ -202,7 +202,7 @@ export default function Home() {
     },
     {
       name: isArabic ? "سارة المصري" : "Sara Al-Masri",
-      role: isArabic ? "عضو في أكاديمية آيس" : "Ace Academy Member",
+      role: isArabic ? "عضو في نادي آيس" : "Ace Club Member",
       text: isArabic
         ? "جربت استوديو البيلاتس وكان تجربة رائعة. المدربون محترفون جداً والأجواء هادئة ومريحة."
         : "The Pilates studio is a wonderful experience. Professional trainers and a wonderfully calming atmosphere.",
@@ -218,6 +218,12 @@ export default function Home() {
 
   return (
     <div style={{ backgroundColor: "#ffffff", color: "#0F1A13" }} className="overflow-x-hidden" dir={isArabic ? "rtl" : "ltr"}>
+      <Head>
+        <title>{isArabic ? "نادي آيس بادل دمشق | أول نادي بادل معتمد في سوريا" : "Ace Padel Club Damascus | First Certified Padel Club in Syria"}</title>
+        <meta name="description" content={isArabic 
+          ? "مرحباً بك في نادي آيس بادل دمشق. احجز ملاعب بادل احترافية، وانضم لبرامج التدريب، وجلسات البيلاتس، واستمتع بالركن الاجتماعي المتميز." 
+          : "Welcome to Ace Padel Club Damascus. Book professional padel courts, join training programs, wellness sessions, and enjoy our premium social corner."} />
+      </Head>
 
       {/* ================================================
           HERO SECTION
@@ -227,7 +233,7 @@ export default function Home() {
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('${resolveAsset('/hero-court.png')}')` }}
+          style={{ backgroundImage: `url('${resolveAsset('/hero-court.webp')}')` }}
         >
           <div className="absolute inset-0" style={{ backgroundColor: "rgba(255,255,255,0.78)" }} />
         </div>
@@ -248,7 +254,7 @@ export default function Home() {
                 className="section-label mb-8 w-fit"
               >
                 <Icon icon="mdi:map-marker" className="w-3.5 h-3.5 text-primary" />
-                {isArabic ? "دمشق — أوتوستراد الفيحاء" : "Damascus — AlFayha Highway"}
+                 {isArabic ? "دمشق — أوتوستراد المزة - نادي الوحدة الرياضي" : "Damascus — Mezzeh Highway, Al-Wahda Sports Club"}
               </motion.div>
 
               <motion.h1
@@ -262,7 +268,7 @@ export default function Home() {
                     آيس<br />
                     <span className="text-primary">بادل</span>{" "}
                     <span className="relative inline-block">
-                      <span className="relative z-10">أكاديمي</span>
+                      <span className="relative z-10">كلوب</span>
                       <span className="absolute bottom-0 left-0 right-0 h-3 bg-accent/50 -rotate-1 z-0" />
                     </span>
                   </>
@@ -271,7 +277,7 @@ export default function Home() {
                     ACE<br />
                     <span className="text-primary">PADEL</span>{" "}
                     <span className="relative inline-block">
-                      <span className="relative z-10">ACADEMY</span>
+                      <span className="relative z-10">CLUB</span>
                       <span className="absolute bottom-1 left-0 right-0 h-3 bg-accent/50 -rotate-1 z-0" />
                     </span>
                   </>
@@ -334,8 +340,8 @@ export default function Home() {
             >
               <div className="relative rounded-[32px] overflow-hidden shadow-[0_24px_80px_rgba(44,82,52,0.25)] aspect-[4/3]">
                 <img
-                  src={resolveAsset('/hero-court.png')}
-                  alt="Professional Padel Court — Ace Padel Academy Damascus"
+                  src={resolveAsset('/hero-court.webp')}
+                  alt="Professional Padel Court — Ace Padel Club Damascus"
                   className="w-full h-full object-cover"
                 />
                 {/* Overlay badge */}
@@ -438,7 +444,7 @@ export default function Home() {
             <FadeIn direction="right">
               <div className="relative rounded-[28px] overflow-hidden shadow-card-hover aspect-[4/3]">
                 <img
-                  src={resolveAsset('/hero-court.png')}
+                  src={resolveAsset('/hero-court.webp')}
                   alt="FIP certified padel court"
                   className="w-full h-full object-cover"
                 />
@@ -511,7 +517,7 @@ export default function Home() {
               </h2>
               <p className={`text-gray-600 mb-8 leading-relaxed ${isArabic ? "font-arabic" : ""}`}>
                 {isArabic
-                  ? "استوديو البيلاتس في آيس أكاديمي مصمم خصيصاً لتكملة رياضة البادل، مع التركيز على القوة الذهنية، الثبات العضلي، وتقليل الإصابات."
+                  ? "استوديو البيلاتس في آيس كلوب مصمم خصيصاً لتكملة رياضة البادل، مع التركيز على القوة الذهنية، الثبات العضلي، وتقليل الإصابات."
                   : "The Ace Pilates Studio is specially designed to complement padel, focusing on mental strength, muscle stability, and injury prevention."}
               </p>
 
@@ -539,7 +545,7 @@ export default function Home() {
             <FadeIn direction="left" delay={0.15}>
               <div className="relative rounded-[28px] overflow-hidden shadow-card-hover aspect-[4/3]">
                 <img
-                  src={resolveAsset('/pilates-studio.png')}
+                  src={resolveAsset('/pilates-studio.webp')}
                   alt="Ace Pilates Studio — serene wellness experience"
                   className="w-full h-full object-cover"
                 />
@@ -554,7 +560,7 @@ export default function Home() {
           ================================================ */}
       <section className="py-20 text-white overflow-hidden relative" style={{ backgroundColor: "#222831" }}>
         <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: `url('${resolveAsset('/social-terrace.png')}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
+          style={{ backgroundImage: `url('${resolveAsset('/social-terrace.webp')}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
         <div className="absolute inset-0" style={{ backgroundColor: "rgba(34,40,49,0.8)" }} />
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
@@ -595,7 +601,7 @@ export default function Home() {
             <FadeIn className="lg:col-span-2" direction="left" delay={0.2}>
               <div className="relative rounded-[28px] overflow-hidden shadow-2xl aspect-[3/4]">
                 <img
-                  src={resolveAsset('/social-terrace.png')}
+                  src={resolveAsset('/social-terrace.webp')}
                   alt="Ace Padel Social Corner and Terrace"
                   className="w-full h-full object-cover"
                 />
@@ -646,13 +652,13 @@ export default function Home() {
                 </h2>
                 <p className={`text-white/70 mb-8 leading-relaxed ${isArabic ? "font-arabic" : ""}`}>
                   {isArabic
-                    ? "نحن في قلب دمشق، على أوتوستراد الفيحاء، في مجمع الاتحاد الرياضي العسكري."
-                    : "We're in the heart of Damascus, on AlFayha Highway, in the Military Sports Union complex."}
+                    ? "نحن في قلب دمشق، على أوتوستراد المزة، في نادي الوحدة الرياضي."
+                    : "We're in the heart of Damascus, on Mezzeh Highway, inside Al-Wahda Sports Club."}
                 </p>
                 <div className="space-y-4">
                   {[
                     { icon: "mdi:phone",      val: "0945 000 365", href: "tel:0945000365", isPhone: true },
-                    { icon: "mdi:map-marker", val: isArabic ? "دمشق - أوتوستراد الفيحاء - الاتحاد الرياضي العسكري" : "Damascus, AlFayha Highway, Military Sports Union", href: "#" },
+                    { icon: "mdi:map-marker", val: isArabic ? "دمشق - أوتوستراد المزة - نادي الوحدة الرياضي" : "Damascus, Mezzeh Highway, Al-Wahda Sports Club", href: "https://www.google.com/maps/place//data=!4m2!3m1!1s0x1518e7001fffdb7d:0xef61ec4bc8d792c6?sa=X&ved=1t:8290&ictx=111" },
                     { icon: "mdi:clock",      val: isArabic ? "يومياً من 7:00 صباحاً حتى 2:00 فجراً" : "Daily: 7:00 AM — 2:00 AM", href: null },
                   ].map(({ icon, val, href, isPhone }, idx) => (
                     <div key={idx} className="flex items-start gap-4">

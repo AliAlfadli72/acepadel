@@ -241,6 +241,7 @@ class PermissionSeeder extends Seeder
             'bookings.create',
             'bookings.edit',
             'bookings.delete',
+            'bookings.approve',
 
             // PLAYERS
             'players.view',

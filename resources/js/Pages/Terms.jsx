@@ -12,16 +12,16 @@ export default function Terms() {
       icon: "mdi:gavel",
       title: { ar: "1. قبول الشروط", en: "1. Acceptance of Terms" },
       content: {
-        ar: "بمجرد دخولك إلى موقع أكاديمية آيس بادل أو استخدام تطبيق الموبايل، فإنك توافق على الالتزام بشروط الاستخدام هذه وجميع القوانين واللوائح المعمول بها.",
-        en: "By accessing the Ace Padel Academy website or mobile application, you agree to be bound by these terms of use and all applicable laws and regulations."
+        ar: "بمجرد دخولك إلى موقع نادي آيس بادل أو استخدام تطبيق الموبايل، فإنك توافق على الالتزام بشروط الاستخدام هذه وجميع القوانين واللوائح المعمول بها.",
+        en: "By accessing the Ace Padel Club website or mobile application, you agree to be bound by these terms of use and all applicable laws and regulations."
       }
     },
     {
       icon: "mdi:calendar-clock",
       title: { ar: "2. سياسة الحجز والإلغاء", en: "2. Booking & Cancellation Policy" },
       content: {
-        ar: "يجب تأكيد حجوزات الملاعب عبر الدفع المسبق من المحفظة أو نقدًا في الأكاديمية. يمكن إلغاء الحجز أو تعديله قبل 24 ساعة على الأقل من موعد اللعب لاسترداد القيمة بالكامل إلى محفظتك الإلكترونية. الإلغاء في غضون أقل من 24 ساعة غير قابل للاسترداد.",
-        en: "Court bookings must be confirmed via wallet pre-payment or cash at the academy. Bookings can be cancelled or rescheduled at least 24 hours prior to the slot for a full refund to your e-wallet. Cancellations within less than 24 hours are non-refundable."
+        ar: "يجب تأكيد حجوزات الملاعب عبر الدفع المسبق من المحفظة أو نقدًا في النادي. يمكن إلغاء الحجز أو تعديله قبل 24 ساعة على الأقل من موعد اللعب لاسترداد القيمة بالكامل إلى محفظتك الإلكترونية. الإلغاء في غضون أقل من 24 ساعة غير قابل للاسترداد.",
+        en: "Court bookings must be confirmed via wallet pre-payment or cash at the club. Bookings can be cancelled or rescheduled at least 24 hours prior to the slot for a full refund to your e-wallet. Cancellations within less than 24 hours are non-refundable."
       }
     },
     {
@@ -36,24 +36,24 @@ export default function Terms() {
       icon: "mdi:wallet-outline",
       title: { ar: "4. المحفظة الإلكترونية", en: "4. E-Wallet Usage" },
       content: {
-        ar: "المبالغ المشحونة في المحفظة الإلكترونية مخصصة حصرياً لاستخدامها في حجز الملاعب وباقات البيلاتس داخل أكاديمية آيس بادل. الرصيد المشحون غير قابل للسحب النقدي أو التحويل لحسابات أخرى.",
-        en: "Funds deposited in the e-wallet are exclusively for booking courts and Pilates packages at Ace Padel Academy. Deposited balances cannot be withdrawn in cash or transferred to other user accounts."
+        ar: "المبالغ المشحونة في المحفظة الإلكترونية مخصصة حصرياً لاستخدامها في حجز الملاعب وباقات البيلاتس داخل نادي آيس بادل. الرصيد المشحون غير قابل للسحب النقدي أو التحويل لحسابات أخرى.",
+        en: "Funds deposited in the e-wallet are exclusively for booking courts and Pilates packages at Ace Padel Club. Deposited balances cannot be withdrawn in cash or transferred to other user accounts."
       }
     },
     {
       icon: "mdi:shield-alert-outline",
       title: { ar: "5. السلامة والمسؤولية", en: "5. Safety & Liability" },
       content: {
-        ar: "أكاديمية آيس بادل غير مسؤولة عن أي إصابات جسدية تحدث للاعبين أثناء استخدام الملاعب أو المشاركة في جلسات البيلاتس والفعاليات. ننصح جميع اللاعبين بالقيام بالإحماء المناسب والتأكد من لياقتهم البدنية قبل اللعب. كما نخلي مسؤوليتنا عن فقدان أو تلف الممتلكات الشخصية داخل مرافقنا.",
-        en: "Ace Padel Academy is not liable for any physical injuries sustained by players while using the courts or participating in Pilates sessions and events. We advise all players to warm up properly. We are also not responsible for the loss or damage of any personal belongings inside our facilities."
+        ar: "نادي آيس بادل غير مسؤول عن أي إصابات جسدية تحدث للاعبين أثناء استخدام الملاعب أو المشاركة في جلسات البيلاتس والفعاليات. ننصح جميع اللاعبين بالقيام بالإحماء المناسب والتأكد من لياقتهم البدنية قبل اللعب. كما نخلي مسؤوليتنا عن فقدان أو تلف الممتلكات الشخصية داخل مرافقنا.",
+        en: "Ace Padel Club is not liable for any physical injuries sustained by players while using the courts or participating in Pilates sessions and events. We advise all players to warm up properly. We are also not responsible for the loss or damage of any personal belongings inside our facilities."
       }
     },
     {
       icon: "mdi:shield-lock-outline",
       title: { ar: "6. تعديل الشروط", en: "6. Modifications of Terms" },
       content: {
-        ar: "تحتفظ الأكاديمية بالحق في مراجعة وتحديث شروط الاستخدام هذه في أي وقت دون إشعار مسبق. استمرارك في استخدام الموقع أو التطبيق بعد تعديل الشروط يعتبر قبولاً منك بالشروط الجديدة.",
-        en: "The Academy reserves the right to revise and update these terms of use at any time without prior notice. Continued use of the website or mobile app after any changes constitutes acceptance of the new terms."
+        ar: "يحتفظ النادي بالحق في مراجعة وتحديث شروط الاستخدام هذه في أي وقت دون إشعار مسبق. استمرارك في استخدام الموقع أو التطبيق بعد تعديل الشروط يعتبر قبولاً منك بالشروط الجديدة.",
+        en: "The Club reserves the right to revise and update these terms of use at any time without prior notice. Continued use of the website or mobile app after any changes constitutes acceptance of the new terms."
       }
     }
   ];
@@ -73,8 +73,8 @@ export default function Terms() {
             </h1>
             <p className={`text-gray-500 max-w-xl mx-auto text-sm md:text-base ${isArabic ? "font-arabic" : ""}`}>
               {isArabic
-                ? "يرجى قراءة شروط استخدام مرافق أكاديمية آيس بادل بعناية قبل حجز الملاعب أو شراء الاشتراكات."
-                : "Please read the terms and conditions of using Ace Padel Academy facilities carefully before booking courts or purchasing subscriptions."}
+                ? "يرجى قراءة شروط استخدام مرافق نادي آيس بادل بعناية قبل حجز الملاعب أو شراء الاشتراكات."
+                : "Please read the terms and conditions of using Ace Padel Club facilities carefully before booking courts or purchasing subscriptions."}
             </p>
           </motion.div>
         </div>
