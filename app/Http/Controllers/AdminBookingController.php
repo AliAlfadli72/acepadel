@@ -30,7 +30,7 @@ class AdminBookingController extends Controller
                     'court',
                     'coachProfile.user'
                 ])
-                ->orderBy('start_time', 'desc');
+                ->orderBy('id', 'desc');
 
             /*
             |--------------------------------------------------------------------------

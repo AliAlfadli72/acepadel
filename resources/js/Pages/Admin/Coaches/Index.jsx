@@ -67,7 +67,7 @@ export default function CoachesIndex({ coaches, courts, eligiblePlayers }) {
                 image: null,
                 bio: coach.coach_profile?.bio || '',
                 specialty: coach.coach_profile?.specialty || '',
-                hourly_rate: coach.coach_profile?.hourly_rate || 0,
+                hourly_rate: coach.coach_profile?.hourly_rate ? parseInt(coach.coach_profile.hourly_rate, 10) : 0,
                 courts: coach.coach_profile?.courts ? coach.coach_profile.courts.map(c => c.id) : [],
                 availabilities: coach.coach_profile?.availabilities ? coach.coach_profile.availabilities.map(a => ({
                     day_of_week: a.day_of_week,
