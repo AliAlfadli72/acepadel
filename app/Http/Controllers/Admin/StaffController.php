@@ -72,8 +72,13 @@ class StaffController extends Controller
         }
 
         // Assign Role
-        $user->assignRole($request->role);
+// Ensure the user is a Player
+        if (!$user->hasRole('Player')) {
+            $user->assignRole('Player');
+        }
 
+        // Assign the staff role
+        $user->assignRole($request->role);
         // Create staff profile
         StaffProfile::create([
             'user_id' => $user->id,
@@ -135,8 +140,10 @@ class StaffController extends Controller
         $user->update($data);
 
         // Update Role
-        $user->syncRoles([$request->role]);
-
+        $user->syncRoles([
+            'Player',
+            $request->role,
+        ]);
         // Update or create staff profile
         StaffProfile::updateOrCreate(
             ['user_id' => $user->id],

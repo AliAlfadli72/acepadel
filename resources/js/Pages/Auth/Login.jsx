@@ -6,11 +6,10 @@ import { useState } from 'react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
+        phone: '',
         password: '',
         remember: false,
     });
-
     const [lang, setLang] = useState('ar');
     const [showPassword, setShowPassword] = useState(false);
     const isAr = lang === 'ar';
@@ -20,8 +19,8 @@ export default function Login({ status, canResetPassword }) {
         heading1:   isAr ? 'أهلاً' : 'WELCOME',
         heading2:   isAr ? 'بعودتك.' : 'BACK.',
         subtitle:   isAr ? 'سجّل دخولك إلى حسابك في آيس بادل.' : 'Sign in to your Ace Padel Club account.',
-        emailLabel: isAr ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email Address or Phone Number',
-        emailPH:    isAr ? 'بريدك الإلكتروني أو رقم هاتفك' : 'your@email.com or phone number',
+        phoneLabel: isAr ? 'رقم الهاتف' : 'Phone Number',
+        phonePH: isAr ? '9XXXXXXXX' : '9XXXXXXXX',
         passLabel:  isAr ? 'كلمة المرور' : 'Password',
         remember:   isAr ? 'تذكّرني' : 'Remember me',
         forgot:     isAr ? 'نسيت كلمة المرور؟' : 'Forgot password?',
@@ -34,10 +33,13 @@ export default function Login({ status, canResetPassword }) {
         footer:     isAr ? `آيس بادل كلوب © ${new Date().getFullYear()} · دمشق، سوريا` : `ACE PADEL CLUB © ${new Date().getFullYear()} · Damascus, Syria`,
     };
 
-    const submit = (e) => {
-        e.preventDefault();
-        post(route('login'), { onFinish: () => reset('password') });
-    };
+const submit = (e) => {
+    e.preventDefault();
+
+    post(route('login'), {
+        onFinish: () => reset('password'),
+    });
+};
 
     const inputBase = {
         backgroundColor: '#FFFFFF',
@@ -80,24 +82,48 @@ export default function Login({ status, canResetPassword }) {
 
             <form onSubmit={submit} className="space-y-5">
 
-                {/* Email */}
                 <div>
-                    <label htmlFor="email" className="block text-xs font-bold mb-2"
-                        style={{ color: '#222831', fontFamily: isAr ? "'Cairo', sans-serif" : 'Inter, sans-serif', textTransform: isAr ? 'none' : 'uppercase', letterSpacing: isAr ? '0' : '0.12em' }}>
-                        {t.emailLabel}
+                    <label
+                        htmlFor="phone"
+                        className="block text-xs font-bold mb-2"
+                        style={{
+                            color: '#222831',
+                            fontFamily: isAr ? "'Cairo', sans-serif" : 'Inter, sans-serif',
+                        }}
+                    >
+                        {t.phoneLabel}
                     </label>
-                    <input
-                        id="email" type="text" name="email"
-                        value={data.email} autoComplete="username" autoFocus
-                        onChange={(e) => setData('email', e.target.value)}
-                        placeholder={t.emailPH}
-                        dir="ltr"
-                        className="block w-full rounded-xl px-4 py-3.5 text-sm transition-all"
-                        style={{ ...inputBase, border: errors.email ? '1.5px solid #ef4444' : '1.5px solid #e0e0e0' }}
-                        onFocus={e => e.target.style.borderColor = '#222831'}
-                        onBlur={e => e.target.style.borderColor = errors.email ? '#ef4444' : '#e0e0e0'}
-                    />
-                    <InputError message={errors.email} className="mt-1.5" />
+
+                    <div
+                        className="flex rounded-xl overflow-hidden"
+                        style={{
+                            border: errors.phone ? '1.5px solid #ef4444' : '1.5px solid #e0e0e0',
+                            background: '#fff',
+                        }}
+                    >
+                        <span className="px-4 flex items-center bg-gray-100 font-bold text-gray-700">
+                            +963
+                        </span>
+
+                        <input
+                            id="phone"
+                            type="tel"
+                            name="phone"
+                            autoFocus
+                            value={data.phone}
+                            autoComplete="tel"
+                            onChange={(e) =>
+                                setData('phone', e.target.value.replace(/\D/g, '').slice(0, 9))
+                            }
+                            placeholder={t.phonePH}
+                            dir="ltr"
+                            maxLength={9}
+                            className="flex-1 px-4 py-3.5 text-sm outline-none"
+                            style={inputBase}
+                        />
+                    </div>
+
+                    <InputError message={errors.phone} className="mt-1.5" />
                 </div>
 
                 {/* Password */}

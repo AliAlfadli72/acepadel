@@ -6,10 +6,11 @@ import { useState } from 'react';
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
-        email: '',
+            phone: '',
         password: '',
         password_confirmation: '',
     });
+    
 
     const [lang, setLang] = useState('ar');
     const [showPassword, setShowPassword] = useState(false);
@@ -23,8 +24,8 @@ export default function Register() {
         subtitle:   isAr ? 'انضم إلينا وابدأ حجز ملاعبك بسهولة.' : 'Join us and start booking your courts easily.',
         nameLabel:  isAr ? 'الاسم الكامل' : 'Full Name',
         namePH:     isAr ? 'أدخل اسمك الكامل' : 'Enter your full name',
-        emailLabel: isAr ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email Address or Phone Number',
-        emailPH:    isAr ? 'بريدك الإلكتروني أو رقم هاتفك' : 'your@email.com or phone number',
+        phoneLabel: isAr ? 'رقم الهاتف' : 'Phone Number',
+        phonePH: isAr ? '+963 9XXXXXXXX' : '+963 9XXXXXXXX',
         passLabel:  isAr ? 'كلمة المرور' : 'Password',
         passConfirm:isAr ? 'تأكيد كلمة المرور' : 'Confirm Password',
         register:   isAr ? 'إنشاء الحساب' : 'Create Account',
@@ -34,13 +35,18 @@ export default function Register() {
         backSite:   isAr ? 'العودة للموقع' : 'Back to Website',
         footer:     isAr ? `آيس بادل كلوب © ${new Date().getFullYear()} · دمشق، سوريا` : `ACE PADEL CLUB © ${new Date().getFullYear()} · Damascus, Syria`,
     };
-
     const submit = (e) => {
         e.preventDefault();
+
         post(route('register'), {
+            data: {
+                ...data,
+                phone: `+963${data.phone}`,
+            },
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
+        
 
     const inputBase = {
         backgroundColor: '#FFFFFF',
@@ -95,24 +101,39 @@ export default function Register() {
                     <InputError message={errors.name} className="mt-1.5" />
                 </div>
 
-                {/* Email */}
                 <div>
-                    <label htmlFor="email" className="block text-xs font-bold mb-2"
-                        style={{ color: '#222831', fontFamily: isAr ? "'Cairo', sans-serif" : 'Inter, sans-serif', textTransform: isAr ? 'none' : 'uppercase', letterSpacing: isAr ? '0' : '0.12em' }}>
-                        {t.emailLabel}
+                    <label
+                        htmlFor="phone"
+                        className="block text-xs font-bold mb-2"
+                        style={{
+                            color: '#222831',
+                            fontFamily: isAr ? "'Cairo', sans-serif" : 'Inter, sans-serif'
+                        }}
+                    >
+                        {isAr ? 'رقم الهاتف' : 'Phone Number'}
                     </label>
-                    <input
-                        id="email" type="text" name="email"
-                        value={data.email} autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        placeholder={t.emailPH}
-                        dir="ltr"
-                        className="block w-full rounded-xl px-4 py-3.5 text-sm transition-all"
-                        style={{ ...inputBase, border: errors.email ? '1.5px solid #ef4444' : '1.5px solid #e0e0e0' }}
-                        onFocus={e => e.target.style.borderColor = '#222831'}
-                        onBlur={e => e.target.style.borderColor = errors.email ? '#ef4444' : '#e0e0e0'}
-                    />
-                    <InputError message={errors.email} className="mt-1.5" />
+
+                    <div className="flex rounded-xl overflow-hidden border border-gray-300">
+                        <span className="px-4 flex items-center bg-gray-100 text-gray-700 font-bold">
+                            +963
+                        </span>
+
+                        <input
+                            id="phone"
+                            type="tel"
+                            value={data.phone}
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                setData('phone', value);
+                            }}
+                            placeholder="9XXXXXXXX"
+                            dir="ltr"
+                            maxLength={9}
+                            className="flex-1 px-4 py-3 outline-none"
+                        />
+                    </div>
+
+                    <InputError message={errors.phone} className="mt-1.5" />
                 </div>
 
                 {/* Password */}

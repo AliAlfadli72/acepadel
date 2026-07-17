@@ -3,6 +3,8 @@ import { Head, useForm, router } from '@inertiajs/react';
 import { Icon } from "@iconify/react";
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { usePage } from '@inertiajs/react';
+import usePermissions from "@/hooks/usePermissions";
 
 const Field = ({ label, children }) => (
     <div className="space-y-1">
@@ -32,6 +34,13 @@ const generateTimeOptions = () => {
 const TIME_OPTIONS = generateTimeOptions();
 
 export default function PilatesIndex({ sessions, filters, stats, coaches = [] }) {
+
+        const { can } = usePermissions();
+    const { roles } = usePage().props;
+
+    const canCreatePilatesSession =
+        can('pilates.create') &&
+        (roles.includes('Admin') || roles.includes('Pilates Admin'));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
     const [search, setSearch] = useState(filters?.search || '');
@@ -173,11 +182,15 @@ export default function PilatesIndex({ sessions, filters, stats, coaches = [] })
                             <h3 className="text-xl font-bold text-primary">جلسات البيلاتس</h3>
                             <p className="text-gray-400 text-sm">{sessions.total} جلسة مسجلة</p>
                         </div>
-                        <button onClick={openAdd}
-                            className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors">
-                            <Icon icon="mdi:plus-circle-outline" className="w-5 h-5" />
-                            إنشاء جلسة جديدة
-                        </button>
+                            {canCreatePilatesSession && (
+                                <button
+                                    onClick={openAdd}
+                                    className="bg-[#d6e02e] text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b8c21a] transition-colors"
+                                >
+                                    <Icon icon="mdi:plus-circle-outline" className="w-5 h-5" />
+                                    إنشاء جلسة جديدة
+                                </button>
+                            )}
                     </div>
 
                     {/* Filter bar */}

@@ -1,65 +1,68 @@
 <?php
 
-namespace App\Http\Requests\Api;
+namespace App\Http\Requests\Auth;
 
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * تهيئة البيانات قبل عملية التحقق.
-     */
-    protected function prepareForValidation()
-    {
-        $identifier = $this->input('identifier');
-        if ($identifier && !filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-            $this->merge([
-                'identifier' => \App\Models\User::normalizePhone($identifier),
-            ]);
-        }
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         return [
-            'identifier' => ['required', 'string'],
-            'password'   => ['required', 'string'],
+            'phone' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     */
-    public function messages(): array
+    public function authenticate(): void
     {
-        return [
-            'identifier.required' => 'حقل البريد الإلكتروني أو رقم الهاتف مطلوب.',
-            'password.required' => 'حقل كلمة المرور مطلوب.',
-        ];
+        $this->ensureIsNotRateLimited();
+
+        if (! Auth::attempt([
+            'phone' => $this->phone,
+            'password' => $this->password,
+        ], $this->boolean('remember'))) {
+
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'phone' => __('auth.failed'),
+            ]);
+        }
+
+        RateLimiter::clear($this->throttleKey());
     }
 
-    /**
-     * Handle a failed validation attempt.
-     */
-    protected function failedValidation(Validator $validator)
+    public function ensureIsNotRateLimited(): void
     {
-        throw new HttpResponseException(response()->json([
-            'status'  => 'error',
-            'message' => 'بيانات التحقق غير صالحة.',
-            'errors'  => $validator->errors(),
-        ], 422));
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        event(new Lockout($this));
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'phone' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    public function throttleKey(): string
+    {
+        return Str::transliterate(Str::lower($this->phone).'|'.$this->ip());
     }
 }

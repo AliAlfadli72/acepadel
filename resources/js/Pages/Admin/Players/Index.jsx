@@ -450,13 +450,13 @@ export default function PlayersIndex({ players, filters, stats }) {
 
 
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                                 <Field label="المستوى">
                                     <select value={data.rank_level} onChange={e => setData('rank_level', e.target.value)} className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm">
                                         {RANKS.map(r => <option key={r} value={r}>{r}</option>)}
                                     </select>
                                 </Field>
-                            </div>
+                            </div> */}
 
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                 {[

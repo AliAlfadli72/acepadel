@@ -96,12 +96,12 @@ export default function Index({ events, filters = {}, stats = {} }) {
             level: event.level,
             date: event.date ? event.date.split('T')[0] : '',
 
-            time: event.time
-                ? event.time.split(':').slice(0, 2).join(':')
-                : '',
+                time: dayjs(event.time).format('HH:mm'),
 
-            fee: event.fee,
-            prize_ar: event.prize_ar || '',
+                fee: event.fee
+                    ? String(parseInt(event.fee, 10))
+                    : '',
+                prize_ar: event.prize_ar || '',
             prize_en: event.prize_en || '',
             max_participants: event.max_participants || 0,
             color_class: event.color_class,

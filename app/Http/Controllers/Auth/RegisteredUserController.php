@@ -31,26 +31,27 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $emailInput = $request->input('email');
-        if ($emailInput && !filter_var($emailInput, FILTER_VALIDATE_EMAIL)) {
-            $request->merge([
-                'email' => User::normalizePhone($emailInput)
-            ]);
-        }
-
-        $loginIdentifier = $request->email;
-        $isEmail = filter_var($loginIdentifier, FILTER_VALIDATE_EMAIL);
-        $column = $isEmail ? 'email' : 'phone';
+        $request->merge([
+            'phone' => '+963' . ltrim($request->phone, '0'),
+        ]);
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|max:255|unique:'.User::class.','.$column,
+            'phone' => [
+                'required',
+                'regex:/^\+9639\d{8}$/',
+                'unique:users,phone',
+            ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'phone.required' => 'رقم الهاتف مطلوب.',
+            'phone.regex' => 'يرجى إدخال رقم هاتف سوري صحيح.',
+            'phone.unique' => 'رقم الهاتف مستخدم بالفعل.',
         ]);
 
         $user = User::create([
             'name' => $request->name,
-            $column => $loginIdentifier,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
 
