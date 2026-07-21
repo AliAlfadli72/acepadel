@@ -86,16 +86,22 @@ class User extends Authenticatable
             return $phone;
         }
 
+        $phone = trim($phone);
+
+        // Check if it already starts with + or 00 (international)
+        if (str_starts_with($phone, '+') || str_starts_with($phone, '00')) {
+            $digits = preg_replace('/\D/', '', $phone);
+            if (str_starts_with($phone, '00')) {
+                $digits = substr($digits, 2);
+            }
+            return '+' . $digits;
+        }
+
         // إبقاء الأرقام فقط
         $digits = preg_replace('/\D/', '', $phone);
 
-        // إذا كان يبدأ بـ 00، نزيله
-        if (str_starts_with($digits, '00')) {
-            $digits = substr($digits, 2);
-        }
-
-        // إذا كان يبدأ بـ 0 وطوله 10 (مثل 09XXXXXXXX)، نستبدل الـ 0 بـ 963
-        if (str_starts_with($digits, '0') && strlen($digits) === 10) {
+        // إذا كان يبدأ بـ 09 وطوله 10 (مثل 09XXXXXXXX)، نستبدل الـ 0 بـ 963
+        if (str_starts_with($digits, '09') && strlen($digits) === 10) {
             $digits = '963' . substr($digits, 1);
         } elseif (str_starts_with($digits, '9') && strlen($digits) === 9) {
             // مثل 99XXXXXXXX -> 96399XXXXXXXX

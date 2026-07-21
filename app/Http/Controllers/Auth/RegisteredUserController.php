@@ -32,20 +32,20 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->merge([
-            'phone' => '+963' . ltrim($request->phone, '0'),
+            'phone' => \App\Models\User::normalizePhone($request->phone),
         ]);
 
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => [
                 'required',
-                'regex:/^\+9639\d{8}$/',
+                'regex:/^\+\d{8,15}$/',
                 'unique:users,phone',
             ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
             'phone.required' => 'رقم الهاتف مطلوب.',
-            'phone.regex' => 'يرجى إدخال رقم هاتف سوري صحيح.',
+            'phone.regex' => 'يرجى إدخال رقم هاتف صحيح مع رمز البلد (مثال: +966512345678 أو +963991234567).',
             'phone.unique' => 'رقم الهاتف مستخدم بالفعل.',
         ]);
 

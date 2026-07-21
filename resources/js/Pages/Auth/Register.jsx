@@ -25,7 +25,7 @@ export default function Register() {
         nameLabel:  isAr ? 'الاسم الكامل' : 'Full Name',
         namePH:     isAr ? 'أدخل اسمك الكامل' : 'Enter your full name',
         phoneLabel: isAr ? 'رقم الهاتف' : 'Phone Number',
-        phonePH: isAr ? '+963 9XXXXXXXX' : '+963 9XXXXXXXX',
+        phonePH: isAr ? '+963 9XXXXXXXX أو رقمك الدولي' : '+963 9XXXXXXXX or international number',
         passLabel:  isAr ? 'كلمة المرور' : 'Password',
         passConfirm:isAr ? 'تأكيد كلمة المرور' : 'Confirm Password',
         register:   isAr ? 'إنشاء الحساب' : 'Create Account',
@@ -39,10 +39,6 @@ export default function Register() {
         e.preventDefault();
 
         post(route('register'), {
-            data: {
-                ...data,
-                phone: `+963${data.phone}`,
-            },
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
@@ -113,25 +109,23 @@ export default function Register() {
                         {isAr ? 'رقم الهاتف' : 'Phone Number'}
                     </label>
 
-                    <div className="flex rounded-xl overflow-hidden border border-gray-300">
-                        <span className="px-4 flex items-center bg-gray-100 text-gray-700 font-bold">
-                            +963
-                        </span>
-
-                        <input
-                            id="phone"
-                            type="tel"
-                            value={data.phone}
-                            onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                setData('phone', value);
-                            }}
-                            placeholder="9XXXXXXXX"
-                            dir="ltr"
-                            maxLength={9}
-                            className="flex-1 px-4 py-3 outline-none"
-                        />
-                    </div>
+                    <input
+                        id="phone"
+                        type="tel"
+                        name="phone"
+                        value={data.phone}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const cleaned = val.replace(/[^\d+]/g, '');
+                            setData('phone', cleaned);
+                        }}
+                        placeholder={t.phonePH}
+                        dir="ltr"
+                        className="block w-full rounded-xl px-4 py-3.5 text-sm transition-all"
+                        style={{ ...inputBase, border: errors.phone ? '1.5px solid #ef4444' : '1.5px solid #e0e0e0' }}
+                        onFocus={e => e.target.style.borderColor = '#222831'}
+                        onBlur={e => e.target.style.borderColor = errors.phone ? '#ef4444' : '#e0e0e0'}
+                    />
 
                     <InputError message={errors.phone} className="mt-1.5" />
                 </div>

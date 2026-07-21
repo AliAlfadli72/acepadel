@@ -20,7 +20,7 @@ export default function Login({ status, canResetPassword }) {
         heading2:   isAr ? 'بعودتك.' : 'BACK.',
         subtitle:   isAr ? 'سجّل دخولك إلى حسابك في آيس بادل.' : 'Sign in to your Ace Padel Club account.',
         phoneLabel: isAr ? 'رقم الهاتف' : 'Phone Number',
-        phonePH: isAr ? '9XXXXXXXX' : '9XXXXXXXX',
+        phonePH: isAr ? '+963 9XXXXXXXX أو رقمك الدولي' : '+963 9XXXXXXXX or international number',
         passLabel:  isAr ? 'كلمة المرور' : 'Password',
         remember:   isAr ? 'تذكّرني' : 'Remember me',
         forgot:     isAr ? 'نسيت كلمة المرور؟' : 'Forgot password?',
@@ -94,34 +94,25 @@ const submit = (e) => {
                         {t.phoneLabel}
                     </label>
 
-                    <div
-                        className="flex rounded-xl overflow-hidden"
-                        style={{
-                            border: errors.phone ? '1.5px solid #ef4444' : '1.5px solid #e0e0e0',
-                            background: '#fff',
+                    <input
+                        id="phone"
+                        type="tel"
+                        name="phone"
+                        autoFocus
+                        value={data.phone}
+                        autoComplete="tel"
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const cleaned = val.replace(/[^\d+]/g, '');
+                            setData('phone', cleaned);
                         }}
-                    >
-                        <span className="px-4 flex items-center bg-gray-100 font-bold text-gray-700">
-                            +963
-                        </span>
-
-                        <input
-                            id="phone"
-                            type="tel"
-                            name="phone"
-                            autoFocus
-                            value={data.phone}
-                            autoComplete="tel"
-                            onChange={(e) =>
-                                setData('phone', e.target.value.replace(/\D/g, '').slice(0, 9))
-                            }
-                            placeholder={t.phonePH}
-                            dir="ltr"
-                            maxLength={9}
-                            className="flex-1 px-4 py-3.5 text-sm outline-none"
-                            style={inputBase}
-                        />
-                    </div>
+                        placeholder={t.phonePH}
+                        dir="ltr"
+                        className="block w-full rounded-xl px-4 py-3.5 text-sm transition-all"
+                        style={{ ...inputBase, border: errors.phone ? '1.5px solid #ef4444' : '1.5px solid #e0e0e0' }}
+                        onFocus={e => e.target.style.borderColor = '#222831'}
+                        onBlur={e => e.target.style.borderColor = errors.phone ? '#ef4444' : '#e0e0e0'}
+                    />
 
                     <InputError message={errors.phone} className="mt-1.5" />
                 </div>

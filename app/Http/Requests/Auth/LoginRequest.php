@@ -20,7 +20,7 @@ class LoginRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'phone' => '+963' . ltrim($this->phone, '0'),
+            'phone' => \App\Models\User::normalizePhone($this->phone),
         ]);
     }
 
