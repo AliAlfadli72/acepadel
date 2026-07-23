@@ -25,7 +25,7 @@ export default function Register() {
         nameLabel:  isAr ? 'الاسم الكامل' : 'Full Name',
         namePH:     isAr ? 'أدخل اسمك الكامل' : 'Enter your full name',
         phoneLabel: isAr ? 'رقم الهاتف' : 'Phone Number',
-        phonePH: isAr ? '+963 9XXXXXXXX أو رقمك الدولي' : '+963 9XXXXXXXX or international number',
+        phonePH: isAr ? 'مثال: +963... أو +966... أو 09...' : 'e.g. +963... or +966... or 09...',
         passLabel:  isAr ? 'كلمة المرور' : 'Password',
         passConfirm:isAr ? 'تأكيد كلمة المرور' : 'Confirm Password',
         register:   isAr ? 'إنشاء الحساب' : 'Create Account',
@@ -111,9 +111,10 @@ export default function Register() {
 
                     <input
                         id="phone"
-                        type="tel"
+                        type="text"
                         name="phone"
                         value={data.phone}
+                        autoComplete="off"
                         onChange={(e) => {
                             const val = e.target.value;
                             const cleaned = val.replace(/[^\d+]/g, '');
