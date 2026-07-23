@@ -95,12 +95,14 @@ const submit = (e) => {
                     </label>
 
                     <input
-                        id="phone"
+                        id="user_phone_input"
                         type="text"
-                        name="phone"
+                        name="user_phone_input"
                         autoFocus
                         value={data.phone}
                         autoComplete="off"
+                        data-lpignore="true"
+                        data-form-type="other"
                         onChange={(e) => {
                             const val = e.target.value;
                             const cleaned = val.replace(/[^\d+]/g, '');
