@@ -95,19 +95,13 @@ const submit = (e) => {
                     </label>
 
                     <input
-                        id="user_phone_input"
+                        id="phone"
                         type="text"
-                        name="user_phone_input"
+                        name="phone"
                         autoFocus
                         value={data.phone}
                         autoComplete="off"
-                        data-lpignore="true"
-                        data-form-type="other"
-                        onChange={(e) => {
-                            const val = e.target.value;
-                            const cleaned = val.replace(/[^\d+]/g, '');
-                            setData('phone', cleaned);
-                        }}
+                        onChange={(e) => setData('phone', e.target.value)}
                         placeholder={t.phonePH}
                         dir="ltr"
                         className="block w-full rounded-xl px-4 py-3.5 text-sm transition-all"

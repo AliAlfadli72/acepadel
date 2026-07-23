@@ -32,6 +32,14 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'phone.required'    => 'حقل رقم الهاتف مطلوب.',
+            'password.required' => 'حقل كلمة المرور مطلوب.',
+        ];
+    }
+
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
