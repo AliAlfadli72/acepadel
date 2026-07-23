@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Http\Requests\Api;
 
-use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class LoginRequest extends FormRequest
 {
@@ -16,53 +13,40 @@ class LoginRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+    protected function prepareForValidation()
     {
-        return [
-            'phone' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ];
-    }
-
-    public function authenticate(): void
-    {
-        $this->ensureIsNotRateLimited();
-
-        if (! Auth::attempt([
-            'phone' => $this->phone,
-            'password' => $this->password,
-        ], $this->boolean('remember'))) {
-
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'phone' => __('auth.failed'),
-            ]);
+        $identifier = $this->input('identifier') ?? $this->input('phone');
+        if ($identifier && !filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $identifier = \App\Models\User::normalizePhone($identifier);
         }
-
-        RateLimiter::clear($this->throttleKey());
-    }
-
-    public function ensureIsNotRateLimited(): void
-    {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
-            return;
-        }
-
-        event(new Lockout($this));
-
-        $seconds = RateLimiter::availableIn($this->throttleKey());
-
-        throw ValidationException::withMessages([
-            'phone' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+        
+        $this->merge([
+            'identifier' => $identifier,
         ]);
     }
 
-    public function throttleKey(): string
+    public function rules(): array
     {
-        return Str::transliterate(Str::lower($this->phone).'|'.$this->ip());
+        return [
+            'identifier' => ['required', 'string'],
+            'password'   => ['required', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'identifier.required' => 'حقل رقم الهاتف أو البريد الإلكتروني مطلوب.',
+            'password.required'   => 'حقل كلمة المرور مطلوب.',
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'status'  => 'error',
+            'message' => $validator->errors()->first(),
+            'errors'  => $validator->errors(),
+        ], 422));
     }
 }

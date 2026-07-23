@@ -260,8 +260,17 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $loginType = filter_var($request->identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        $user      = User::where($loginType, $request->identifier)->first();
+        $identifier = $request->identifier;
+        $isEmail    = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+
+        if ($isEmail) {
+            $user = User::where('email', $identifier)->first();
+        } else {
+            $normalizedPhone = User::normalizePhone($identifier);
+            $user = User::where('phone', $normalizedPhone)
+                ->orWhere('phone', $identifier)
+                ->first();
+        }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
