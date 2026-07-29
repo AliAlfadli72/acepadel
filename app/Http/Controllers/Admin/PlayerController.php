@@ -165,14 +165,24 @@ class PlayerController extends Controller
         }
         $user->update($data);
 
+        $rankLevel = $request->input('rank_level');
+        $points = (int) $request->input('points', 0);
+        if ($points === 0 && $rankLevel) {
+            $upper = strtoupper($rankLevel);
+            if ($upper === 'S' || str_contains($upper, 'ELITE') || str_contains($upper, 'نخبة')) $points = 1000;
+            elseif ($upper === 'A' || str_contains($upper, 'PRO') || str_contains($upper, 'محترف')) $points = 600;
+            elseif ($upper === 'B' || str_contains($upper, 'ADV') || str_contains($upper, 'متقدم')) $points = 300;
+            elseif ($upper === 'C' || str_contains($upper, 'INTER') || str_contains($upper, 'متوسط')) $points = 100;
+        }
+
         // Update or create player profile
         PlayerProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'points'         => $request->points,
+                'rank_level'     => $rankLevel ?? \App\Services\RankService::getLevelLabel($points),
+                'points'         => $points,
                 'matches_played' => $request->matches_played,
                 'matches_won'    => $request->matches_won,
-                // rank_level يُحسب تلقائياً من النقاط
             ]
         );
 

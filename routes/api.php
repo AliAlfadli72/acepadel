@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\CoachController;
 use App\Http\Controllers\Api\WebhookController;
+use App\Http\Controllers\Api\TournamentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -134,5 +135,46 @@ Route::prefix('pilates')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/book', [\App\Http\Controllers\Api\PilatesApiController::class, 'book']);
         Route::get('/my-bookings', [\App\Http\Controllers\Api\PilatesApiController::class, 'myBookings']);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Tournament Hub API Routes (Public & Player)
+// ─────────────────────────────────────────────────────────────
+Route::prefix('v1/tournaments')->group(function () {
+    Route::get('/', [TournamentController::class, 'index']);
+    Route::get('/{id}', [TournamentController::class, 'show']);
+    Route::get('/{id}/categories/{categoryId}/bracket', [TournamentController::class, 'getBracket']);
+    Route::get('/{id}/categories/{categoryId}/matches', [TournamentController::class, 'getMatches']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/{id}/register', [TournamentController::class, 'registerTeam']);
+    });
+});
+
+// Alias route without v1 prefix for backwards/direct compatibility
+Route::prefix('tournaments')->group(function () {
+    Route::get('/', [TournamentController::class, 'index']);
+    Route::get('/{id}', [TournamentController::class, 'show']);
+    Route::get('/{id}/categories/{categoryId}/bracket', [TournamentController::class, 'getBracket']);
+    Route::get('/{id}/categories/{categoryId}/matches', [TournamentController::class, 'getMatches']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/{id}/register', [TournamentController::class, 'registerTeam']);
+    });
+});
+
+Route::get('/v1/my-tournament-matches', [TournamentController::class, 'myMatches']);
+
+// Protected Player & Admin Tournament Routes
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // Admin Tournament Management Endpoints
+    Route::prefix('v1/admin')->group(function () {
+        Route::post('/tournaments', [TournamentController::class, 'store']);
+        Route::post('/tournaments/{id}/categories', [TournamentController::class, 'storeCategory']);
+        Route::post('/tournaments/{id}/categories/{categoryId}/generate-bracket', [TournamentController::class, 'generateBracket']);
+        Route::put('/matches/{matchId}/score', [TournamentController::class, 'updateMatchScore']);
+        Route::put('/matches/{matchId}/schedule', [TournamentController::class, 'updateMatchSchedule']);
     });
 });

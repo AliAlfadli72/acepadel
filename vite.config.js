@@ -14,7 +14,7 @@ export default defineConfig({
         host: '0.0.0.0',
         cors: true,
         hmr: {
-            host: '172.21.224.248',
+            host: 'localhost',
         },
     },
 });

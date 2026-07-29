@@ -80,8 +80,8 @@ class EventController extends Controller
             'title_en' => 'required|string|max:255',
             'desc_ar' => 'required|string',
             'desc_en' => 'required|string',
-            'category' => 'required|in:Tournament,Cup,Event',
-            'level' => 'required|in:Open,Advanced,All Levels,Juniors',
+            'category' => 'required|string|max:255',
+            'level' => 'required|string|max:255',
             'date' => 'required|date|after_or_equal:today',
             'time' => 'required',
             'fee' => 'required|numeric|min:0',
@@ -118,8 +118,8 @@ class EventController extends Controller
             'title_en' => 'required|string|max:255',
             'desc_ar' => 'required|string',
             'desc_en' => 'required|string',
-            'category' => 'required|in:Tournament,Cup,Event',
-            'level' => 'required|in:Open,Advanced,All Levels,Juniors',
+            'category' => 'required|string|max:255',
+            'level' => 'required|string|max:255',
             'date' => 'required|date',
             'time' => 'required',
             'fee' => 'required|numeric|min:0',
@@ -177,17 +177,21 @@ class EventController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | Refund Wallet
+                | Refund Wallet (Only if fee > 0)
                 |--------------------------------------------------------------------------
                 */
 
-                app(\App\Services\WalletService::class)->deposit(
-                    $wallet,
-                    $event->fee,
-                    "استرجاع رسوم فعالية #{$event->id}",
-                    auth()->id(),
-                    $event
-                );
+                $fee = (float) ($event->fee ?? 0);
+                if ($fee > 0) {
+                    app(\App\Services\WalletService::class)->deposit(
+                        $wallet,
+                        $fee,
+                        "استرجاع رسوم فعالية #{$event->id}",
+                        'padel',
+                        auth()->id(),
+                        $event
+                    );
+                }
 
                 /*
                 |--------------------------------------------------------------------------
@@ -196,7 +200,7 @@ class EventController extends Controller
                 */
 
                 $registration->update([
-                    'status' => 'cancelled'
+                    'status' => 'rejected'
                 ]);
             }
 
@@ -333,13 +337,166 @@ class EventController extends Controller
         return back()->with('success', $message);
     }
 
+    protected function getOrCreateTournamentForEvent(\App\Models\Event $event)
+    {
+        $tournament = \App\Models\Tournament::with([
+            'categories.teams.player1',
+            'categories.teams.player2',
+            'categories.matches.team1',
+            'categories.matches.team2',
+            'categories.matches.winner',
+        ])->where('title_ar', $event->title_ar)->first();
+
+        if (!$tournament) {
+            $tournament = \App\Models\Tournament::create([
+                'title_ar' => $event->title_ar,
+                'title_en' => $event->title_en ?: $event->title_ar,
+                'desc_ar' => $event->desc_ar,
+                'desc_en' => $event->desc_en ?: $event->desc_ar,
+                'location_ar' => 'نادي آيس بادل',
+                'location_en' => 'Ace Padel Club',
+                'prize_pool' => $event->prize_ar ?? '40 Million SYP',
+                'start_date' => $event->date ?: now(),
+                'end_date' => $event->date ?: now(),
+                'status' => 'ongoing',
+            ]);
+        }
+
+        $targetCategoryName = ($event->level && str_contains($event->level, 'Category'))
+            ? $event->level
+            : ($event->level ?: 'Category A');
+
+        if ($tournament->categories->isEmpty()) {
+            \App\Models\TournamentCategory::create([
+                'tournament_id' => $tournament->id,
+                'name' => $targetCategoryName,
+                'max_teams' => 16,
+                'fee' => $event->fee ?? 0,
+                'format' => 'knockout',
+            ]);
+
+            $tournament->load([
+                'categories.teams.player1',
+                'categories.teams.player2',
+                'categories.matches.team1',
+                'categories.matches.team2',
+                'categories.matches.winner',
+            ]);
+        }
+
+        return $tournament;
+    }
+
     public function show(string $id)
     {
         $event = \App\Models\Event::with(['registrations.user'])->findOrFail($id);
-        
+        $tournament = $this->getOrCreateTournamentForEvent($event);
+
         return inertia('Admin/Events/Show', [
-            'event' => $event
+            'event' => $event,
+            'tournament' => $tournament,
         ]);
+    }
+
+    public function storeTeam(Request $request, string $eventId)
+    {
+        $event = \App\Models\Event::findOrFail($eventId);
+        $tournament = $this->getOrCreateTournamentForEvent($event);
+
+        $request->validate([
+            'category_id' => 'nullable',
+            'player1_id' => 'required|exists:users,id',
+            'player2_id' => 'required|exists:users,id|different:player1_id',
+            'team_name' => 'nullable|string|max:100',
+        ]);
+
+        $category = ($request->category_id && $request->category_id !== 'null')
+            ? \App\Models\TournamentCategory::find($request->category_id)
+            : $tournament->categories->first();
+
+        if (!$category) {
+            $category = $tournament->categories->first();
+        }
+
+        $p1 = \App\Models\User::find($request->player1_id);
+        $p2 = \App\Models\User::find($request->player2_id);
+
+        $existingTeamPlayer = \App\Models\TournamentTeam::where('tournament_category_id', $category->id)
+            ->where(function($q) use ($p1, $p2) {
+                $q->whereIn('player1_id', [$p1->id, $p2->id])
+                  ->orWhereIn('player2_id', [$p1->id, $p2->id]);
+            })->first();
+
+        if ($existingTeamPlayer) {
+            return back()->withErrors(['error' => 'أحد اللاعبين المحددِين مضاف بالفعل في فريق آخر ضمن هذه الفئة!']);
+        }
+
+        $teamName = $request->team_name ?: ($p1->name . ' + ' . $p2->name);
+
+        \App\Models\TournamentTeam::create([
+            'tournament_category_id' => $category->id,
+            'team_name' => $teamName,
+            'player1_id' => $p1->id,
+            'player2_id' => $p2->id,
+            'player2_name' => $p2->name,
+            'status' => 'confirmed',
+        ]);
+
+        return redirect()->route('admin.events.show', $event->id)->with('success', 'تم تشكيل الفريق وتعيين اللاعبين بنجاح!');
+    }
+
+    public function destroyTeam(string $eventId, string $teamId)
+    {
+        $event = \App\Models\Event::findOrFail($eventId);
+        $team = \App\Models\TournamentTeam::findOrFail($teamId);
+        $team->delete();
+        return redirect()->route('admin.events.show', $event->id)->with('success', 'تم حذف الفريق بنجاح.');
+    }
+
+    public function generateBracket(Request $request, string $eventId)
+    {
+        $event = \App\Models\Event::findOrFail($eventId);
+        $tournament = $this->getOrCreateTournamentForEvent($event);
+
+        $category = ($request->category_id && $request->category_id !== 'null')
+            ? \App\Models\TournamentCategory::find($request->category_id)
+            : $tournament->categories->first();
+
+        if (!$category) {
+            return back()->withErrors(['error' => 'لا توجد فئة متاحة لهذه البطولة.']);
+        }
+        
+        try {
+            app(\App\Services\TournamentBracketService::class)->generateBracket($category);
+            return redirect()->route('admin.events.show', $event->id)->with('success', 'تم توليد شجرة التصفيات تلقائياً للبطولة بنجاح! 🏆');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function updateMatchResult(Request $request, string $eventId, string $matchId)
+    {
+        $event = \App\Models\Event::findOrFail($eventId);
+
+        $request->validate([
+            'winner_id' => 'required|exists:tournament_teams,id',
+            'score_team1' => 'nullable|string',
+            'score_team2' => 'nullable|string',
+        ]);
+
+        $match = \App\Models\TournamentMatch::findOrFail($matchId);
+        
+        try {
+            app(\App\Services\TournamentBracketService::class)->recordMatchResult(
+                $match,
+                $request->winner_id,
+                $request->score_team1,
+                $request->score_team2
+            );
+            return redirect()->route('admin.events.show', $event->id)->with('success', 'تم تسجيل النتيجة وتأهيل الفائز للدور التالي! 🏆');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     public function updatePlacement(\Illuminate\Http\Request $request, string $eventId, string $registrationId)
@@ -349,7 +506,7 @@ class EventController extends Controller
         ]);
 
         $registration = \App\Models\EventRegistration::where('event_id', $eventId)
-            ->where('status', 'approved') // Only approved players can get a placement
+            ->where('status', 'approved')
             ->findOrFail($registrationId);
             
         $registration->update(['placement' => $request->placement]);

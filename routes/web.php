@@ -261,6 +261,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/events/{event}/registrations/{registration}/placement', [\App\Http\Controllers\Admin\EventController::class, 'updatePlacement'])
             ->middleware('permission:events.edit')
             ->name('admin.events.registrations.placement');
+
+        Route::match(['get', 'post'], '/admin/events/{event}/teams', function(\Illuminate\Http\Request $request, $event) {
+            if ($request->isMethod('get')) {
+                return redirect()->route('admin.events.show', $event);
+            }
+            return app(\App\Http\Controllers\Admin\EventController::class)->storeTeam($request, $event);
+        })->middleware('permission:events.edit')->name('admin.events.teams.store');
+
+        Route::delete('/admin/events/{event}/teams/{team}', [\App\Http\Controllers\Admin\EventController::class, 'destroyTeam'])
+            ->middleware('permission:events.edit')
+            ->name('admin.events.teams.destroy');
+
+        Route::post('/admin/events/{event}/generate-bracket', [\App\Http\Controllers\Admin\EventController::class, 'generateBracket'])
+            ->middleware('permission:events.edit')
+            ->name('admin.events.bracket.generate');
+
+        Route::post('/admin/events/{event}/matches/{match}/result', [\App\Http\Controllers\Admin\EventController::class, 'updateMatchResult'])
+            ->middleware('permission:events.edit')
+            ->name('admin.events.matches.result');
     });
 
 

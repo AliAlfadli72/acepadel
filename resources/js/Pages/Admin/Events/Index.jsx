@@ -266,10 +266,11 @@ export default function Index({ events, filters = {}, stats = {} }) {
                                 className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-2.5 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8"
                             >
                                 <option value="">كل المستويات</option>
-                                <option value="Open">مفتوح (Open)</option>
-                                <option value="Advanced">متقدم (Advanced)</option>
-                                <option value="Juniors">ناشئين (Juniors)</option>
-                                <option value="All Levels">جميع المستويات</option>
+                                <option value="Category A">Category A</option>
+                                <option value="Category B">Category B</option>
+                                <option value="Category C">Category C</option>
+                                <option value="Category D">Category D</option>
+                                <option value="Category E">Category E</option>
                             </select>
                         </div>
 
@@ -578,10 +579,11 @@ export default function Index({ events, filters = {}, stats = {} }) {
                                             <div>
                                                 <label className="block text-xs font-extrabold text-slate-500 mb-1.5">المستوى</label>
                                                 <select className="w-full rounded-xl border border-slate-200 focus:border-slate-400 bg-slate-50/50 text-xs font-bold text-slate-700 focus:bg-white focus:ring-0 focus:outline-none transition-all p-3 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%2522%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[position:left_0.75rem_center] bg-[length:1.25rem_1.25rem] bg-no-repeat pl-8" value={data.level} onChange={e => setData('level', e.target.value)}>
-                                                    <option value="Open">مفتوح (Open)</option>
-                                                    <option value="Advanced">متقدم (Advanced)</option>
-                                                    <option value="Juniors">ناشئين (Juniors)</option>
-                                                    <option value="All Levels">جميع المستويات</option>
+                                                    <option value="Category A">Category A</option>
+                                                    <option value="Category B">Category B</option>
+                                                    <option value="Category C">Category C</option>
+                                                    <option value="Category D">Category D</option>
+                                                    <option value="Category E">Category E</option>
                                                 </select>
                                             </div>
                                             <div>

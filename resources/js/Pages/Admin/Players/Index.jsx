@@ -7,19 +7,38 @@ import Swal from 'sweetalert2';
 import usePermissions from "@/hooks/usePermissions";
 import { resolveAsset } from '../../../utils';
 
-const RANKS = ['مبتدئ', 'متوسط', 'متقدم', 'محترف', 'نخبة'];
-const rankTranslation = {
-    'Beginner': 'مبتدئ',
-    'Intermediate': 'متوسط',
-    'Advanced': 'متقدم',
-    'Professional': 'محترف',
-    'Elite': 'نخبة',
+const RANKS = ['D', 'C', 'B', 'A', 'S'];
+const RANK_CHIP_LABELS = { 
+    D: 'D (مبتدئ)', 
+    C: 'C (متوسط)', 
+    B: 'B (متقدم)', 
+    A: 'A (محترف)', 
+    S: 'S (نخبة)', 
+    'مبتدئ': 'D (مبتدئ)', 
+    'متوسط': 'C (متوسط)', 
+    'متقدم': 'B (متقدم)', 
+    'محترف': 'A (محترف)', 
+    'نخبة': 'S (نخبة)' 
 };
-const getRank = (r) => rankTranslation[r] || r;
 
-const rankColor = (r) => {
-    const m = { 'مبتدئ':'bg-gray-100 text-gray-600', 'متوسط':'bg-blue-100 text-blue-700', 'متقدم':'bg-yellow-100 text-yellow-700', 'محترف':'bg-orange-100 text-orange-700', 'نخبة':'bg-purple-100 text-purple-700' };
-    return m[getRank(r)] || 'bg-gray-100 text-gray-500';
+const getRankDisplay = (profile) => {
+    const levelStr = (profile?.rank_level || '').toString().toUpperCase();
+    const points = Number(profile?.points || 0);
+
+    if (levelStr === 'S' || levelStr.includes('ELITE') || levelStr.includes('نخبة') || points >= 1000) {
+        return { letter: 'S', colorClass: 'bg-amber-400 text-amber-950 shadow-amber-200 border border-amber-300' };
+    }
+    if (levelStr === 'A' || levelStr.includes('PRO') || levelStr.includes('محترف') || points >= 600) {
+        return { letter: 'A', colorClass: 'bg-rose-500 text-white shadow-rose-200 border border-rose-400' };
+    }
+    if (levelStr === 'B' || levelStr.includes('ADV') || levelStr.includes('متقدم') || points >= 300) {
+        return { letter: 'B', colorClass: 'bg-emerald-500 text-white shadow-emerald-200 border border-emerald-400' };
+    }
+    if (levelStr === 'C' || levelStr.includes('INTER') || levelStr.includes('متوسط') || points >= 100) {
+        return { letter: 'C', colorClass: 'bg-sky-500 text-white shadow-sky-200 border border-sky-400' };
+    }
+
+    return { letter: 'D', colorClass: 'bg-slate-200 text-slate-700 border border-slate-300' };
 };
 
 const Field = ({ label, children }) => (
@@ -209,7 +228,7 @@ export default function PlayersIndex({ players, filters, stats }) {
                                 {['', ...RANKS].map(r => (
                                     <button key={r||'all'} onClick={() => { setRank(r); applyFilters({ rank: r }); }}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${rank===r ? 'bg-primary text-white border-primary' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}>
-                                        {r || 'الكل'}
+                                        {r ? (RANK_CHIP_LABELS[r] || r) : 'الكل'}
                                     </button>
                                 ))}
                             </div>
@@ -274,11 +293,16 @@ export default function PlayersIndex({ players, filters, stats }) {
                                                     <div className="text-xs text-gray-600" dir="ltr">{p.phone || p.email || '—'}</div>
                                                     {p.phone && p.email && <div className="text-xs text-gray-400 truncate max-w-[140px]">{p.email}</div>}
                                                 </td>
-                                                {/* Rank */}
+                                                {/* Rank / Level */}
                                                 <td className="px-5 py-3.5">
-                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${rankColor(profile?.rank_level)}`}>
-                                                        {getRank(profile?.rank_level) || '—'}
-                                                    </span>
+                                                    {(() => {
+                                                        const r = getRankDisplay(profile);
+                                                        return (
+                                                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-black shadow-xs ${r.colorClass}`}>
+                                                                {r.letter}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 {/* Points */}
                                                 <td className="px-5 py-3.5 font-bold text-gray-800">{profile?.points || 0}</td>
@@ -450,13 +474,21 @@ export default function PlayersIndex({ players, filters, stats }) {
 
 
 
-                            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                                <Field label="المستوى">
-                                    <select value={data.rank_level} onChange={e => setData('rank_level', e.target.value)} className="w-full rounded-lg border-gray-200 focus:border-primary focus:ring-primary text-sm">
-                                        {RANKS.map(r => <option key={r} value={r}>{r}</option>)}
+                            <div className="mb-4">
+                                <Field label="المستوى (Letter Rank)">
+                                    <select 
+                                        value={data.rank_level} 
+                                        onChange={e => setData('rank_level', e.target.value)} 
+                                        className="w-full rounded-xl border border-gray-200 focus:border-primary focus:ring-primary text-sm font-bold text-gray-800 p-2.5 bg-gray-50/50"
+                                    >
+                                        <option value="D">D - مبتدئ (Beginner)</option>
+                                        <option value="C">C - متوسط (Intermediate)</option>
+                                        <option value="B">B - متقدم (Advanced)</option>
+                                        <option value="A">A - محترف (Professional)</option>
+                                        <option value="S">S - نخبة (Elite)</option>
                                     </select>
                                 </Field>
-                            </div> */}
+                            </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                 {[

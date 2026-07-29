@@ -27,7 +27,7 @@ class EventRegistrationNotification extends Notification
 
     private function getContentByLocale($locale): array
     {
-        $title = $locale === 'en' ? $this->event->title_en : $this->event->title_ar;
+        $title = ($locale === 'en' ? ($this->event->title_en ?? $this->event->title) : ($this->event->title_ar ?? $this->event->title)) ?? $this->event->title;
 
         if ($locale === 'en') {
             return match ($this->registrationStatus) {

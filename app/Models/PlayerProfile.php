@@ -21,7 +21,9 @@ class PlayerProfile extends Model
     protected static function booted(): void
     {
         static::saving(function (PlayerProfile $profile) {
-            $profile->rank_level = RankService::getLevelLabel($profile->points ?? 0);
+            if (empty($profile->rank_level)) {
+                $profile->rank_level = RankService::getLevelLabel($profile->points ?? 0);
+            }
         });
     }
 

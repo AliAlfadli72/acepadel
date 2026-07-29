@@ -40,13 +40,27 @@ class EventController extends Controller
                 'start_time'              => $event->time ? $event->time->format('H:i') : '00:00',
                 'end_time'                => $event->time ? $event->time->copy()->addHours(2)->format('H:i') : '02:00',
                 'price'                   => $event->fee,
-                'max_participants'        => $event->max_participants,
-                'current_participants'    => $event->approved_count,   // approved فقط
+                'max_participants'        => ($event->max_participants && (int)$event->max_participants > 0) ? (int)$event->max_participants : 16,
+                'current_participants'    => max(
+                    $event->approved_count,
+                    $event->registrations_count,
+                    DB::table('tournament_teams')->whereIn('tournament_category_id', function($q) use ($event) {
+                        $q->select('id')->from('tournament_categories')
+                          ->whereIn('tournament_id', function($q2) use ($event) {
+                              $q2->select('id')->from('tournaments')->where('title_ar', $event->title)->orWhere('id', $event->id);
+                          });
+                    })->count() * 2
+                ),
                 'status'                  => $event->status ?? 'upcoming',
                 'type'                    => $event->category ?? 'tournament',
                 'image_url'               => $event->image_path ? asset('storage/' . $event->image_path) : null,
-                'prize'                   => $event->prize,
-                'level'                   => $event->level,
+                'level'                   => (function() use ($event) {
+                    $catName = DB::table('tournament_categories')
+                        ->whereIn('tournament_id', function($q) use ($event) {
+                            $q->select('id')->from('tournaments')->where('title_ar', $event->title)->orWhere('title_en', $event->title)->orWhere('id', $event->id);
+                        })->value('name');
+                    return $catName ?: $event->level;
+                })(),
                 // حالة تسجيل المستخدم: null | 'pending' | 'approved' | 'rejected'
                 'my_registration_status'  => $myRegistrations->get($event->id),
             ];
@@ -103,9 +117,13 @@ class EventController extends Controller
                 'rejected' => 'تم رفض طلبك من قِبل الإدارة.',
             ];
             return response()->json([
-                'status'  => 'error',
+                'status'  => 'info',
                 'message' => $msgs[$existing->status] ?? 'أنت مسجّل مسبقاً.',
-            ], 400);
+                'data'    => [
+                    'registration_id'     => $existing->id,
+                    'registration_status' => $existing->status,
+                ],
+            ], 200);
         }
 
         // 5. التحقق من السعة (approved فقط)
