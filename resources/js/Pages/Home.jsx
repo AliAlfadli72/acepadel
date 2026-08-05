@@ -712,7 +712,7 @@ export default function Home() {
                 <FadeIn direction="left">
                   <div className="relative rounded-[36px] overflow-hidden border border-accent/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] group aspect-[4/5] bg-black">
                     <img
-                      src={resolveAsset('/app-hands-showcase.webp')}
+                      src={resolveAsset('/mobile-hands-showcase.webp')}
                       alt="Ace Padel Mobile App Showcase"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
