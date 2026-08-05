@@ -606,8 +606,9 @@ export default function Home() {
                     alt="Feel The Heat - Ace Padel Food Corner"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-md rounded-xl p-2 text-center text-xs font-bold text-accent">
-                    {isArabic ? "برغر الدجاج المميز 🔥" : "Signature Burger"}
+                  <div className="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-md rounded-xl p-2 text-center text-xs font-bold text-accent flex items-center justify-center gap-1.5">
+                    <span>{isArabic ? "برغر الدجاج المميز" : "Signature Burger"}</span>
+                    <Icon icon="mdi:fire" className="w-4 h-4 text-orange-400" />
                   </div>
                 </div>
                 <div className="relative rounded-[24px] overflow-hidden shadow-2xl aspect-[3/4] group translate-y-6">
@@ -616,8 +617,9 @@ export default function Home() {
                     alt="Ace Padel Gourmet Tennis Burger"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-md rounded-xl p-2 text-center text-xs font-bold text-white">
-                    {isArabic ? "وجبات فاخرة لراحة اللاعبين 🎾" : "Gourmet Player Fuel"}
+                  <div className="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-md rounded-xl p-2 text-center text-xs font-bold text-white flex items-center justify-center gap-1.5">
+                    <span>{isArabic ? "وجبات فاخرة لراحة اللاعبين" : "Gourmet Player Fuel"}</span>
+                    <Icon icon="mdi:tennis" className="w-4 h-4 text-accent" />
                   </div>
                 </div>
               </div>
@@ -642,11 +644,13 @@ export default function Home() {
                 <FadeIn direction="right">
                   <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-accent px-4 py-2 rounded-full border border-accent/30 bg-accent/10 mb-6 backdrop-blur-md">
                     <Icon icon="mdi:cellphone-check" className="w-4 h-4 text-accent" />
-                    {isArabic ? "تطبيق Ace Padel الرسمـي 📱" : "Official Ace Padel App 📱"}
+                    <span>{isArabic ? "تطبيق Ace Padel الرسمـي" : "Official Ace Padel App"}</span>
+                    <Icon icon="mdi:cellphone-wireless" className="w-4 h-4 text-accent" />
                   </div>
 
-                  <h2 className={`font-display font-black text-white mt-2 mb-6 leading-tight ${isArabic ? "font-arabic text-3xl sm:text-4xl md:text-5xl" : "text-4xl md:text-5xl"}`}>
-                    {isArabic ? "تجربة البادل كاملة بين يديك 🎾" : "The Complete Padel Experience"}
+                  <h2 className={`font-display font-black text-white mt-2 mb-6 leading-tight flex items-center gap-3 flex-wrap ${isArabic ? "font-arabic text-3xl sm:text-4xl md:text-5xl" : "text-4xl md:text-5xl"}`}>
+                    <span>{isArabic ? "تجربة البادل كاملة بين يديك" : "The Complete Padel Experience"}</span>
+                    <Icon icon="mdi:tennis" className="w-8 h-8 sm:w-10 sm:h-10 text-accent inline-block align-middle" />
                   </h2>
 
                   <p className={`text-gray-300 mb-8 leading-relaxed text-base sm:text-lg max-w-xl ${isArabic ? "font-arabic" : ""}`}>
@@ -708,7 +712,7 @@ export default function Home() {
                 <FadeIn direction="left">
                   <div className="relative rounded-[36px] overflow-hidden border border-accent/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] group aspect-[4/5] bg-black">
                     <img
-                      src={route('home').replace(/\/$/, '') + '/app-showcase.webp'}
+                      src={resolveAsset('/app-showcase.webp')}
                       alt="Ace Padel Mobile App Showcase"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -716,8 +720,9 @@ export default function Home() {
                     
                     <div className="absolute bottom-5 left-5 right-5 backdrop-blur-md bg-black/60 p-4 rounded-2xl border border-white/15 flex items-center justify-between">
                       <div>
-                        <span className="text-accent text-[11px] font-bold uppercase tracking-widest block mb-1">
-                          {isArabic ? "الواجهة الأصلية 📱" : "Live App UI 📱"}
+                        <span className="text-accent text-[11px] font-bold uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                          <Icon icon="mdi:cellphone-text" className="w-3.5 h-3.5 text-accent" />
+                          {isArabic ? "الواجهة الأصلية" : "Live App UI"}
                         </span>
                         <h3 className={`font-bold text-white text-xs sm:text-sm ${isArabic ? "font-arabic" : ""}`}>
                           {isArabic ? "تطبيق Ace Padel Club على الآيفون" : "Ace Padel Club App on iPhone"}
