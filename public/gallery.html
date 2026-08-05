@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>معرض صور Ace Padel الحقيقية 🎾</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0F172A; color: white; margin: 0; padding: 20px; }
+    h1 { text-align: center; color: #D2F53E; margin-bottom: 8px; }
+    p { text-align: center; color: #94A3B8; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .card { background: #1E293B; border-radius: 16px; overflow: hidden; border: 1px solid #334155; }
+    .card img { width: 100%; height: 200px; object-fit: cover; }
+    .card .info { padding: 12px; font-size: 14px; text-align: center; }
+    .card .info span { font-weight: bold; color: #D2F53E; }
+  </style>
+</head>
+<body>
+  <h1>معرض الصور الحقيقية لملاعب Ace Padel 🎾</h1>
+  <p>اختر الصورة المناسبة لربطها في الموقع الرئيسي</p>
+  <div class="grid" id="gallery"></div>
+
+  <script>
+    const images = [
+      "AM1A6659", "AM1A6660", "AM1A6662", "AM1A6664", "AM1A6669", "AM1A6672", "AM1A6673", "AM1A6677", "AM1A6679", "AM1A6680",
+      "AM1A6681", "AM1A6682", "AM1A6684", "AM1A6688", "AM1A6691", "AM1A6692", "AM1A6693", "AM1A6695", "AM1A6696", "AM1A6697",
+      "AM1A6698", "AM1A6701", "AM1A6705", "AM1A6709", "AM1A6712", "AM1A6716", "AM1A6721", "AM1A6723", "AM1A6724", "AM1A6725",
+      "AM1A6726", "AM1A6728", "AM1A6729", "AM1A6736", "AM1A6737", "AM1A6738", "AM1A6748", "AM1A6751", "AM1A6752", "AM1A6760",
+      "AM1A6761", "AM1A6768", "AM1A6769", "AM1A6774", "AM1A6884", "AM1A6885", "AM1A6918", "AM1A6919", "AM1A6926", "AM1A6927",
+      "AM1A6930", "AM1A6934", "AM1A6938", "AM1A6941", "AM1A6952", "AM1A6954", "AM1A6966", "AM1A6970"
+    ];
+
+    const gallery = document.getElementById("gallery");
+    images.forEach(name => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img src="/images/real/${name}.webp" onerror="this.src='/palce/${name}.jpg'" alt="${name}" loading="lazy" />
+        <div class="info">
+          <span>${name}</span>
+        </div>
+      `;
+      gallery.appendChild(card);
+    });
+  </script>
+</body>
+</html>

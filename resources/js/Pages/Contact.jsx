@@ -141,14 +141,14 @@ export default function Contact() {
             </h2>
             <div id="map" className="w-full h-80 rounded-3xl overflow-hidden border border-gray-200 shadow-card" style={{backgroundColor:'#E8F0E8'}}>
               <iframe
-                src="https://maps.google.com/maps?q=33.529249,36.2966476&z=17&output=embed"
+                src="https://maps.google.com/maps?q=ACE+Padel+Academy,+Damascus&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
-                style={{ border: 0, filter: "saturate(0.8) contrast(1.1)" }}
+                style={{ border: 0, filter: "saturate(0.9) contrast(1.1)" }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Ace Padel Club Location"
+                title="ACE Padel Academy Location"
               />
             </div>
 
@@ -159,15 +159,15 @@ export default function Contact() {
               </div>
               <div>
                 <p className={`font-bold text-gray-900 text-sm ${isArabic ? "font-arabic" : ""}`}>
-                  {isArabic ? "دمشق، أوتوستراد المزة، نادي الوحدة الرياضي" : "Damascus, Mezzeh Highway, Al-Wahda Sports Club"}
+                  {isArabic ? "دمشق — مدينة الفيحاء الرياضية (G7HW+MPC)" : "Damascus — Al-Faiha Sports City (G7HW+MPC)"}
                 </p>
                 <a
-                  href="https://www.google.com/maps/place//data=!4m2!3m1!1s0x1518e7001fffdb7d:0xef61ec4bc8d792c6?sa=X&ved=1t:8290&ictx=111"
+                  href="https://maps.google.com/?q=G7HW%2BMPC,+Damascus,+Syria"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`text-primary text-xs font-semibold hover:underline ${isArabic ? "font-arabic" : ""}`}
                 >
-                  {isArabic ? "فتح في خرائط جوجل ←" : "Open in Google Maps →"}
+                  {isArabic ? "فتح في خرائط جوجل (G7HW+MPC) ←" : "Open in Google Maps (G7HW+MPC) →"}
                 </a>
               </div>
             </div>

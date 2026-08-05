@@ -58,7 +58,7 @@ const SERVICES = [
       { icon: "mdi:certificate", ar: "مدربون معتمدون دولياً", en: "Internationally certified coaches" },
     ],
     price: { ar: "من 1500 ل.س / حصة", en: "From 1,500 SYP/session" },
-    image: "/hero-court.webp",
+    image: "/racket-decor.webp",
     color: "bg-accent/20 text-primary",
   },
   {
@@ -84,19 +84,19 @@ const SERVICES = [
     id: "social",
     icon: "mdi:food-fork-drink",
     tag: { ar: "اجتماعي", en: "Social" },
-    title: { ar: "الركن الاجتماعي", en: "Social Corner" },
+    title: { ar: "الركن الاجتماعي والمأكولات", en: "Social Corner & Dining" },
     description: {
-      ar: "فود كورت يقدم قائمة طعام صحية متنوعة وتيراس خارجي بإطلالة خلابة على الملاعب، لتجربة اجتماعية راقية بعد اللعب أو لمشاهدة المباريات.",
-      en: "A healthy food court with a diverse menu and an open terrace with stunning views of the courts, for a premium social experience after games.",
+      ar: "فود كورت يقدم قائمة طعام صحية وجبات برغر فاخرة وتيراس خارجي بإطلالة خلابة على الملاعب، لتجربة اجتماعية راقية بعد اللعب.",
+      en: "A healthy food court with gourmet meals and an open terrace with stunning court views, for a premium social experience after games.",
     },
     features: [
-      { icon: "mdi:leaf", ar: "قائمة طعام صحية ومتنوعة", en: "Healthy & diverse menu" },
+      { icon: "mdi:food", ar: "وجبات برغر فاخرة من Wing Over", en: "Gourmet Wing Over burgers" },
       { icon: "mdi:sofa", ar: "تيراس خارجي مريح", en: "Comfortable outdoor terrace" },
       { icon: "mdi:eye", ar: "إطلالة مباشرة على الملاعب", en: "Direct court views" },
       { icon: "mdi:wifi", ar: "واي فاي مجاني وسريع", en: "Free high-speed Wi-Fi" },
     ],
     price: { ar: "يفتح للجميع", en: "Open to all" },
-    image: "/social-terrace.webp",
+    image: "/food-corner.webp",
     color: "bg-emerald-50 text-primary",
   },
 ];

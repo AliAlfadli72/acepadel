@@ -599,17 +599,144 @@ export default function Home() {
             </div>
 
             <FadeIn className="lg:col-span-2" direction="left" delay={0.2}>
-              <div className="relative rounded-[28px] overflow-hidden shadow-2xl aspect-[3/4]">
-                <img
-                  src={resolveAsset('/social-terrace.webp')}
-                  alt="Ace Padel Social Corner and Terrace"
-                  className="w-full h-full object-cover"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative rounded-[24px] overflow-hidden shadow-2xl aspect-[3/4] group">
+                  <img
+                    src={resolveAsset('/food-corner.webp')}
+                    alt="Feel The Heat - Ace Padel Food Corner"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-md rounded-xl p-2 text-center text-xs font-bold text-accent">
+                    {isArabic ? "برغر الدجاج المميز 🔥" : "Signature Burger"}
+                  </div>
+                </div>
+                <div className="relative rounded-[24px] overflow-hidden shadow-2xl aspect-[3/4] group translate-y-6">
+                  <img
+                    src={resolveAsset('/food-burger.webp')}
+                    alt="Ace Padel Gourmet Tennis Burger"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-md rounded-xl p-2 text-center text-xs font-bold text-white">
+                    {isArabic ? "وجبات فاخرة لراحة اللاعبين 🎾" : "Gourmet Player Fuel"}
+                  </div>
+                </div>
               </div>
             </FadeIn>
           </div>
         </div>
       </section>
+
+      {/* ================================================
+          BOUTIQUE GLASSMOBILE APP SHOWCASE BANNER
+          ================================================ */}
+      <section className="py-12 px-4 sm:px-6 bg-gray-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="rounded-[36px] md:rounded-[48px] p-8 md:p-16 relative overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.3)]">
+            {/* Ambient Background Glow Spheres */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-accent/15 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="grid lg:grid-cols-12 gap-10 items-center relative z-10">
+              {/* Left Content Column */}
+              <div className="lg:col-span-7">
+                <FadeIn direction="right">
+                  <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-accent px-4 py-2 rounded-full border border-accent/30 bg-accent/10 mb-6 backdrop-blur-md">
+                    <Icon icon="mdi:cellphone-check" className="w-4 h-4 text-accent" />
+                    {isArabic ? "تطبيق Ace Padel الرسمـي 📱" : "Official Ace Padel App 📱"}
+                  </div>
+
+                  <h2 className={`font-display font-black text-white mt-2 mb-6 leading-tight ${isArabic ? "font-arabic text-3xl sm:text-4xl md:text-5xl" : "text-4xl md:text-5xl"}`}>
+                    {isArabic ? "تجربة البادل كاملة بين يديك 🎾" : "The Complete Padel Experience"}
+                  </h2>
+
+                  <p className={`text-gray-300 mb-8 leading-relaxed text-base sm:text-lg max-w-xl ${isArabic ? "font-arabic" : ""}`}>
+                    {isArabic
+                      ? "حمل تطبيق Ace Padel الرسمي من متجر آبل. تصفح جدول الملاعب الحرة، احجز بلمسة واحدة، تابع نتائج البطولات واستقبل تنبيهات التذكير قبل مباراتك."
+                      : "Download the official Ace Padel app from Apple App Store. Book courts instantly, track live rankings, and stay connected with our sports community."}
+                  </p>
+
+                  {/* Feature Badges Grid */}
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-10 max-w-lg">
+                    {[
+                      { icon: "mdi:lightning-bolt", label: isArabic ? "حجز 24/7 بلمسة" : "Instant 24/7 Booking" },
+                      { icon: "mdi:bell-ring-outline", label: isArabic ? "إشعارات تذكيرية" : "Push Notifications" },
+                      { icon: "mdi:wallet-outline", label: isArabic ? "محفظة رصيد شمسية" : "In-App E-Wallet" },
+                      { icon: "mdi:trophy-outline", label: isArabic ? "ترتيب التصنيف الحي" : "Live Leaderboard" },
+                    ].map(({ icon, label }) => (
+                      <div key={label} className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                        <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
+                          <Icon icon={icon} className="w-5 h-5 text-accent" />
+                        </div>
+                        <span className={`text-white/90 text-xs sm:text-sm font-bold ${isArabic ? "font-arabic" : ""}`}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Download Action Buttons */}
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <a
+                      href="https://apps.apple.com/us/app/ace-padel-club/id6777794118"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-3.5 bg-accent text-black px-8 py-4 rounded-full font-black text-sm hover:bg-white transition-all shadow-[0_10px_30px_rgba(204,255,0,0.3)] hover:scale-105 active:scale-95"
+                    >
+                      <Icon icon="mdi:apple" className="w-7 h-7 text-black" />
+                      <div className="text-left leading-tight">
+                        <div className="text-[10px] text-black/70 font-semibold uppercase tracking-wider">Download on the</div>
+                        <div className="text-base font-black">App Store (iOS)</div>
+                      </div>
+                    </a>
+
+                    <a
+                      href="https://apps.apple.com/us/app/ace-padel-club/id6777794118"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-3.5 bg-white/10 text-white border border-white/20 px-8 py-4 rounded-full font-bold text-sm hover:bg-white hover:text-black transition-all backdrop-blur-md hover:scale-105 active:scale-95"
+                    >
+                      <Icon icon="mdi:google-play" className="w-6 h-6 text-accent" />
+                      <div className="text-left leading-tight">
+                        <div className="text-[10px] text-gray-300 font-normal uppercase tracking-wider">GET IT ON</div>
+                        <div className="text-base font-black">Google Play</div>
+                      </div>
+                    </a>
+                  </div>
+                </FadeIn>
+              </div>
+
+              {/* Right Image Showcase Column (Interactive Glass Device Frame) */}
+              <div className="lg:col-span-5">
+                <FadeIn direction="left">
+                  <div className="relative rounded-[36px] overflow-hidden border border-accent/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] group aspect-[4/5] bg-black">
+                    <img
+                      src={route('home').replace(/\/$/, '') + '/app-showcase.webp'}
+                      alt="Ace Padel Mobile App Showcase"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-85" />
+                    
+                    <div className="absolute bottom-5 left-5 right-5 backdrop-blur-md bg-black/60 p-4 rounded-2xl border border-white/15 flex items-center justify-between">
+                      <div>
+                        <span className="text-accent text-[11px] font-bold uppercase tracking-widest block mb-1">
+                          {isArabic ? "الواجهة الأصلية 📱" : "Live App UI 📱"}
+                        </span>
+                        <h3 className={`font-bold text-white text-xs sm:text-sm ${isArabic ? "font-arabic" : ""}`}>
+                          {isArabic ? "تطبيق Ace Padel Club على الآيفون" : "Ace Padel Club App on iPhone"}
+                        </h3>
+                      </div>
+                      <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
+                    </div>
+                  </div>
+                </FadeIn>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================
+          REAL CLUB PHOTO SHOWCASE CAROUSEL SLIDER
+          ================================================ */}
+      <RealPhotoSlider isArabic={isArabic} resolveAsset={resolveAsset} />
 
       {/* ================================================
           TESTIMONIALS
@@ -652,14 +779,14 @@ export default function Home() {
                 </h2>
                 <p className={`text-white/70 mb-8 leading-relaxed ${isArabic ? "font-arabic" : ""}`}>
                   {isArabic
-                    ? "نحن في قلب دمشق، على أوتوستراد المزة، في نادي الوحدة الرياضي."
-                    : "We're in the heart of Damascus, on Mezzeh Highway, inside Al-Wahda Sports Club."}
+                    ? "نحن في قلب دمشق، داخل مدينة الفيحاء الرياضية."
+                    : "We're in the heart of Damascus, inside Al-Faiha Sports City."}
                 </p>
                 <div className="space-y-4">
                   {[
                     { icon: "mdi:phone",      val: "0945 000 365", href: "tel:0945000365", isPhone: true },
-                    { icon: "mdi:map-marker", val: isArabic ? "دمشق - أوتوستراد المزة - نادي الوحدة الرياضي" : "Damascus, Mezzeh Highway, Al-Wahda Sports Club", href: "https://www.google.com/maps/place//data=!4m2!3m1!1s0x1518e7001fffdb7d:0xef61ec4bc8d792c6?sa=X&ved=1t:8290&ictx=111" },
-                    { icon: "mdi:clock",      val: isArabic ? "يومياً من 7:00 صباحاً حتى 2:00 فجراً" : "Daily: 7:00 AM — 2:00 AM", href: null },
+                    { icon: "mdi:map-marker", val: isArabic ? "دمشق — مدينة الفيحاء الرياضية (G7HW+MPC)" : "Damascus, Al-Faiha Sports City (G7HW+MPC)", href: "https://maps.google.com/?q=G7HW%2BMPC,+Damascus,+Syria" },
+                    { icon: "mdi:clock",      val: isArabic ? "مفتوح على مدار 24 ساعة" : "Open 24 Hours", href: null },
                   ].map(({ icon, val, href, isPhone }, idx) => (
                     <div key={idx} className="flex items-start gap-4">
                       <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
@@ -701,3 +828,168 @@ export default function Home() {
 }
 
 Home.layout = page => <AppLayout children={page} />;
+
+function RealPhotoSlider({ isArabic, resolveAsset }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [visibleCards, setVisibleCards] = useState(1);
+
+  const photos = [
+    { img: '/terrace-topview.webp', tag: isArabic ? "إطلالة بانورامية 🏙️" : "Panoramic Terrace", title: isArabic ? "الجسر الزجاجي والترّاس العلوي" : "Glass Bridge & Upper Terrace" },
+    { img: '/images/real/AM1A6748.webp', tag: isArabic ? "حماس المباريات ⚡" : "Match Action ⚡", title: isArabic ? "لقطات الحماس والضربات القوية" : "Dynamic Match Action & Smashes" },
+    { img: '/food-corner.webp', tag: isArabic ? "مأكولات فاخرة 🔥" : "Gourmet Dining 🔥", title: isArabic ? "برغر الدجاج المميز من Wing Over" : "Wing Over Gourmet Chicken Burger" },
+    { img: '/hero-court.webp', tag: isArabic ? "FIP معتمد 💎" : "FIP Certified", title: isArabic ? "الملاعب المغلقة والمضاءة احترافياً" : "Indoor Illuminated FIP Courts" },
+    { img: '/pilates-studio.webp', tag: isArabic ? "استرخاء وثبات 🧘‍♀️" : "Wellness 🧘‍♀️", title: isArabic ? "استوديو البيلاتس وأجهزة Reformer" : "Pilates Studio & Reformer Gear" },
+    { img: '/racket-decor.webp', tag: isArabic ? "تفاصيل التميز 🎾" : "Excellence Details", title: isArabic ? "معدات وتفاصيل البادل الاحترافية" : "Pro Padel Gear & Ambiance" },
+    { img: '/images/real/AM1A6680.webp', tag: isArabic ? "جلسات مريحة ☕" : "Lounge Comfort ☕", title: isArabic ? "ترّاس الاستراحة وجلسات المتابعة" : "Courtside Outdoor Lounge" },
+    { img: '/images/real/AM1A6723.webp', tag: isArabic ? "تدريب واحتراف 🎯" : "Daily Practice 🎯", title: isArabic ? "أجواء التنافس والتدريب اليومي" : "Daily Match Practice & Serves" },
+    { img: '/food-burger.webp', tag: isArabic ? "طاقة للاعبين 🍔" : "Player Fuel 🍔", title: isArabic ? "وجبات فاخرة لتغذية اللاعبين" : "Gourmet Tennis Burger" },
+    { img: '/images/real/AM1A6736.webp', tag: isArabic ? "إضاءة ليلية 🌙" : "Night Lighting 🌙", title: isArabic ? "إضاءة LED المانعة للوهج" : "Anti-Glare LED Night Stadium" },
+    { img: '/images/real/AM1A6662.webp', tag: isArabic ? "معايير دولية 📐" : "FIP Standards 📐", title: isArabic ? "شبكة الملعب المعتمدة دولياً" : "Official FIP Net Specs" },
+    { img: '/images/real/AM1A6701.webp', tag: isArabic ? "رؤية كاملة 💎" : "Full View 💎", title: isArabic ? "الملاعب الخارجية والرؤية البانورامية" : "Panoramic Outdoor Padel Courts" },
+  ];
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setVisibleCards(3);
+      else if (window.innerWidth >= 640) setVisibleCards(2);
+      else setVisibleCards(1);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const maxIndex = Math.max(0, photos.length - visibleCards);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isPaused, maxIndex]);
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+  };
+
+  return (
+    <section className="py-16 sm:py-24 bg-[#0F172A] text-white overflow-hidden relative" dir={isArabic ? "rtl" : "ltr"}>
+      {/* Background ambient glow */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        {/* Header with Navigation Controls */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
+          <div>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 text-accent text-xs font-bold uppercase tracking-widest mb-3 sm:mb-4">
+              <Icon icon="mdi:camera" className="w-4 h-4 text-accent" />
+              {isArabic ? "معرض الصور الحقيقية" : "Real Club Gallery"}
+            </span>
+            <h2 className={`font-display font-black text-white ${isArabic ? "font-arabic text-3xl sm:text-4xl md:text-5xl" : "text-4xl md:text-5xl"}`}>
+              {isArabic ? "لمحات من واقع نادي آيس بادل 🎾" : "Experience Ace Padel"}
+            </h2>
+            <p className={`mt-2 sm:mt-3 text-gray-400 max-w-xl text-xs sm:text-sm md:text-base ${isArabic ? "font-arabic" : ""}`}>
+              {isArabic
+                ? "استعرض جولة حية للملاعب الفاخرة، التراس البانورامي، استوديو البيلاتس، والركن الاجتماعي"
+                : "Take a live tour of our FIP courts, panoramic terrace, Pilates studio, and gourmet dining"}
+            </p>
+          </div>
+
+          {/* Navigation Controls & Counter */}
+          <div className="flex items-center justify-between sm:justify-start gap-4">
+            <span className="text-xs text-gray-300 font-bold uppercase tracking-widest bg-white/10 border border-white/15 px-4 py-2 rounded-full flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              {currentIndex + 1} / {photos.length} {isArabic ? "صورة" : "Photos"}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrev}
+                aria-label="Previous Slide"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 border border-white/20 hover:bg-accent hover:border-accent hover:text-black text-white flex items-center justify-center transition-all duration-300 shadow-lg active:scale-95"
+              >
+                <Icon icon={isArabic ? "mdi:chevron-right" : "mdi:chevron-left"} className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+              <button
+                onClick={handleNext}
+                aria-label="Next Slide"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 border border-white/20 hover:bg-accent hover:border-accent hover:text-black text-white flex items-center justify-center transition-all duration-300 shadow-lg active:scale-95"
+              >
+                <Icon icon={isArabic ? "mdi:chevron-left" : "mdi:chevron-right"} className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Carousel Slider Viewport */}
+        <div
+          className="relative overflow-hidden rounded-[28px] sm:rounded-[32px]"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          <motion.div
+            className="flex"
+            animate={{
+              x: isArabic
+                ? `${currentIndex * (100 / visibleCards)}%`
+                : `-${currentIndex * (100 / visibleCards)}%`,
+            }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {photos.map((card, idx) => (
+              <div
+                key={idx}
+                style={{ width: `${100 / visibleCards}%` }}
+                className="shrink-0 p-2"
+              >
+                <div
+                  className={`relative w-full rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-2xl aspect-[3/4] border transition-all duration-500 ${
+                    idx === currentIndex
+                      ? "border-accent ring-2 ring-accent/40 scale-[1.01]"
+                      : "border-white/10 opacity-90 hover:opacity-100 hover:border-white/40"
+                  }`}
+                >
+                  <img
+                    src={resolveAsset(card.img)}
+                    alt={card.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-90" />
+                  <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-white">
+                    <span className="inline-block px-2.5 py-1 rounded-full bg-accent/20 border border-accent/40 text-accent text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 backdrop-blur-md">
+                      {card.tag}
+                    </span>
+                    <h3 className={`font-bold text-base sm:text-lg md:text-xl text-white leading-tight break-words ${isArabic ? "font-arabic" : ""}`}>
+                      {card.title}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Slide Indicator Dots */}
+        <div className="flex justify-center items-center gap-1.5 sm:gap-2 mt-6 sm:mt-8 flex-wrap">
+          {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex ? "w-6 sm:w-8 bg-accent" : "w-2 sm:w-2.5 bg-white/20 hover:bg-white/40"
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
