@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         $admin = User::create([
             'name' => 'System Admin',
             'email' => 'admin@acepadel.com',
-            'phone' => '+963000000000',
+            'phone' => '0969890643',
             'password' => bcrypt('password'),
         ]);
 
